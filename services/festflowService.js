@@ -22,7 +22,7 @@ function getApiKey() {
 }
 
 function getRequestTimeoutMs() {
-    return parseInt(process.env.FESTFLOW_TIMEOUT_MS, 10) || 6000;
+    return parseInt(process.env.FESTFLOW_TIMEOUT_MS, 10) || 10000;
 }
 
 // In-Memory Short-Lived Cache (30s TTL) for Serverless Optimization & Error Resilience
@@ -621,7 +621,7 @@ async function runDiagnostics() {
     // Test /team-points
     const startTp = Date.now();
     try {
-        const resTp = await fetchWithAxios(`${baseUrl}/team-points`, {}, 1, 5000);
+        const resTp = await fetchWithAxios(`${baseUrl}/team-points`, {}, 1, getRequestTimeoutMs());
         report.endpoints.teamPoints = {
             status: resTp?.status,
             latencyMs: Date.now() - startTp,
@@ -639,7 +639,7 @@ async function runDiagnostics() {
     // Test /competitions
     const startComp = Date.now();
     try {
-        const resComp = await fetchWithAxios(`${baseUrl}/competitions`, {}, 1, 5000);
+        const resComp = await fetchWithAxios(`${baseUrl}/competitions`, {}, 1, getRequestTimeoutMs());
         const compCount = Array.isArray(resComp?.data?.data) ? resComp.data.data.length : (Array.isArray(resComp?.data) ? resComp.data.length : 0);
         report.endpoints.competitions = {
             status: resComp?.status,
