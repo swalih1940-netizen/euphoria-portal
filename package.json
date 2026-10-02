@@ -1,0 +1,26 @@
+{
+  "name": "euphoria-portal",
+  "version": "1.0.0",
+  "description": "Event Euphoria '26 - Dedicated Standalone Festival & Live Results Portal",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "keywords": [
+    "event-euphoria",
+    "festival",
+    "sirajul-irfan",
+    "festflow",
+    "results-portal"
+  ],
+  "author": "Sirajul Irfan",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "hbs": "^4.2.0"
+  }
+}

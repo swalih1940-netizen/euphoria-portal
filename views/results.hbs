@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html class="dark scroll-smooth" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>OFFICIAL RESULTS | Event Euphoria '26 | SIRAJUL IRFAN</title>
+    <!-- PWA & Theme Color -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#070a12" />
+
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logo-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/logo-192.png">
+    <link rel="shortcut icon" href="/images/favicon.ico">
+
+    <!-- Primary SEO Meta Tags -->
+    <meta name="description"
+        content="Official Event Euphoria '26 Festival Results Portal. Search published competition results by category, item name, participant, and team standings." />
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#f59e0b',
+                            goldLight: '#fbbf24',
+                            purple: '#8b5cf6',
+                            deepDark: '#070a12',
+                            cardDark: '#0f172a',
+                            cyan: '#06b6d4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Outfit', 'sans-serif'],
+                        heading: ['Outfit', 'Chakra Petch', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- html-to-image library for Direct High-Res Poster Export (CDN with local fallback) -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+    <script>
+        if (typeof htmlToImage === 'undefined') {
+            document.write('<script src="/js/html-to-image.js"><\/script>');
+        }
+    </script>
+
+    <!-- Custom Styling & Sahityotsav Results Aesthetics -->
+    <style>
+        @font-face {
+            font-family: 'TraditionalCivilization';
+            src: url('/Font/Traditional%20Civilization%20Demo.ttf') format('truetype'),
+                url('/Font/Traditional Civilization Demo.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        .euphoria-logo-brand {
+            font-family: 'TraditionalCivilization', sans-serif;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+            text-shadow: none;
+            filter: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .group:hover .euphoria-logo-brand {
+            opacity: 0.85;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-Light';
+            src: url('/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype');
+            font-weight: 300;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-Regular';
+            src: url('/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-SemiBold';
+            src: url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .glass-nav {
+            background: rgba(7, 10, 18, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .gradient-text-gold {
+            background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0, 1, 0, 1);
+        }
+
+        .accordion-content.open {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        @media print {
+
+            header,
+            footer,
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .glass-card {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                color: black !important;
+            }
+
+            .text-white,
+            .text-slate-300,
+            .text-slate-400 {
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between">
+
+    <!-- Main Results Portal Area (Clean Headerless Festival Design) -->
+    <main class="pt-6 sm:pt-12 pb-20 max-w-4xl mx-auto px-3 sm:px-6 w-full flex-grow">
+
+        <!-- Top Navigation Bar (Official Euphoria Logo & Official Results Badge) -->
+        <div class="flex items-center justify-between mb-8 sm:mb-10 px-1">
+            <a href="/" class="group flex items-center transition-transform duration-200 active:scale-95"
+                title="Return to Event Euphoria Festival Portal">
+                <span
+                    class="euphoria-logo-brand text-2xl sm:text-3xl md:text-4xl font-normal leading-none select-none transition-all duration-300">
+                    Euphoria
+                </span>
+            </a>
+            <span
+                class="text-[10px] sm:text-xs font-bold text-amber-400 tracking-wider uppercase px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 shadow-sm flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Official Results</span>
+            </span>
+        </div>
+
+        <!-- Header Title Banner -->
+        <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-10 px-2">
+            <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold uppercase tracking-widest mb-3">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> LIVE COMPETITION RESULTS
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-heading font-bold text-white tracking-tight">
+                <span class="gradient-text-gold">RESULTS PORTAL</span>
+            </h1>
+            <p class="text-slate-400 text-xs sm:text-sm mt-3 leading-relaxed">
+                Search and explore category-wise published competition scores, candidate rankings, and team performance
+                tallies.
+            </p>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SEARCH & CATEGORY FILTER BAR               -->
+        <!-- ========================================== -->
+        <div class="glass-card rounded-2xl p-3.5 sm:p-5 border border-slate-800 mb-6 sm:mb-8 shadow-2xl">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+
+                <!-- Search Input Bar -->
+                <div class="sm:col-span-8 relative">
+                    <span
+                        class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                    <input type="text" id="search-input" placeholder="Search competition, candidate, team..."
+                        class="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-9 py-2.5 sm:py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors">
+                    <button id="clear-search"
+                        class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs uppercase font-semibold">Clear</button>
+                </div>
+
+                <!-- Category Filter Dropdown -->
+                <div class="sm:col-span-4 relative">
+                    <span
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">filter_alt</span>
+                    <select id="category-select"
+                        class="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-7 py-2.5 sm:py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition-colors appearance-none font-semibold">
+                        <option value="ALL">All Categories</option>
+                        <option value="Alpha Zone">Alpha Zone</option>
+                        <option value="Core Zone">Core Zone</option>
+                        <option value="Prime Zone">Prime Zone</option>
+                        <option value="General">General</option>
+                    </select>
+                    <span
+                        class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-base">expand_more</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ACCORDION COMPETITION LIST                 -->
+        <!-- ========================================== -->
+        <div class="space-y-3 sm:space-y-4" id="competitions-container">
+
+            {{#if competitions}}
+            {{#each competitions}}
+            <div class="competition-card glass-card rounded-2xl border border-slate-800 hover:border-slate-700 transition-all overflow-hidden"
+                data-category="{{this.category}}" data-search="{{this.title}} {{this.code}} {{this.category}}">
+
+                <!-- Accordion Header Button -->
+                <button onclick="toggleAccordion('{{this.id}}')"
+                    class="w-full p-3.5 sm:p-5 flex items-center justify-between text-left focus:outline-none group">
+                    <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <span
+                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-heading font-bold text-amber-400 text-xs shrink-0">
+                            #{{#if this.formattedCode}}{{this.formattedCode}}{{else}}{{this.code}}{{/if}}
+                        </span>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span
+                                    class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 shrink-0">
+                                    {{this.category}}
+                                </span>
+                                <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
+                                    <span class="material-symbols-outlined text-xs">location_on</span> {{this.stage}}
+                                </span>
+                            </div>
+                            <h3
+                                class="font-heading font-bold text-sm sm:text-lg text-white group-hover:text-amber-400 transition-colors truncate">
+                                {{this.title}}
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+                        <span
+                            class="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> {{this.status}}
+                        </span>
+                        <span id="icon-{{this.id}}"
+                            class="material-symbols-outlined text-slate-400 transition-transform duration-300 text-xl sm:text-2xl">
+                            expand_more
+                        </span>
+                    </div>
+                </button>
+
+                <!-- Accordion Content Panel -->
+                <div id="content-{{this.id}}" class="accordion-content border-t border-slate-800/80 bg-slate-950/60">
+
+                    <!-- Mobile View: Clean, Spacious Candidate Cards (Avoids cramped tables on phones) -->
+                    <div class="sm:hidden p-3 space-y-2.5">
+                        {{#each this.winners}}
+                        <div
+                            class="flex items-center justify-between p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <!-- Rank Badge -->
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black shrink-0
+                                        {{#if this.isFirst}}bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20
+                                        {{else if this.isSecond}}bg-gradient-to-br from-slate-200 to-slate-400 text-slate-950
+                                        {{else if this.isThird}}bg-gradient-to-br from-amber-600 to-amber-800 text-white
+                                        {{else}}bg-slate-800 text-slate-300 border border-slate-700/50{{/if}}">
+                                    {{#if this.rank}}{{this.rank}}{{else if this.prize}}{{this.prize}}{{else}}-{{/if}}
+                                </span>
+                                <!-- Participant Details -->
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-sm text-white leading-tight truncate">
+                                        {{#if this.participant}}{{this.participant}}{{else}}{{this.name}}{{/if}}
+                                    </h4>
+                                    <p class="text-[11px] font-medium text-slate-400 truncate mt-0.5">
+                                        {{#if this.team}}{{this.team}}{{else if this.teamName}}{{this.teamName}}{{else
+                                        if this.district}}{{this.district}}{{else}}-{{/if}}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Grade Badge -->
+                            {{#if this.grade}}
+                            <div class="shrink-0">
+                                <span
+                                    class="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono">
+                                    {{this.grade}}
+                                </span>
+                            </div>
+                            {{/if}}
+                        </div>
+                        {{/each}}
+                    </div>
+
+                    <!-- Desktop View: Structured Table (Hidden on small screens) -->
+                    <div class="hidden sm:block p-4 sm:p-6 overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm">
+                            <thead>
+                                <tr
+                                    class="text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-3">
+                                    <th class="py-3 px-4 font-bold text-slate-300">RANK</th>
+                                    <th class="py-3 px-4 font-bold text-slate-300">PARTICIPANT</th>
+                                    <th class="py-3 px-4 font-bold text-slate-300">TEAM</th>
+                                    <th class="py-3 px-4 font-bold text-slate-300 text-center">GRADE</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60">
+                                {{#each this.winners}}
+                                <tr class="hover:bg-slate-900/50 transition-colors">
+                                    <!-- RANK -->
+                                    <td class="py-3.5 px-4 font-bold text-white">
+                                        <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg text-xs font-bold
+                                                {{#if this.isFirst}}bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20
+                                                {{else if this.isSecond}}bg-slate-300 text-slate-950
+                                                {{else if this.isThird}}bg-amber-700 text-white
+                                                {{else}}bg-slate-800 text-slate-300 border border-slate-700/50{{/if}}">
+                                            {{#if this.rank}}{{this.rank}}{{else if
+                                            this.prize}}{{this.prize}}{{else}}-{{/if}}
+                                        </span>
+                                    </td>
+                                    <!-- PARTICIPANT -->
+                                    <td class="py-3.5 px-4 font-semibold text-white">
+                                        {{#if this.participant}}{{this.participant}}{{else}}{{this.name}}{{/if}}
+                                    </td>
+                                    <!-- TEAM -->
+                                    <td class="py-3.5 px-4 text-slate-300">
+                                        <span class="font-medium text-slate-200">{{#if this.team}}{{this.team}}{{else if
+                                            this.teamName}}{{this.teamName}}{{else if
+                                            this.district}}{{this.district}}{{else}}-{{/if}}</span>
+                                    </td>
+                                    <!-- GRADE -->
+                                    <td class="py-3.5 px-4 font-bold text-center">
+                                        {{#if this.grade}}
+                                        <span
+                                            class="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-amber-300 text-xs font-bold">
+                                            {{this.grade}}
+                                        </span>
+                                        {{else}}
+                                        <span class="text-slate-600">-</span>
+                                        {{/if}}
+                                    </td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Card Action Footer (DOWNLOAD & SHARE) -->
+                    <div
+                        class="px-3 sm:px-6 py-3 sm:py-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 border-t border-slate-800/80 bg-slate-950/90">
+                        <div
+                            class="text-[11px] text-slate-400 flex items-center justify-center sm:justify-start gap-1.5 font-medium">
+                            <span class="material-symbols-outlined text-xs text-amber-400">verified</span>
+                            <span>Official Verified Result</span>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+                            <!-- Download Poster Button (Outlined Yellow Stroke, Sharp Minimal Radius) -->
+                            <button onclick="downloadCompetitionPoster('{{this.id}}', this)"
+                                class="flex-1 sm:flex-initial h-9 px-2.5 sm:px-4 rounded-md font-bold text-[11px] sm:text-xs tracking-wider uppercase text-amber-400 hover:text-slate-950 bg-transparent hover:bg-amber-400 border border-amber-400 active:scale-95 transition-all duration-150 inline-flex items-center justify-center gap-1.5 shrink-0"
+                                title="Download high-resolution poster">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                <span class="whitespace-nowrap">Download Poster</span>
+                            </button>
+
+                            <!-- Share Button (Outlined White Stroke, Sharp Minimal Radius) -->
+                            <button onclick="shareCompetitionWhatsApp('{{this.id}}', this)"
+                                class="flex-1 sm:flex-initial h-9 px-2.5 sm:px-4 rounded-md font-bold text-[11px] sm:text-xs tracking-wider uppercase text-white hover:text-slate-950 bg-transparent hover:bg-white border border-white/70 hover:border-white active:scale-95 transition-all duration-150 inline-flex items-center justify-center gap-1.5 shrink-0"
+                                title="Share poster & results to WhatsApp">
+                                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.072-2.106-.512-1.805-.747-2.956-2.58-3.045-2.699-.089-.12-0.732-.974-.732-1.858 0-.885.464-1.32.63-1.498.167-.179.365-.224.486-.224.12 0 .241.002.346.007.11.005.258-.042.404.308.149.359.513 1.25.558 1.341.045.09.075.195.015.315-.059.12-.089.195-.179.3-.089.105-.188.234-.269.315-.09.09-.184.188-.079.368.105.18.468.773 1.004 1.25.69.614 1.272.805 1.452.895.18.09.285.075.39-.045.106-.12.45-.525.57-.705.12-.18.24-.15.405-.09.165.06 1.05.495 1.23.585.18.09.3.135.345.21.045.075.045.435-.099.84zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.442 5.177L2 22l4.981-1.398A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+                                </svg>
+                                <span class="whitespace-nowrap">Share</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {{/each}}
+            {{else}}
+            <div class="glass-card rounded-2xl p-12 text-center border border-slate-800 my-6">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400">
+                    <span class="material-symbols-outlined text-3xl">campaign</span>
+                </div>
+                <h3 class="font-heading font-bold text-xl text-white mb-2">No Published Competitions Yet</h3>
+                <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                    Published competition results from FestFlow will appear here in real-time as soon as scores are
+                    finalized by the judges.
+                </p>
+            </div>
+            {{/if}}
+
+            <!-- Empty Search Results Placeholder -->
+            <div id="no-results" class="hidden glass-card rounded-2xl p-12 text-center border border-slate-800">
+                <span class="material-symbols-outlined text-4xl text-slate-500 mb-3">search_off</span>
+                <h3 class="font-heading font-bold text-lg text-white">No Competitions Found</h3>
+                <p class="text-xs text-slate-400 mt-1">Try adjusting your search terms or category filters.</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- JSON Payload for Client-Side Poster Generation -->
+    <script id="competitions-json-data" type="application/json">
+    {{{json competitions}}}
+    </script>
+
+    <!-- Lightbox Modal for Instant Poster Preview after Download -->
+    <div id="poster-preview-modal"
+        class="fixed inset-0 z-[100000] hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6"
+        onclick="if(event.target === this) closePosterPreviewModal();">
+        <div class="relative max-w-xl w-full max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/70 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            onclick="event.stopPropagation();">
+            <!-- Header Bar -->
+            <div
+                class="w-full px-3.5 sm:px-5 py-3 flex items-center justify-between gap-2.5 border-b border-slate-800 bg-slate-950/95">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+                    <span id="preview-modal-title"
+                        class="font-bold text-xs sm:text-sm text-white uppercase tracking-wider truncate">Competition
+                        Result</span>
+                </div>
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <button onclick="downloadPosterFromModal()" id="preview-modal-download-btn"
+                        class="h-8 px-3 sm:px-3.5 rounded-md border border-amber-400 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-150 whitespace-nowrap">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        <span>Download</span>
+                    </button>
+                    <button onclick="closePosterPreviewModal()"
+                        class="w-8 h-8 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all shrink-0"
+                        title="Close">
+                        <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Image Canvas -->
+            <div
+                class="p-2 sm:p-4 flex items-center justify-center overflow-auto max-h-[calc(92vh-65px)] w-full bg-slate-950/60">
+                <img id="preview-modal-img" src="" alt="Competition Poster"
+                    class="max-w-full max-h-[75vh] object-contain rounded-lg sm:rounded-xl shadow-2xl border border-slate-800" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden High-Res Poster Template (2480px x 2953px) for html-to-image Export -->
+    <div id="poster-render-wrapper"
+        style="position: fixed; top: 0; left: 0; width: 2480px; height: 2953px; overflow: hidden; pointer-events: none; opacity: 0; z-index: -99999;">
+        <div id="poster-render-card"
+            style="width: 2480px; height: 2953px; position: relative; margin: 0; padding: 0; box-sizing: border-box; background: #070a12;">
+
+            <!-- Clean Background Template Image -->
+            <img src="/images/Result.jpg"
+                style="position: absolute; top: 0; left: 0; width: 2480px; height: 2953px; object-fit: cover; z-index: 1;"
+                alt="Poster Background" />
+
+            <!-- 1st Winner Row (Circle 01) -->
+            <div id="poster-winner-1" style="position: absolute; top: 37.8%; left: 28.6%; right: 10%; z-index: 10;">
+                <div id="poster-p1-name"
+                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                    -</div>
+                <div id="poster-t1-name"
+                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                    -</div>
+            </div>
+
+            <!-- 2nd Winner Row (Circle 02) -->
+            <div id="poster-winner-2" style="position: absolute; top: 44.5%; left: 28.6%; right: 10%; z-index: 10;">
+                <div id="poster-p2-name"
+                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                    -</div>
+                <div id="poster-t2-name"
+                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                    -</div>
+            </div>
+
+            <!-- 3rd Winner Row (Circle 03) -->
+            <div id="poster-winner-3" style="position: absolute; top: 51.1%; left: 28.6%; right: 10%; z-index: 10;">
+                <div id="poster-p3-name"
+                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                    -</div>
+                <div id="poster-t3-name"
+                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                    -</div>
+            </div>
+
+            <!-- Result Number -->
+            <div id="poster-res-num"
+                style="position: absolute; top: 61.8%; left: 23.5%; font-family: 'Nohemi-Light', sans-serif; font-size: 260px; font-weight: 300; color: #ffffff; line-height: 1; margin: 0; z-index: 10;">
+                01</div>
+
+            <!-- Competition Name & Category Subheading (Vertically Centered Flex Container) -->
+            <div id="poster-comp-title-wrapper"
+                style="position: absolute; top: 60.8%; left: 38.2%; width: 720px; max-width: 720px; height: 315px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; z-index: 10;">
+                <!-- Zone Subheading -->
+                <div id="poster-comp-category"
+                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 38px; font-weight: 400; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.12em; line-height: 1; margin: 0 0 14px 0; opacity: 0.9;">
+                    ALPHA ZONE</div>
+                <!-- Main Competition Title -->
+                <div id="poster-comp-title"
+                    style="font-family: 'Nohemi-SemiBold', sans-serif; font-size: 98px; font-weight: 600; color: #FFC700; line-height: 1.12; letter-spacing: -0.015em; margin: 0; padding: 0; word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
+                    -</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-[#05070d] border-t border-slate-900 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 Sirajul Irfan Da'wa Dars. Official Event Euphoria Results Engine.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Client-Side Search & Accordion Script -->
+    <script>
+        function toggleAccordion(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Close other open accordions for clean accordion UX
+                document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+                document.querySelectorAll('[id^="icon-"]').forEach(i => i.style.transform = 'rotate(0deg)');
+
+                content.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Live Search & Category Filtering
+        const searchInput = document.getElementById('search-input');
+        const categorySelect = document.getElementById('category-select');
+        const clearBtn = document.getElementById('clear-search');
+        const competitionCards = document.querySelectorAll('.competition-card');
+        const noResults = document.getElementById('no-results');
+
+        function filterCompetitions() {
+            const query = searchInput.value.toLowerCase().trim();
+            const selectedCat = categorySelect.value;
+            let visibleCount = 0;
+
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            competitionCards.forEach(card => {
+                const cardCat = (card.getAttribute('data-category') || '').toLowerCase().trim();
+                const cardText = (card.getAttribute('data-search') + ' ' + card.innerText).toLowerCase();
+
+                let matchesCat = false;
+                if (selectedCat === 'ALL') {
+                    matchesCat = true;
+                } else {
+                    const selLower = selectedCat.toLowerCase().trim();
+                    if (cardCat === selLower) {
+                        matchesCat = true;
+                    } else if (selLower.includes('prime') && cardCat.includes('prime')) {
+                        matchesCat = true;
+                    } else if (selLower.includes('core') && cardCat.includes('core')) {
+                        matchesCat = true;
+                    } else if (selLower.includes('alpha') && cardCat.includes('alpha')) {
+                        matchesCat = true;
+                    } else if (selLower === 'general' && cardCat.includes('general')) {
+                        matchesCat = true;
+                    } else if (cardCat.includes(selLower) || selLower.includes(cardCat)) {
+                        matchesCat = true;
+                    }
+                }
+
+                const matchesQuery = (query === '' || cardText.includes(query));
+
+                if (matchesCat && matchesQuery) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterCompetitions);
+        if (categorySelect) categorySelect.addEventListener('change', filterCompetitions);
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterCompetitions();
+            });
+        }
+
+        // Auto-open selected competition or category from URL query string
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const compId = urlParams.get('id');
+            const cat = urlParams.get('category');
+
+            if (cat && categorySelect) {
+                const catLower = cat.toLowerCase().trim();
+                const matchedOption = Array.from(categorySelect.options).find(opt => {
+                    const optLower = opt.value.toLowerCase().trim();
+                    return optLower === catLower ||
+                        (catLower.includes('prime') && optLower.includes('prime')) ||
+                        (catLower.includes('core') && optLower.includes('core')) ||
+                        (catLower.includes('alpha') && optLower.includes('alpha')) ||
+                        (catLower.includes('general') && optLower.includes('general'));
+                });
+                if (matchedOption) {
+                    categorySelect.value = matchedOption.value;
+                } else {
+                    categorySelect.value = cat;
+                }
+                filterCompetitions();
+            }
+
+            if (compId) {
+                toggleAccordion(compId);
+                const content = document.getElementById('content-' + compId);
+                const card = content ? content.closest('.competition-card') : null;
+                if (card) {
+                    setTimeout(() => {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 200);
+                }
+            } else if (window.location.hash) {
+                const hashId = window.location.hash.replace('#content-', '').replace('#', '');
+                if (hashId) {
+                    toggleAccordion(hashId);
+                    const content = document.getElementById('content-' + hashId);
+                    const card = content ? content.closest('.competition-card') : null;
+                    if (card) {
+                        setTimeout(() => {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 200);
+                    }
+                }
+            }
+        });
+
+        // Print PDF & Download Results Handler
+        function printCompetitionResult(id) {
+            const content = document.getElementById('content-' + id);
+            if (!content) return;
+            const card = content.closest('.competition-card');
+            const titleElem = card.querySelector('h3');
+            const compTitle = titleElem ? titleElem.innerText.trim() : 'Competition Results';
+            const catElem = card.querySelector('[class*="bg-amber-500/10"]');
+            const category = catElem ? catElem.innerText.trim() : '';
+            const codeElem = card.querySelector('.font-heading.text-amber-400');
+            const code = codeElem ? codeElem.innerText.trim() : '';
+            const tableHtml = card.querySelector('table') ? card.querySelector('table').outerHTML : '';
+
+            const printWin = window.open('', '_blank', 'width=900,height=700');
+            printWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${code ? '#' + code + ' - ' : ''}${compTitle} Official Results | SIRAJUL IRFAN</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #0f172a; background: #fff; }
+                        .header { text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 16px; margin-bottom: 24px; }
+                        .header h1 { font-size: 24px; margin: 0; color: #0f172a; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
+                        .header h2 { font-size: 14px; margin: 6px 0 0; color: #d97706; font-weight: 700; letter-spacing: 1px; }
+                        .comp-box { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+                        .comp-box .title { font-size: 18px; font-weight: 700; color: #0f172a; }
+                        .comp-box .badge { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #fde68a; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+                        th { background: #0f172a; color: #fff; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+                        td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #1e293b; }
+                        tr:nth-child(even) { background: #f8fafc; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+                        @media print {
+                            body { padding: 20px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>SIRAJUL IRFAN DA'WA DARS</h1>
+                        <h2>EVENT EUPHORIA '26 — OFFICIAL COMPETITION RESULTS SHEET</h2>
+                    </div>
+                    <div class="comp-box">
+                        <div class="title">${code ? '#' + code + ' ' : ''}${compTitle}</div>
+                        <div class="badge">${category}</div>
+                    </div>
+                    ${tableHtml}
+                    <div class="footer">
+                        <p>Certified Official Results • Event Euphoria Results Portal • Published ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+        }
+
+        function downloadCompetitionResult(id) {
+            printCompetitionResult(id);
+        }
+
+        function shareCompetitionResult(id, title, btnElement) {
+            return shareCompetitionWhatsApp(id, btnElement);
+        }
+
+        let cachedPosterBgDataUrl = null;
+        let cachedFontEmbedCss = null;
+
+        async function preparePosterAssets() {
+            if (!cachedPosterBgDataUrl) {
+                try {
+                    const res = await fetch('/images/Result.jpg');
+                    const blob = await res.blob();
+                    cachedPosterBgDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (e) {
+                    console.warn('[Poster Engine] Could not pre-load Result.jpg as base64 data URL:', e);
+                }
+            }
+
+            if (!cachedFontEmbedCss) {
+                try {
+                    const fontUrls = [
+                        { family: 'Nohemi-Light', weight: 300, format: 'opentype', url: '/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf' },
+                        { family: 'Nohemi-Regular', weight: 400, format: 'opentype', url: '/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf' },
+                        { family: 'Nohemi-SemiBold', weight: 600, format: 'truetype', url: '/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf' }
+                    ];
+
+                    let css = '';
+                    for (const font of fontUrls) {
+                        try {
+                            const res = await fetch(font.url);
+                            const blob = await res.blob();
+                            const dataUrl = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(reader.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(blob);
+                            });
+                            css += `@font-face { font-family: '${font.family}'; src: url('${dataUrl}') format('${font.format}'); font-weight: ${font.weight}; font-style: normal; }\n`;
+                        } catch (fontErr) {
+                            console.warn(`[Poster Engine] Failed embedding font ${font.family}:`, fontErr);
+                        }
+                    }
+                    cachedFontEmbedCss = css;
+                } catch (e) {
+                    console.warn('[Poster Engine] Could not pre-embed poster fonts:', e);
+                }
+            }
+        }
+
+        async function generateCompetitionPoster(compId) {
+            const rawCompsData = document.getElementById('competitions-json-data')?.textContent;
+            let compList = [];
+            try {
+                compList = rawCompsData ? JSON.parse(rawCompsData) : [];
+            } catch (e) {
+                console.error('Error parsing competitions JSON data:', e);
+            }
+
+            const comp = compList.find(c => String(c.id) === String(compId)) || compList.find(c => String(c.code) === String(compId));
+            if (!comp) {
+                throw new Error('Competition details not found for poster export.');
+            }
+
+            const wrapperElem = document.getElementById('poster-render-wrapper');
+
+            try {
+                // Pre-load assets as Base64 Data URLs to avoid CORS and fetch failures
+                await preparePosterAssets();
+
+                const bgImgElem = document.querySelector('#poster-render-card img');
+                if (bgImgElem && cachedPosterBgDataUrl) {
+                    bgImgElem.src = cachedPosterBgDataUrl;
+                }
+
+                // Format Result Number
+                let resNum = comp.formattedCode || comp.code || comp.resultNumber || '01';
+                resNum = String(resNum).trim();
+                if (/^\d+$/.test(resNum) && resNum.length < 2) {
+                    resNum = resNum.padStart(2, '0');
+                }
+
+                // Competition Title
+                const compTitle = comp.title || comp.name || 'Competition';
+
+                // Extract 1st, 2nd, 3rd place winners
+                const winners = Array.isArray(comp.winners) ? comp.winners : [];
+                const w1 = winners.find(w => w.rank === 1 || String(w.prize).includes('1st') || String(w.rank) === '1');
+                const w2 = winners.find(w => w.rank === 2 || String(w.prize).includes('2nd') || String(w.rank) === '2');
+                const w3 = winners.find(w => w.rank === 3 || String(w.prize).includes('3rd') || String(w.rank) === '3');
+
+                // Populate Poster DOM Template
+                const cardElem = document.getElementById('poster-render-card');
+
+                // 1st Winner
+                const row1 = document.getElementById('poster-winner-1');
+                if (w1) {
+                    row1.style.display = 'block';
+                    document.getElementById('poster-p1-name').innerText = w1.participant || w1.participantName || w1.name || '-';
+                    document.getElementById('poster-t1-name').innerText = w1.team || w1.teamName || w1.rawTeamName || '-';
+                } else {
+                    row1.style.display = 'none';
+                }
+
+                // 2nd Winner
+                const row2 = document.getElementById('poster-winner-2');
+                if (w2) {
+                    row2.style.display = 'block';
+                    document.getElementById('poster-p2-name').innerText = w2.participant || w2.participantName || w2.name || '-';
+                    document.getElementById('poster-t2-name').innerText = w2.team || w2.teamName || w2.rawTeamName || '-';
+                } else {
+                    row2.style.display = 'none';
+                }
+
+                // 3rd Winner
+                const row3 = document.getElementById('poster-winner-3');
+                if (w3) {
+                    row3.style.display = 'block';
+                    document.getElementById('poster-p3-name').innerText = w3.participant || w3.participantName || w3.name || '-';
+                    document.getElementById('poster-t3-name').innerText = w3.team || w3.teamName || w3.rawTeamName || '-';
+                } else {
+                    row3.style.display = 'none';
+                }
+
+                document.getElementById('poster-res-num').innerText = resNum;
+
+                // Category / Zone Subheading
+                let compCategory = comp.category || comp.categoryName || comp.catName || comp.stageCategory || 'GENERAL';
+                if (typeof compCategory === 'object') {
+                    compCategory = compCategory.name || compCategory.title || compCategory.label || 'GENERAL';
+                }
+                compCategory = String(compCategory).trim().toUpperCase();
+                if (compCategory === 'PRIME') compCategory = 'PRIME ZONE';
+                if (compCategory === 'CORE') compCategory = 'CORE ZONE';
+                if (compCategory === 'ALPHA') compCategory = 'ALPHA ZONE';
+
+                const catElem = document.getElementById('poster-comp-category');
+                if (catElem) {
+                    catElem.innerText = compCategory;
+                }
+
+                const titleElem = document.getElementById('poster-comp-title');
+                if (titleElem) {
+                    titleElem.innerText = compTitle;
+                    // Balanced font sizing and line height based on title length
+                    if (compTitle.length > 24) {
+                        titleElem.style.fontSize = '84px';
+                        titleElem.style.lineHeight = '1.14';
+                    } else if (compTitle.length > 14) {
+                        titleElem.style.fontSize = '96px';
+                        titleElem.style.lineHeight = '1.12';
+                    } else {
+                        titleElem.style.fontSize = '104px';
+                        titleElem.style.lineHeight = '1.1';
+                    }
+                }
+
+                // Make poster wrapper visible to browser layout engine during capture
+                if (wrapperElem) {
+                    wrapperElem.style.opacity = '1';
+                    wrapperElem.style.zIndex = '99999';
+                    wrapperElem.style.left = '0';
+                    wrapperElem.style.top = '0';
+                }
+
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                }
+
+                // Resolve html-to-image toPng engine
+                const getEngine = () => {
+                    if (window.htmlToImage && typeof window.htmlToImage.toPng === 'function') {
+                        return window.htmlToImage;
+                    }
+                    if (typeof htmlToImage !== 'undefined' && typeof htmlToImage.toPng === 'function') {
+                        return htmlToImage;
+                    }
+                    return null;
+                };
+
+                let renderEngine = getEngine();
+                if (!renderEngine) {
+                    // Fallback dynamic load if script was delayed or blocked
+                    await new Promise((resolve) => {
+                        const s = document.createElement('script');
+                        s.src = '/js/html-to-image.js';
+                        s.onload = resolve;
+                        s.onerror = resolve;
+                        document.head.appendChild(s);
+                    });
+                    renderEngine = getEngine();
+                }
+
+                if (!renderEngine || typeof renderEngine.toPng !== 'function') {
+                    throw new Error('html-to-image render engine is not loaded');
+                }
+
+                const toPng = renderEngine.toPng.bind(renderEngine);
+
+                const options = {
+                    width: 2480,
+                    height: 2953,
+                    pixelRatio: 1,
+                    cacheBust: true
+                };
+
+                if (cachedFontEmbedCss) {
+                    options.fontEmbedCSS = cachedFontEmbedCss;
+                }
+
+                // Warmup pass to prime canvas rendering engine
+                try {
+                    await toPng(cardElem, options);
+                } catch (e) { }
+
+                // Capture high-res PNG image
+                const dataUrl = await toPng(cardElem, options);
+                const cleanName = compTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+                const filename = `Result_#${resNum}_${cleanName}.png`;
+
+                return {
+                    comp,
+                    compTitle,
+                    resNum,
+                    filename,
+                    dataUrl
+                };
+            } finally {
+                // Restore poster wrapper hidden state
+                if (wrapperElem) {
+                    wrapperElem.style.opacity = '0';
+                    wrapperElem.style.zIndex = '-99999';
+                    wrapperElem.style.left = '-9999px';
+                }
+            }
+        }
+
+        function formatWhatsAppCaption(comp, compTitle, resNum) {
+            let num = resNum || comp.formattedCode || comp.code || comp.resultNumber || '01';
+            num = String(num).trim();
+            if (/^\d+$/.test(num) && num.length < 2) {
+                num = num.padStart(2, '0');
+            }
+
+            const title = compTitle || comp.title || comp.name || 'Competition';
+            const compId = comp.id || comp._id || '';
+            const shareUrl = compId ? `${window.location.origin}/result?id=${encodeURIComponent(compId)}` : `${window.location.origin}/result`;
+
+            return `*EUPHORIA 2K26*\n${title} | Result #${num}\n\n🔗 ${shareUrl}`;
+        }
+
+        let activeModalPoster = { dataUrl: '', filename: '', compTitle: '' };
+
+        function openPosterPreviewModal(dataUrl, filename, compTitle) {
+            activeModalPoster = { dataUrl, filename, compTitle };
+            const modal = document.getElementById('poster-preview-modal');
+            const img = document.getElementById('preview-modal-img');
+            const title = document.getElementById('preview-modal-title');
+
+            if (modal && img) {
+                img.src = dataUrl;
+                if (title) title.innerText = compTitle ? compTitle.trim() : 'Competition Result';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function downloadPosterFromModal() {
+            if (!activeModalPoster || !activeModalPoster.dataUrl) return;
+
+            try {
+                const link = document.createElement('a');
+                link.download = activeModalPoster.filename || 'Euphoria-Result-Poster.png';
+                link.href = activeModalPoster.dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                console.error('[Modal Poster Download Error]:', err);
+            }
+        }
+
+        function closePosterPreviewModal() {
+            const modal = document.getElementById('poster-preview-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        // Close modal on Escape key press
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closePosterPreviewModal();
+            }
+        });
+
+        async function downloadCompetitionPoster(compId, btnElement) {
+            const originalBtnHtml = btnElement ? btnElement.innerHTML : '';
+            if (btnElement) {
+                btnElement.disabled = true;
+                btnElement.classList.add('opacity-75', 'cursor-wait');
+                btnElement.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">sync</span><span>Generating...</span>`;
+            }
+
+            try {
+                const { compTitle, filename, dataUrl } = await generateCompetitionPoster(compId);
+
+                // Directly display the generated poster in the centered popup modal (no new tab / blank window)
+                openPosterPreviewModal(dataUrl, filename, compTitle);
+
+            } catch (err) {
+                console.error('[Poster Generation Error Details]:', err);
+                if (err && err.stack) console.error('Stack trace:', err.stack);
+                alert(`Could not generate poster image: ${err.message || 'Unknown error'}`);
+            } finally {
+                if (btnElement) {
+                    btnElement.disabled = false;
+                    btnElement.classList.remove('opacity-75', 'cursor-wait');
+                    btnElement.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+
+        async function shareCompetitionWhatsApp(compId, btnElement) {
+            const originalBtnHtml = btnElement ? btnElement.innerHTML : '';
+            if (btnElement) {
+                btnElement.disabled = true;
+                btnElement.classList.add('opacity-75', 'cursor-wait');
+                btnElement.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">sync</span><span>Generating...</span>`;
+            }
+
+            try {
+                const { comp, compTitle, resNum, filename, dataUrl } = await generateCompetitionPoster(compId);
+                const captionText = formatWhatsAppCaption(comp, compTitle, resNum);
+
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                let sharedViaWebShare = false;
+
+                // Try Web Share API with image file on supported mobile browsers
+                if (isMobile && navigator.canShare) {
+                    try {
+                        const blobRes = await fetch(dataUrl);
+                        const blob = await blobRes.blob();
+                        const posterFile = new File([blob], filename, { type: 'image/png' });
+
+                        if (navigator.canShare({ files: [posterFile] })) {
+                            await navigator.share({
+                                files: [posterFile],
+                                title: `Euphoria 2k26 - ${compTitle}`,
+                                text: captionText
+                            });
+                            sharedViaWebShare = true;
+                        }
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') {
+                            return;
+                        }
+                        console.warn('[Web Share API failed, falling back to direct WhatsApp]:', shareErr);
+                    }
+                }
+
+                // If not mobile Web Share with image, directly open WhatsApp with pre-formatted caption & download poster
+                if (!sharedViaWebShare) {
+                    // Trigger download of the poster so the user has the image immediately
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Open WhatsApp directly with the pre-formatted caption
+                    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(captionText)}`;
+                    window.open(whatsappUrl, '_blank');
+                }
+
+            } catch (err) {
+                console.error('[WhatsApp Share Error]:', err);
+                if (err && err.stack) console.error('Stack trace:', err.stack);
+                alert(`Could not share result to WhatsApp: ${err.message || 'Unknown error'}`);
+            } finally {
+                if (btnElement) {
+                    btnElement.disabled = false;
+                    btnElement.classList.remove('opacity-75', 'cursor-wait');
+                    btnElement.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
