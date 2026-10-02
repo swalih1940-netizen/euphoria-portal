@@ -236,12 +236,32 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`🎉 EVENT EUPHORIA PORTAL STANDALONE SERVER`);
-    console.log(`🌐 Local URL:     http://localhost:${PORT}`);
-    console.log(`🌐 Subdomain:     ${SUBDOMAIN_URL}`);
-    console.log(`🔗 FestFlow API:  ${process.env.FESTFLOW_BASE_URL || 'Default Live URL'}`);
-    console.log(`====================================================`);
+// 8. FestFlow API Live Connectivity & Diagnostics Endpoint
+app.get('/api/debug-festflow', async (req, res) => {
+    try {
+        const diagnostics = await festflowService.runDiagnostics();
+        res.status(diagnostics.overallStatus === 'ok' ? 200 : 502).json(diagnostics);
+    } catch (err) {
+        res.status(500).json({
+            error: err.message,
+            stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
+        });
+    }
 });
+
+// Start Server locally or in non-serverless standalone execution
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`====================================================`);
+        console.log(`🎉 EVENT EUPHORIA PORTAL STANDALONE SERVER`);
+        console.log(`🌐 Local URL:     http://localhost:${PORT}`);
+        console.log(`🌐 Subdomain:     ${SUBDOMAIN_URL}`);
+        console.log(`🔗 FestFlow API:  ${festflowService.getBaseUrl()}`);
+        console.log(`====================================================`);
+    });
+}
+
+// Export for Vercel Serverless Function Deployment
+module.exports = app;
+
+

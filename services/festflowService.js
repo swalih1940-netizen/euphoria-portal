@@ -1,21 +1,40 @@
 /**
  * FestFlow API Service Module for Sirajul Irfan (Event Euphoria)
  * Base URL: https://euphoria.festfloww.com/api/public
- * API Key: da7f60cc99a7b59e264186130f6cb70c4f493eb0c1fa287ff4ae9d7f42235d52
  */
 
 const axios = require('axios');
 const https = require('https');
 
-const rawBaseUrl = process.env.FESTFLOW_BASE_URL || 'https://euphoria.festfloww.com/api/public';
-const FESTFLOW_BASE_URL = rawBaseUrl.replace(/\/+$|\s+$/g, '');
-const FESTFLOW_API_KEY = (process.env.FESTFLOW_API_KEY || 'da7f60cc99a7b59e264186130f6cb70c4f493eb0c1fa287ff4ae9d7f42235d52').trim();
-const REQUEST_TIMEOUT_MS = parseInt(process.env.FESTFLOW_TIMEOUT_MS, 10) || 5000;
+// Helper getters to dynamically and safely read/clean environment variables
+function getBaseUrl() {
+    const raw = process.env.FESTFLOW_BASE_URL || 'https://euphoria.festfloww.com/api/public';
+    return String(raw).trim().replace(/^["']+|["']+$/g, '').replace(/\/+$/, '');
+}
 
-// Custom HTTPS Agent disabling strict SSL verification to handle local SSL/cert blocks
+function getApiKey() {
+    const raw = process.env.FESTFLOW_API_KEY || 'da7f60cc99a7b59e264186130f6cb70c4f493eb0c1fa287ff4ae9d7f42235d52';
+    return String(raw).trim().replace(/^["']+|["']+$/g, '');
+}
+
+function getRequestTimeoutMs() {
+    return parseInt(process.env.FESTFLOW_TIMEOUT_MS, 10) || 6000;
+}
+
+// In-Memory Short-Lived Cache (30s TTL) for Serverless Optimization & Error Resilience
+const CACHE_TTL_MS = 30 * 1000;
+const cacheStore = {
+    competitions: null,
+    competitionsTime: 0,
+    teamPoints: null,
+    teamPointsTime: 0
+};
+
+// Custom HTTPS Agent: keepAlive: false is essential for Serverless/Vercel
+// to avoid ECONNRESET and socket hangup errors when Lambda containers freeze/unfreeze
 const httpsAgent = new https.Agent({
     rejectUnauthorized: false,
-    keepAlive: true
+    keepAlive: false
 });
 
 // Fallback collections exported as default structure
@@ -46,7 +65,9 @@ const FALLBACK_COMPETITIONS = [];
 /**
  * Fast & Robust API Request helper using Axios with HTTPS Agent
  */
-async function fetchWithAxios(url, options = {}, maxRetries = 2, timeoutMs = REQUEST_TIMEOUT_MS) {
+async function fetchWithAxios(url, options = {}, maxRetries = 2, timeoutMs = null) {
+    const apiKey = getApiKey();
+    const effectiveTimeout = timeoutMs || getRequestTimeoutMs();
     let lastError = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -54,37 +75,36 @@ async function fetchWithAxios(url, options = {}, maxRetries = 2, timeoutMs = REQ
             const response = await axios.get(url, {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'x-api-key': FESTFLOW_API_KEY,
+                    'x-api-key': apiKey,
                     'Accept': 'application/json, text/plain, */*',
                     'Cache-Control': 'no-cache',
                     ...options.headers
                 },
                 httpsAgent: httpsAgent,
-                timeout: timeoutMs,
+                timeout: effectiveTimeout,
                 validateStatus: () => true
             });
             return response;
         } catch (err) {
             lastError = err;
             const errCode = err.code || (err.cause ? err.cause.code : 'UNKNOWN');
-            
-            if (errCode === 'ENOTFOUND' || errCode === 'ECONNREFUSED' || errCode === 'ENETUNREACH' || errCode === 'ETIMEDOUT' || errCode === 'ECONNRESET') {
-                console.warn(`[FestFlow Service Network Warning] Local DNS/Network unreachable (${errCode}).`);
-                break;
-            }
 
-            console.error(`[FestFlow API Axios Attempt ${attempt}/${maxRetries} Error]:`, {
+            console.warn(`[FestFlow API Axios Attempt ${attempt}/${maxRetries} Warning]:`, {
                 url: url,
                 message: err.message,
                 code: errCode
             });
 
+            if (errCode === 'ENOTFOUND') {
+                break;
+            }
+
             if (attempt < maxRetries) {
-                await new Promise(res => setTimeout(res, 300));
+                await new Promise(res => setTimeout(res, 350 * attempt));
             }
         }
     }
-    throw lastError || new Error('FestFlow Request Failed');
+    throw lastError || new Error(`FestFlow Request Failed for ${url}`);
 }
 
 /**
@@ -295,12 +315,20 @@ function extractTeamName(w) {
  * Fetch Team Points / House Standings dynamically aggregated from FestFlow API team-points and competition results
  */
 async function fetchTeamPoints(existingCompetitions = null) {
-    const endpoint = `${FESTFLOW_BASE_URL}/team-points`;
+    const baseUrl = getBaseUrl();
+    const endpoint = `${baseUrl}/team-points`;
+
+    // Check memory cache first (if not forcing fresh or if recent)
+    const now = Date.now();
+    if (!existingCompetitions && cacheStore.teamPoints && (now - cacheStore.teamPointsTime < CACHE_TTL_MS)) {
+        return cacheStore.teamPoints;
+    }
+
     let apiScoresMap = {};
 
     try {
         console.log(`[FestFlow API Axios Request] GET ${endpoint}`);
-        const response = await fetchWithAxios(endpoint, {}, 2, REQUEST_TIMEOUT_MS);
+        const response = await fetchWithAxios(endpoint, {}, 2);
 
         if (response && response.status === 200) {
             const rawData = response.data;
@@ -325,6 +353,8 @@ async function fetchTeamPoints(existingCompetitions = null) {
                     apiScoresMap[tName] = Math.max(apiScoresMap[tName] || 0, pts);
                 }
             });
+        } else {
+            console.error(`[FestFlow API Error] GET ${endpoint} returned status ${response?.status}:`, response?.data);
         }
     } catch (err) {
         console.warn(`[FestFlow API Catch] /team-points unreachable (${err.message}).`);
@@ -375,7 +405,7 @@ async function fetchTeamPoints(existingCompetitions = null) {
 
     const maxPoints = Math.max(...aggregatedList.map(t => t.points), 1);
 
-    return aggregatedList.map((item, idx) => {
+    const calculatedHouses = aggregatedList.map((item, idx) => {
         const rank = idx + 1;
         const progress = Math.min(100, Math.round((item.points / maxPoints) * 100));
 
@@ -390,16 +420,30 @@ async function fetchTeamPoints(existingCompetitions = null) {
             barGradient: rank === 1 ? 'from-amber-500 to-amber-300' : (rank === 2 ? 'from-emerald-500 to-emerald-300' : 'from-cyan-500 to-cyan-300')
         };
     });
+
+    // Cache the successful aggregation
+    cacheStore.teamPoints = calculatedHouses;
+    cacheStore.teamPointsTime = Date.now();
+
+    return calculatedHouses;
 }
 
 /**
  * Fetch Published Competitions & Results strictly from FestFlow API
  */
 async function fetchCompetitions() {
-    const endpoint = `${FESTFLOW_BASE_URL}/competitions`;
+    const baseUrl = getBaseUrl();
+    const endpoint = `${baseUrl}/competitions`;
+
+    // Check memory cache first
+    const now = Date.now();
+    if (cacheStore.competitions && (now - cacheStore.competitionsTime < CACHE_TTL_MS)) {
+        return cacheStore.competitions;
+    }
+
     try {
         console.log(`[FestFlow API Axios Request] GET ${endpoint}`);
-        const response = await fetchWithAxios(endpoint, {}, 2, REQUEST_TIMEOUT_MS);
+        const response = await fetchWithAxios(endpoint, {}, 2);
 
         if (response && response.status === 200) {
             const rawData = response.data;
@@ -426,9 +470,9 @@ async function fetchCompetitions() {
                     // Query sub-endpoint for competition results (/competitions/:id/results)
                     if (compId) {
                         try {
-                            const subUrl = `${FESTFLOW_BASE_URL}/competitions/${compId}/results`;
+                            const subUrl = `${baseUrl}/competitions/${compId}/results`;
                             console.log(`[FestFlow API Axios Sub-Request] GET ${subUrl}`);
-                            const subResponse = await fetchWithAxios(subUrl, {}, 2, 3000);
+                            const subResponse = await fetchWithAxios(subUrl, {}, 2, 4000);
                             if (subResponse && subResponse.status === 200) {
                                 const subData = subResponse.data;
                                 console.log(`[FESTFLOW RAW RESULTS API RESPONSE for ${compId}]:\n`, typeof subData === 'string' ? subData : JSON.stringify(subData, null, 2));
@@ -519,25 +563,104 @@ async function fetchCompetitions() {
                     };
                 }));
 
-                // Return ONLY live competitions parsed from API!
+                // Update cache store
+                cacheStore.competitions = mappedCompetitions;
+                cacheStore.competitionsTime = Date.now();
+
                 return mappedCompetitions;
             }
 
             console.warn(`[FestFlow API Warning] 200 OK received from /competitions but zero items found in API payload.`);
+            if (cacheStore.competitions && cacheStore.competitions.length > 0) {
+                console.log(`[FestFlow Service] Using ${cacheStore.competitions.length} cached competition item(s) as resilient fallback.`);
+                return cacheStore.competitions;
+            }
             return [];
         }
 
-        console.warn(`[FestFlow API Error] GET /competitions status ${response?.status || 'No Response'}.`);
+        console.error(`[FestFlow API Error] GET ${endpoint} returned status ${response?.status}:`, response?.data);
+        if (cacheStore.competitions && cacheStore.competitions.length > 0) {
+            return cacheStore.competitions;
+        }
         return [];
     } catch (err) {
         console.warn(`[FestFlow API Catch] /competitions error (${err.message}).`);
+        if (cacheStore.competitions && cacheStore.competitions.length > 0) {
+            console.log(`[FestFlow Service] Returning cached competitions following network catch.`);
+            return cacheStore.competitions;
+        }
         return [];
     }
+}
+
+/**
+ * Diagnostic utility to verify FestFlow connectivity, credentials, and API payloads
+ */
+async function runDiagnostics() {
+    const baseUrl = getBaseUrl();
+    const apiKey = getApiKey();
+    const maskedKey = apiKey ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)} (length: ${apiKey.length})` : 'MISSING';
+
+    const report = {
+        timestamp: new Date().toISOString(),
+        config: {
+            baseUrl: baseUrl,
+            apiKeyConfigured: !!apiKey,
+            apiKeyMasked: maskedKey,
+            timeoutMs: getRequestTimeoutMs(),
+            isVercel: !!process.env.VERCEL,
+            nodeEnv: process.env.NODE_ENV
+        },
+        endpoints: {}
+    };
+
+    // Test /team-points
+    const startTp = Date.now();
+    try {
+        const resTp = await fetchWithAxios(`${baseUrl}/team-points`, {}, 1, 5000);
+        report.endpoints.teamPoints = {
+            status: resTp?.status,
+            latencyMs: Date.now() - startTp,
+            dataPresent: !!resTp?.data,
+            sample: resTp?.data?.data ? Object.keys(resTp.data.data) : null
+        };
+    } catch (e) {
+        report.endpoints.teamPoints = {
+            error: e.message,
+            code: e.code || 'UNKNOWN',
+            latencyMs: Date.now() - startTp
+        };
+    }
+
+    // Test /competitions
+    const startComp = Date.now();
+    try {
+        const resComp = await fetchWithAxios(`${baseUrl}/competitions`, {}, 1, 5000);
+        const compCount = Array.isArray(resComp?.data?.data) ? resComp.data.data.length : (Array.isArray(resComp?.data) ? resComp.data.length : 0);
+        report.endpoints.competitions = {
+            status: resComp?.status,
+            latencyMs: Date.now() - startComp,
+            competitionsFound: compCount
+        };
+    } catch (e) {
+        report.endpoints.competitions = {
+            error: e.message,
+            code: e.code || 'UNKNOWN',
+            latencyMs: Date.now() - startComp
+        };
+    }
+
+    report.overallStatus = (report.endpoints.teamPoints?.status === 200 && report.endpoints.competitions?.status === 200) ? 'ok' : 'degraded';
+    return report;
 }
 
 module.exports = {
     fetchTeamPoints,
     fetchCompetitions,
     FALLBACK_HOUSES,
-    FALLBACK_COMPETITIONS
+    FALLBACK_COMPETITIONS,
+    getBaseUrl,
+    getApiKey,
+    runDiagnostics
 };
+
