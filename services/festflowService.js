@@ -13,7 +13,11 @@ function getBaseUrl() {
 }
 
 function getApiKey() {
-    const raw = process.env.FESTFLOW_API_KEY || 'da7f60cc99a7b59e264186130f6cb70c4f493eb0c1fa287ff4ae9d7f42235d52';
+    let raw = process.env.FESTFLOW_API_KEY;
+    // Guard against placeholder strings copied from .env.example into production env vars
+    if (!raw || raw.includes('your_festflow_api_key_here') || raw.includes('your_api_key') || raw.length < 32) {
+        raw = 'da7f60cc99a7b59e264186130f6cb70c4f493eb0c1fa287ff4ae9d7f42235d52';
+    }
     return String(raw).trim().replace(/^["']+|["']+$/g, '');
 }
 
