@@ -80,40 +80,8 @@
 
 <body class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen pb-24">
 
-    <!-- PIN Authentication Screen (Shown if not yet authenticated) -->
-    <div id="admin-pin-screen" class="fixed inset-0 z-50 bg-[#070a12] flex items-center justify-center p-4">
-        <div class="glass-card max-w-md w-full p-8 rounded-3xl border border-amber-500/20 text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl"></div>
-            
-            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
-            </div>
-
-            <h2 class="text-2xl font-bold font-heading text-white">Event Euphoria Admin</h2>
-            <p class="text-slate-400 text-xs mt-1.5 mb-6">Enter Admin PIN or Master Password to manage festival photos and uploads.</p>
-
-            <form id="pin-login-form" class="space-y-4">
-                <div class="relative">
-                    <input type="password" id="admin-pin-input" placeholder="Enter Admin PIN" required autofocus
-                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-center text-lg text-white font-mono tracking-widest placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" />
-                </div>
-                <div id="pin-error-msg" class="text-xs text-red-400 font-semibold hidden">Incorrect PIN. Please try again.</div>
-
-                <button type="submit"
-                    class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/20 active:scale-95 transition-all">
-                    Unlock Admin Access
-                </button>
-            </form>
-
-            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
-                <span>Default PIN: <strong class="text-slate-400 font-mono">euphoria2026</strong></span>
-                <a href="/" class="text-amber-400 hover:underline">Return to Portal</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Admin Dashboard (Hidden until PIN verified) -->
-    <div id="admin-dashboard-container" class="hidden">
+    <!-- Main Admin Dashboard -->
+    <div id="admin-dashboard-container">
 
         <!-- Top Admin Header -->
         <header class="bg-[#0b101e]/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40">
@@ -126,6 +94,11 @@
                     <span class="px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
                         Admin Suite
                     </span>
+                    <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-[11px] text-slate-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-slate-400">Authenticated:</span>
+                        <span class="font-mono font-semibold text-amber-400">{{#if adminUser}}{{adminUser}}{{else}}sisa@26{{/if}}</span>
+                    </div>
                 </div>
 
                 <!-- Navigation Shortcuts -->
@@ -147,11 +120,12 @@
                         <span class="material-symbols-outlined text-sm">home</span>
                         <span class="hidden sm:inline">Portal</span>
                     </a>
-                    <button id="admin-logout-btn"
-                        class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1 transition-all"
-                        title="Lock Admin Session">
-                        <span class="material-symbols-outlined text-sm">lock</span>
-                    </button>
+                    <a href="/admin/logout" id="admin-logout-btn"
+                        class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1.5 transition-all"
+                        title="Log Out of Admin Session">
+                        <span class="material-symbols-outlined text-sm">logout</span>
+                        <span class="hidden sm:inline">Logout</span>
+                    </a>
                 </div>
             </div>
         </header>
@@ -347,46 +321,17 @@
 
     <!-- Admin Panel JavaScript Logic -->
     <script>
-        // Master Admin PIN verification
-        const CORRECT_PIN = 'euphoria2026';
         let allAdminPhotos = [];
 
-        // Check auth status on load
-        function checkAdminAuth() {
-            const isAuth = localStorage.getItem('euphoria_admin_auth') === 'true';
-            const pinScreen = document.getElementById('admin-pin-screen');
-            const dashboard = document.getElementById('admin-dashboard-container');
-
-            if (isAuth) {
-                pinScreen.classList.add('hidden');
-                dashboard.classList.remove('hidden');
-                loadAdminPhotos();
-            } else {
-                pinScreen.classList.remove('hidden');
-                dashboard.classList.add('hidden');
-            }
-        }
-
-        // Handle PIN submit
-        document.getElementById('pin-login-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const enteredPin = document.getElementById('admin-pin-input').value.trim();
-            const errorMsg = document.getElementById('pin-error-msg');
-
-            if (enteredPin === CORRECT_PIN || enteredPin === 'sisa2026') {
-                localStorage.setItem('euphoria_admin_auth', 'true');
-                errorMsg.classList.add('hidden');
-                checkAdminAuth();
-            } else {
-                errorMsg.classList.remove('hidden');
-                document.getElementById('admin-pin-input').focus();
-            }
+        // Load admin photos immediately upon page load (Server-authenticated)
+        document.addEventListener('DOMContentLoaded', function () {
+            loadAdminPhotos();
         });
 
-        // Logout / Lock
+        // Logout handler (clears client storage as well)
         document.getElementById('admin-logout-btn')?.addEventListener('click', function () {
             localStorage.removeItem('euphoria_admin_auth');
-            checkAdminAuth();
+            localStorage.removeItem('euphoria_admin_token');
         });
 
         // Alert Banner Helper

@@ -5,7 +5,12 @@
       "src": "app.js",
       "use": "@vercel/node",
       "config": {
-        "maxDuration": 30
+        "maxDuration": 30,
+        "includeFiles": [
+          "views/**",
+          "data/**",
+          "public/**"
+        ]
       }
     }
   ],

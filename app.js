@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const hbs = require('hbs');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const festflowService = require('./services/festflowService');
@@ -413,31 +414,181 @@ app.get('/api/tv/live-data', async (req, res) => {
     }
 });
 
-// 7. Admin Panel: Festival Photo Upload & Management
-app.get(['/admin', '/admin/gallery', '/admin/photos'], (req, res) => {
+// ==========================================
+// 7. ADMIN AUTHENTICATION & SECURITY
+// ==========================================
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'sisa@26').trim();
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'sisa123').trim();
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'euphoria_admin_session_key_2026_sisa';
+const ADMIN_COOKIE_NAME = 'euphoria_admin_session';
+
+function generateAdminToken() {
+    const timestamp = Date.now();
+    const payload = `${ADMIN_USERNAME}:${timestamp}`;
+    const hash = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(payload).digest('hex');
+    return `${timestamp}.${hash}`;
+}
+
+function verifyAdminToken(token) {
+    if (!token || typeof token !== 'string') return false;
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const [timestampStr, providedHash] = parts;
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp)) return false;
+    // Expire session after 7 days
+    const maxAge = 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() - timestamp > maxAge || timestamp > Date.now() + 60000) {
+        return false;
+    }
+    const payload = `${ADMIN_USERNAME}:${timestamp}`;
+    const expectedHash = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(payload).digest('hex');
+    if (providedHash.length !== expectedHash.length) return false;
+    try {
+        return crypto.timingSafeEqual(Buffer.from(providedHash, 'utf8'), Buffer.from(expectedHash, 'utf8'));
+    } catch (e) {
+        return false;
+    }
+}
+
+function getCookie(req, name) {
+    const cookieHeader = req.headers && req.headers.cookie;
+    if (!cookieHeader) return null;
+    const cookies = cookieHeader.split(';');
+    for (let c of cookies) {
+        const [k, ...v] = c.trim().split('=');
+        if (k === name) {
+            return decodeURIComponent(v.join('='));
+        }
+    }
+    return null;
+}
+
+function isAdminAuthenticated(req) {
+    // 1. Check session cookie
+    const sessionToken = getCookie(req, ADMIN_COOKIE_NAME);
+    if (sessionToken && verifyAdminToken(sessionToken)) {
+        return true;
+    }
+    // 2. Check authorization header or custom token for API calls
+    const authHeader = req.headers && (req.headers.authorization || req.headers['x-admin-token']);
+    if (authHeader) {
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+        if (verifyAdminToken(token)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function requireAdminAuth(req, res, next) {
+    if (isAdminAuthenticated(req)) {
+        return next();
+    }
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({
+            success: false,
+            error: 'Unauthorized. Admin credentials required.'
+        });
+    }
+    return res.redirect('/admin/login');
+}
+
+// 7a. Admin Login GET Route
+app.get('/admin/login', (req, res) => {
+    if (isAdminAuthenticated(req)) {
+        return res.redirect('/admin');
+    }
+    res.render('adminLogin', {
+        title: `ADMIN LOGIN | Event Euphoria '26`,
+        error: req.query.error ? 'Invalid username or password. Please try again.' : null,
+        username: req.query.u || '',
+        isLandingPage: false
+    });
+});
+
+// 7b. Admin Login POST Route (Strictly requires Username: "sisa@26" and Password: "sisa123")
+app.post('/admin/login', (req, res) => {
+    const { username, password } = req.body || {};
+    const cleanUser = (username || '').trim();
+    const cleanPass = (password || '').trim();
+
+    const isMatch = (cleanUser === ADMIN_USERNAME) && (cleanPass === ADMIN_PASSWORD);
+
+    if (isMatch) {
+        const token = generateAdminToken();
+        const isProduction = process.env.NODE_ENV === 'production';
+        res.cookie(ADMIN_COOKIE_NAME, token, {
+            httpOnly: true,
+            secure: isProduction,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax',
+            path: '/'
+        });
+
+        const isJson = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.is('json');
+        if (isJson) {
+            return res.json({ success: true, redirect: '/admin', token });
+        }
+        return res.redirect('/admin');
+    }
+
+    // Invalid Credentials
+    const isJson = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.is('json');
+    if (isJson) {
+        return res.status(401).json({
+            success: false,
+            error: 'Invalid username or password. Please try again.'
+        });
+    }
+
+    res.render('adminLogin', {
+        title: `ADMIN LOGIN | Event Euphoria '26`,
+        error: 'Invalid username or password. Please try again.',
+        username: cleanUser,
+        isLandingPage: false
+    });
+});
+
+// 7c. Admin Logout Route
+app.all('/admin/logout', (req, res) => {
+    res.clearCookie(ADMIN_COOKIE_NAME, { path: '/' });
+    res.redirect('/admin/login');
+});
+
+// 7d. Admin Dashboard: Festival Photo Upload & Management
+app.get(['/admin', '/admin/gallery', '/admin/photos'], requireAdminAuth, (req, res) => {
     try {
         const photos = galleryService.getAllPhotos();
         res.render('adminGallery', {
             title: `ADMIN PANEL | Festival Photo Manager | Event Euphoria '26`,
-            photos: photos,
+            photos: photos || [],
+            adminUser: ADMIN_USERNAME,
             isLandingPage: false
         });
     } catch (err) {
         console.error('[Euphoria Portal] Error rendering admin gallery:', err);
-        res.status(500).send('Internal Server Error loading Admin Panel');
+        res.render('adminGallery', {
+            title: `ADMIN PANEL | Festival Photo Manager | Event Euphoria '26`,
+            photos: galleryService.INITIAL_PHOTOS || [],
+            adminUser: ADMIN_USERNAME,
+            isLandingPage: false
+        });
     }
 });
 
-app.get('/api/admin/gallery/list', (req, res) => {
+// Protected Admin API Endpoints
+app.get('/api/admin/gallery/list', requireAdminAuth, (req, res) => {
     try {
         const photos = galleryService.getAllPhotos();
         res.json({ success: true, photos });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error('[Admin Gallery List Error]:', err);
+        res.json({ success: true, photos: galleryService.INITIAL_PHOTOS || [] });
     }
 });
 
-app.post('/api/admin/gallery/upload', (req, res) => {
+app.post('/api/admin/gallery/upload', requireAdminAuth, (req, res) => {
     try {
         const { title, caption, category, house, imageData, imageUrl, originalSize, compressedSize, originalFilename } = req.body;
         if (!imageData && !imageUrl) {
@@ -461,7 +612,7 @@ app.post('/api/admin/gallery/upload', (req, res) => {
     }
 });
 
-app.post('/api/admin/gallery/upload-batch', (req, res) => {
+app.post('/api/admin/gallery/upload-batch', requireAdminAuth, (req, res) => {
     try {
         const { photos: incomingPhotos, category, house } = req.body;
         if (!Array.isArray(incomingPhotos) || incomingPhotos.length === 0) {
@@ -485,7 +636,7 @@ app.post('/api/admin/gallery/upload-batch', (req, res) => {
     }
 });
 
-app.post('/api/admin/gallery/delete/:id', (req, res) => {
+app.post('/api/admin/gallery/delete/:id', requireAdminAuth, (req, res) => {
     try {
         const success = galleryService.deletePhoto(req.params.id);
         if (success) {

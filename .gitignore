@@ -6,7 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 .vscode/
 .idea/
-public/uploads/
+public/uploads/*
+public/uploads/gallery/*
+!public/uploads/gallery/.gitkeep
 
 # Android Build & Local Config
 .gradle/
