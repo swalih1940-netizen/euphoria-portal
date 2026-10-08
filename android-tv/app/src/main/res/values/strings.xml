@@ -1,14 +1,14 @@
 <resources>
     <string name="app_name">Euphoria TV</string>
-    <string name="default_url">http://10.168.75.217:3001/tv</string>
-    <string name="default_local_url">http://10.168.75.217:3001/tv</string>
+    <string name="default_url">https://euphoria.sirajulirfan.com/tv</string>
+    <string name="default_local_url">https://euphoria.sirajulirfan.com/tv</string>
     <string name="default_cloud_url">https://euphoria.sirajulirfan.com/tv</string>
     <string name="default_emulator_url">http://10.0.2.2:3001/tv</string>
     <string name="settings_title">Display Settings</string>
-    <string name="enter_url_hint">Enter TV Display URL (http://... or https://...)</string>
+    <string name="enter_url_hint">Enter TV Display URL (https://... or http://...)</string>
     <string name="save_and_reload">Save &amp; Load</string>
     <string name="btn_cloud_url">Cloud URL (Production)</string>
-    <string name="btn_local_url">Local Server (10.168.75.217)</string>
+    <string name="btn_local_url">Reset to Production URL</string>
     <string name="btn_hard_refresh">Hard Refresh</string>
     <string name="btn_cancel">Cancel</string>
     <string name="connecting">Connecting to Euphoria TV Display...</string>

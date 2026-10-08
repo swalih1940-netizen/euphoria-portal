@@ -10,7 +10,8 @@ buildscript {
 }
 
 allprojects {
-    layout.buildDirectory = file("C:/Users/sanus_uu6200b/AppData/Local/Temp/android-tv-build/${project.name}")
+    def tempDir = System.getProperty("java.io.tmpdir")
+    layout.buildDirectory = file("${tempDir}/android-tv-build/${project.name}")
 }
 
 task clean(type: Delete) {

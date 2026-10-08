@@ -154,9 +154,10 @@ function writePhotos(photos) {
     ensureDirs();
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
+        console.log(`[GalleryService] Successfully updated ${DATA_FILE} (${inMemoryPhotos.length} photos remaining)`);
         return true;
     } catch (e) {
-        console.warn('[GalleryService] Notice: writing data file (persisted in-memory):', e.message);
+        console.error('[GalleryService] Notice: writing data file (persisted in-memory):', e.message);
         return false;
     }
 }
@@ -166,7 +167,7 @@ function writePhotos(photos) {
  */
 function getAllPhotos() {
     const photos = readPhotos();
-    return photos.sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+    return [...photos].sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 }
 
 /**
@@ -251,57 +252,130 @@ function savePhotos(photosArray) {
 }
 
 /**
- * Delete a photo by ID or path and remove physical file if stored locally
+ * Delete a photo by ID, imageUrl, originalFilename or title, and permanently remove physical file from storage
  */
 function deletePhoto(identifier) {
-    if (!identifier) return false;
+    if (!identifier) {
+        console.warn('[GalleryService] deletePhoto called without an identifier.');
+        return { success: false, error: 'No photo identifier provided.' };
+    }
     ensureDirs();
     const photos = readPhotos();
-    const cleanId = decodeURIComponent(String(identifier)).trim();
+    
+    // Normalize identifier string
+    let rawStr = String(identifier).trim().replace(/^["']+|["']+$/g, '');
+    let cleanId = rawStr;
+    try {
+        cleanId = decodeURIComponent(rawStr).trim();
+    } catch (e) {}
 
-    // Match by ID, imageUrl, or filename
+    const cleanBase = cleanId.split('?')[0].split('#')[0].replace(/\\/g, '/');
+    const baseName = path.basename(cleanBase);
+
+    console.log(`[GalleryService] deletePhoto searching for: raw="${rawStr}", cleanId="${cleanId}", baseName="${baseName}"`);
+
+    // Match by ID, imageUrl, originalFilename, title, or basename
     const index = photos.findIndex(p => {
         if (!p) return false;
-        if (p.id && String(p.id).trim() === cleanId) return true;
-        if (p.imageUrl && String(p.imageUrl).trim() === cleanId) return true;
-        if (p.imageUrl && path.basename(p.imageUrl) === path.basename(cleanId)) return true;
+        const pId = String(p.id || '').trim();
+        const pImg = String(p.imageUrl || '').trim().replace(/\\/g, '/');
+        const pImgClean = pImg.split('?')[0].split('#')[0];
+        const pBasename = path.basename(pImgClean);
+
+        if (pId && (pId === rawStr || pId === cleanId || pId === cleanBase)) return true;
+        if (pImg && (pImg === rawStr || pImg === cleanId || pImgClean === cleanBase)) return true;
+        if (pBasename && baseName && pBasename === baseName) return true;
+        if (p.originalFilename && (p.originalFilename === rawStr || p.originalFilename === cleanId || p.originalFilename === baseName)) return true;
+        if (p.title && (p.title === rawStr || p.title === cleanId)) return true;
         return false;
     });
 
     if (index === -1) {
-        return false;
+        console.warn(`[GalleryService] Photo "${rawStr}" not found in ${photos.length} records.`);
+        return { success: false, error: `Photo "${rawStr}" not found in gallery records.` };
     }
 
     const photo = photos[index];
+    console.log(`[GalleryService] Found target photo: ID=${photo.id}, Image=${photo.imageUrl}`);
 
-    // Attempt to remove physical file if stored locally without crashing
+    // Attempt to remove physical file if stored on server disk
+    let fileDeleted = false;
+    let deletedFilePath = null;
+    let fileError = null;
+
     if (photo.imageUrl) {
-        let localPath = null;
-        if (photo.imageUrl.startsWith('/uploads/gallery/')) {
-            const filename = path.basename(photo.imageUrl);
-            localPath = path.join(UPLOADS_DIR, filename);
-        } else if (photo.imageUrl.startsWith('/uploads/')) {
-            const filename = path.basename(photo.imageUrl);
-            localPath = path.join(__dirname, '..', 'public', 'uploads', filename);
-        }
+        const publicDir = path.resolve(__dirname, '..', 'public');
+        const candidatePaths = [];
 
-        if (localPath) {
+        let imgUrlClean = String(photo.imageUrl).split('?')[0].split('#')[0].trim();
+        if (imgUrlClean.startsWith('http://') || imgUrlClean.startsWith('https://')) {
             try {
-                if (fs.existsSync(localPath)) {
-                    fs.unlinkSync(localPath);
-                    console.log('[GalleryService] Successfully removed physical image file:', localPath);
+                imgUrlClean = new URL(imgUrlClean).pathname;
+            } catch (e) {}
+        }
+        try {
+            imgUrlClean = decodeURIComponent(imgUrlClean);
+        } catch (e) {}
+        imgUrlClean = imgUrlClean.replace(/\\/g, '/');
+
+        // 1. Direct path relative to public/
+        const relPath = imgUrlClean.startsWith('/') ? imgUrlClean.slice(1) : imgUrlClean;
+        candidatePaths.push(path.resolve(publicDir, relPath));
+
+        // 2. Direct inside uploads/gallery/
+        const fileName = path.basename(imgUrlClean);
+        candidatePaths.push(path.resolve(UPLOADS_DIR, fileName));
+        candidatePaths.push(path.resolve(publicDir, 'uploads', fileName));
+        candidatePaths.push(path.resolve(publicDir, 'images', fileName));
+
+        // Deduplicate paths
+        const uniquePaths = Array.from(new Set(candidatePaths));
+
+        for (const targetPath of uniquePaths) {
+            // Guard against directory traversal outside public directory
+            if (!targetPath.startsWith(publicDir)) continue;
+
+            try {
+                if (fs.existsSync(targetPath)) {
+                    const stat = fs.statSync(targetPath);
+                    if (stat.isFile()) {
+                        fs.unlinkSync(targetPath);
+                        fileDeleted = true;
+                        deletedFilePath = targetPath;
+                        console.log(`[GalleryService] Permanently deleted physical image file: ${targetPath}`);
+                        break;
+                    }
                 }
             } catch (err) {
-                // Gracefully ignore permission or lock errors; data removal should still succeed
-                console.warn('[GalleryService] Note: Could not unlink local image file (permission or locked):', err.message);
+                fileError = err.message;
+                console.error(`[GalleryService] Failed to unlink file ${targetPath}:`, err.message);
             }
+        }
+
+        if (!fileDeleted && !deletedFilePath) {
+            console.log(`[GalleryService] Note: No physical file found on disk for "${photo.imageUrl}" (may be external or already deleted).`);
         }
     }
 
-    // Remove from in-memory and persistent storage
+    // Permanently remove record from in-memory and JSON storage
     photos.splice(index, 1);
-    writePhotos(photos);
-    return true;
+    const writeOk = writePhotos(photos);
+
+    if (!writeOk) {
+        console.error(`[GalleryService] Critical: Failed to persist deletion to ${DATA_FILE}`);
+    } else {
+        console.log(`[GalleryService] Permanently removed photo "${photo.id}". ${photos.length} photos remaining in database.`);
+    }
+
+    return {
+        success: true,
+        id: photo.id,
+        photo,
+        fileDeleted,
+        deletedFilePath,
+        fileError,
+        remainingCount: photos.length
+    };
 }
 
 module.exports = {

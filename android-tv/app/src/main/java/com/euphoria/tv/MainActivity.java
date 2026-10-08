@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
 
     private static final String PREFS_NAME = "EuphoriaTVPrefs";
     private static final String KEY_PORTAL_URL = "portal_url";
-    private static final String DEFAULT_SERVER_URL = "http://10.168.75.217:3001/tv";
+    private static final String DEFAULT_SERVER_URL = "https://euphoria.sirajulirfan.com/tv";
     private static final String DEFAULT_LOCAL_URL = "http://10.168.75.217:3001/tv";
     private static final String DEFAULT_PRODUCTION_URL = "https://euphoria.sirajulirfan.com/tv";
 
@@ -58,11 +58,18 @@ public class MainActivity extends Activity {
         // Keep TV screen awake at all times (Kiosk mode)
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        // Ensure display layout extends to full 16:9 screen edges without cutout or letterboxing
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+
         setContentView(R.layout.activity_main);
 
         preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String savedUrl = preferences.getString(KEY_PORTAL_URL, null);
-        if (savedUrl == null || savedUrl.equals("https://euphoria.sirajulirfan.com/tv") || savedUrl.contains("192.168.1.100")) {
+        // If saved URL points to obsolete local IP, or is unset, default to the live production server URL
+        if (savedUrl == null || savedUrl.contains("10.168.75.217") || savedUrl.contains("192.168.") || savedUrl.contains("10.0.2.2") || savedUrl.contains(":3001")) {
             currentUrl = DEFAULT_SERVER_URL;
             preferences.edit().putString(KEY_PORTAL_URL, DEFAULT_SERVER_URL).apply();
         } else {
@@ -110,6 +117,8 @@ public class MainActivity extends Activity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setTextZoom(100);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         // Performance & Cache
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);

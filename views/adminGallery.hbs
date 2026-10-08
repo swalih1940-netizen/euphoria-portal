@@ -289,7 +289,7 @@
                                 <span class="material-symbols-outlined text-cyan-400">collections</span>
                                 <span>Published Gallery Photos</span>
                             </h2>
-                            <button onclick="loadAdminPhotos()" class="text-slate-400 hover:text-white flex items-center gap-1 text-xs font-semibold">
+                            <button id="admin-reload-btn" onclick="loadAdminPhotos()" class="text-slate-400 hover:text-white flex items-center gap-1 text-xs font-semibold transition-all cursor-pointer">
                                 <span class="material-symbols-outlined text-sm">refresh</span>
                                 <span>Reload</span>
                             </button>
@@ -627,43 +627,77 @@
         // ==============================================
         // LOAD & MANAGE EXISTING PHOTOS
         // ==============================================
-        async function loadAdminPhotos() {
+        // ==============================================
+        // LOAD & MANAGE EXISTING PHOTOS
+        // ==============================================
+        async function loadAdminPhotos(silent = false) {
             const container = document.getElementById('admin-photos-container');
             const statTotal = document.getElementById('stat-total-photos');
+            const reloadBtn = document.getElementById('admin-reload-btn');
+
+            if (!silent && reloadBtn) {
+                reloadBtn.classList.add('opacity-50', 'pointer-events-none');
+                const icon = reloadBtn.querySelector('.material-symbols-outlined');
+                if (icon) icon.classList.add('animate-spin');
+            }
 
             try {
-                const res = await fetch('/api/admin/gallery/list');
+                const token = localStorage.getItem('euphoria_admin_token');
+                const headers = { 'Accept': 'application/json' };
+                if (token) {
+                    headers['x-admin-token'] = token;
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                // Cache busting query parameter and no-store cache directive to prevent stale cached responses
+                const res = await fetch(`/api/admin/gallery/list?_nocache=${Date.now()}`, {
+                    headers,
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
                 const data = await res.json();
 
-                if (data.photos) {
+                if (data && Array.isArray(data.photos)) {
                     allAdminPhotos = data.photos;
-                    statTotal.innerText = allAdminPhotos.length;
-                    renderPhotosList(allAdminPhotos);
+                    if (statTotal) statTotal.innerText = allAdminPhotos.length;
+                    applyAdminSearchFilter();
+                } else if (data && !data.success && res.status === 401) {
+                    showAlert('Session expired. Redirecting to login...', false);
+                    setTimeout(() => window.location.href = '/admin/login', 1200);
                 }
             } catch (err) {
                 console.error('[Failed to fetch admin photos]:', err);
-                container.innerHTML = `
-                    <div class="text-center py-8 text-red-400 text-xs">
-                        Failed to load photos. Please refresh.
-                    </div>
-                `;
+                if (!silent) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-red-400 text-xs">
+                            Failed to load photos. Please try clicking Reload again.
+                        </div>
+                    `;
+                }
+            } finally {
+                if (!silent && reloadBtn) {
+                    reloadBtn.classList.remove('opacity-50', 'pointer-events-none');
+                    const icon = reloadBtn.querySelector('.material-symbols-outlined');
+                    if (icon) icon.classList.remove('animate-spin');
+                }
             }
         }
 
         function renderPhotosList(photos) {
             const container = document.getElementById('admin-photos-container');
-            if (photos.length === 0) {
+            if (!photos || photos.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12 text-slate-500">
                         <span class="material-symbols-outlined text-3xl mb-1">no_photography</span>
-                        <p class="text-xs font-semibold">No photos in the gallery yet.</p>
+                        <p class="text-xs font-semibold">No photos found in the gallery.</p>
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = photos.map(photo => `
-                <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group">
+                <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group" data-item-id="${photo.id}">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
                             <img src="${photo.imageUrl}" alt="${photo.title}" class="w-full h-full object-cover" />
@@ -701,6 +735,23 @@
             `).join('');
         }
 
+        // Apply Search Filtering while maintaining list integrity
+        function applyAdminSearchFilter() {
+            const searchInput = document.getElementById('admin-search-input');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            if (!query) {
+                renderPhotosList(allAdminPhotos);
+                return;
+            }
+            const filtered = allAdminPhotos.filter(p => 
+                (p.title && p.title.toLowerCase().includes(query)) ||
+                (p.category && p.category.toLowerCase().includes(query)) ||
+                (p.house && p.house.toLowerCase().includes(query)) ||
+                (p.originalFilename && p.originalFilename.toLowerCase().includes(query))
+            );
+            renderPhotosList(filtered);
+        }
+
         // Event delegation for photo deletion
         document.getElementById('admin-photos-container').addEventListener('click', function (e) {
             const deleteBtn = e.target.closest('.btn-delete-photo');
@@ -712,17 +763,9 @@
         });
 
         // Search in admin
-        document.getElementById('admin-search-input').addEventListener('input', function () {
-            const query = this.value.toLowerCase().trim();
-            const filtered = allAdminPhotos.filter(p => 
-                (p.title && p.title.toLowerCase().includes(query)) ||
-                (p.category && p.category.toLowerCase().includes(query)) ||
-                (p.house && p.house.toLowerCase().includes(query))
-            );
-            renderPhotosList(filtered);
-        });
+        document.getElementById('admin-search-input').addEventListener('input', applyAdminSearchFilter);
 
-        // Delete photo with immediate optimistic UI update
+        // Delete photo with immediate optimistic UI update and background permanent sync
         async function deleteGalleryPhoto(id, title) {
             if (!id) return;
             const photoTitle = title || 'this photo';
@@ -730,34 +773,67 @@
                 return;
             }
 
-            // Save previous state for rollback if server request fails
+            const targetId = String(id).trim();
             const previousPhotos = [...allAdminPhotos];
 
-            // 1. Immediate UI update: remove item from memory and DOM immediately
-            allAdminPhotos = allAdminPhotos.filter(p => p.id !== id && p.imageUrl !== id);
+            // 1. Immediate UI update: filter out the photo from state and DOM immediately
+            allAdminPhotos = allAdminPhotos.filter(p => {
+                if (!p) return false;
+                const pId = String(p.id || '').trim();
+                const pImg = String(p.imageUrl || '').trim();
+                const pImgClean = pImg.split('?')[0].split('#')[0];
+                const targetClean = targetId.split('?')[0].split('#')[0];
+                if (pId === targetId || pId === targetClean) return false;
+                if (pImg === targetId || pImgClean === targetClean) return false;
+                if (p.originalFilename && (p.originalFilename === targetId || p.originalFilename === targetClean)) return false;
+                return true;
+            });
+
             const statTotal = document.getElementById('stat-total-photos');
             if (statTotal) statTotal.innerText = allAdminPhotos.length;
-            renderPhotosList(allAdminPhotos);
+            applyAdminSearchFilter();
 
+            // 2. Transmit Delete Request to Server
             try {
-                const res = await fetch(`/api/admin/gallery/delete/${encodeURIComponent(id)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ id })
+                const token = localStorage.getItem('euphoria_admin_token');
+                const headers = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['x-admin-token'] = token;
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                // Send DELETE request (with fallback to POST for proxy compatibility)
+                let res = await fetch(`/api/admin/gallery/delete/${encodeURIComponent(targetId)}`, {
+                    method: 'DELETE',
+                    headers,
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ id: targetId })
                 });
+
+                if (!res.ok && res.status !== 404 && res.status !== 401 && res.status !== 400) {
+                    res = await fetch(`/api/admin/gallery/delete/${encodeURIComponent(targetId)}`, {
+                        method: 'POST',
+                        headers,
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ id: targetId })
+                    });
+                }
 
                 const data = await res.json().catch(() => ({}));
 
                 if (res.ok && data.success) {
-                    showAlert(`Photo deleted successfully.`, true);
+                    showAlert(`Photo deleted successfully from gallery.`, true);
+                    // Silently sync authoritative state from server without page reload or flicker
+                    loadAdminPhotos(true);
                 } else {
+                    console.error('[Delete Photo Server Error]:', data.error || res.statusText);
                     // Rollback UI update on failure
                     allAdminPhotos = previousPhotos;
                     if (statTotal) statTotal.innerText = allAdminPhotos.length;
-                    renderPhotosList(allAdminPhotos);
+                    applyAdminSearchFilter();
 
                     if (res.status === 401) {
                         showAlert('Session expired. Redirecting to login...', false);
@@ -767,11 +843,11 @@
                     }
                 }
             } catch (err) {
-                console.error('[Delete Photo Error]:', err);
+                console.error('[Delete Photo Network Error]:', err);
                 // Rollback on network failure
                 allAdminPhotos = previousPhotos;
                 if (statTotal) statTotal.innerText = allAdminPhotos.length;
-                renderPhotosList(allAdminPhotos);
+                applyAdminSearchFilter();
                 showAlert('Network error: ' + err.message, false);
             }
         }

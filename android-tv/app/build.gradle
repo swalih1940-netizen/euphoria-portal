@@ -42,14 +42,24 @@ dependencies {
 tasks.register('copyApkToLocal') {
     doLast {
         def srcApk = file("${layout.buildDirectory.get()}/outputs/apk/debug/app-debug.apk")
-        def destDir = file("${projectDir}/build/outputs/apk/debug")
-        if (srcApk.exists() && srcApk.canonicalPath != file("${destDir}/app-debug.apk").canonicalPath) {
-            destDir.mkdirs()
-            copy {
-                from srcApk
-                into destDir
+        def destFile = file("${projectDir}/build/outputs/apk/debug/app-debug.apk")
+        if (srcApk.exists()) {
+            boolean isSame = false
+            try {
+                if (destFile.exists()) {
+                    isSame = (srcApk.toPath().toRealPath().equals(destFile.toPath().toRealPath()))
+                } else if (file("${projectDir}/build").exists()) {
+                    isSame = file("${layout.buildDirectory.get()}").toPath().toRealPath().equals(file("${projectDir}/build").toPath().toRealPath())
+                }
+            } catch (Exception ignored) {}
+
+            if (isSame) {
+                println "Debug APK is directly available at ${destFile.absolutePath}"
+            } else {
+                destFile.parentFile.mkdirs()
+                java.nio.file.Files.copy(srcApk.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                println "Copied debug APK to ${destFile.absolutePath}"
             }
-            println "Copied debug APK to ${destDir}/app-debug.apk"
         }
     }
 }

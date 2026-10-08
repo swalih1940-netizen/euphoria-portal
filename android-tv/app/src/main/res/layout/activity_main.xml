@@ -3,13 +3,15 @@
     android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
     android:background="@color/bg_dark">
 
-    <!-- Primary Hardware Accelerated Kiosk WebView -->
+    <!-- Primary Hardware Accelerated Kiosk WebView (Full 16:9 Match Parent, 100% Width & Height) -->
     <WebView
         android:id="@+id/tvWebView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="false"
         android:background="@color/bg_dark"
         android:focusable="true"
         android:focusableInTouchMode="true"
