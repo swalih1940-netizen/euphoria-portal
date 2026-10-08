@@ -118,17 +118,14 @@ const INITIAL_PHOTOS = [
     }
 ];
 
-// Read photos from storage file (with in-memory fallback for read-only serverless environments)
+// Read photos from storage file (guaranteeing persistent state without resurrecting deleted demo photos)
 function readPhotos() {
-    if (inMemoryPhotos && Array.isArray(inMemoryPhotos) && inMemoryPhotos.length > 0) {
-        return inMemoryPhotos;
-    }
     ensureDirs();
     try {
         if (fs.existsSync(DATA_FILE)) {
             const raw = fs.readFileSync(DATA_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
                 inMemoryPhotos = parsed;
                 return inMemoryPhotos;
             }
@@ -137,27 +134,30 @@ function readPhotos() {
         console.warn('[GalleryService] Notice: reading data file:', e.message);
     }
 
+    if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos)) {
+        return inMemoryPhotos;
+    }
+
+    // Only if file has never been created at all on a completely fresh initialization
     inMemoryPhotos = [...INITIAL_PHOTOS];
     try {
-        if (!fs.existsSync(DATA_FILE)) {
-            fs.writeFileSync(DATA_FILE, JSON.stringify(INITIAL_PHOTOS, null, 2), 'utf-8');
-        }
+        fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
     } catch (e) {
-        // Read-only filesystem / serverless, memory fallback is already set
+        // Read-only filesystem / serverless, memory fallback is set
     }
     return inMemoryPhotos;
 }
 
 // Write photos to storage file
 function writePhotos(photos) {
-    inMemoryPhotos = photos;
+    inMemoryPhotos = Array.isArray(photos) ? [...photos] : [];
     ensureDirs();
     try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(photos, null, 2), 'utf-8');
+        fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
         return true;
     } catch (e) {
         console.warn('[GalleryService] Notice: writing data file (persisted in-memory):', e.message);
-        return true;
+        return false;
     }
 }
 

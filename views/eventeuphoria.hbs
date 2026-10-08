@@ -1256,12 +1256,50 @@
                 openHomeLightbox(currentHomeIndex - 1);
             }
 
-            updateHomeCards();
-            homeCards.forEach((card, idx) => {
-                card.addEventListener('click', function() {
-                    openHomeLightbox(idx);
+            function bindHomeCardListeners() {
+                updateHomeCards();
+                homeCards.forEach((card, idx) => {
+                    card.addEventListener('click', function() {
+                        openHomeLightbox(idx);
+                    });
                 });
-            });
+            }
+
+            bindHomeCardListeners();
+
+            async function fetchHomeLivePhotos() {
+                try {
+                    const res = await fetch('/api/gallery?_nocache=' + Date.now(), { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.success && Array.isArray(data.photos)) {
+                            const grid = document.getElementById('home-gallery-grid');
+                            if (!grid) return;
+                            const topPhotos = data.photos.slice(0, 8);
+                            if (topPhotos.length === 0) {
+                                grid.innerHTML = `
+                                    <div class="col-span-full text-center py-12 text-slate-500">
+                                        <p class="text-xs font-semibold">Photos will be published throughout festival days.</p>
+                                    </div>`;
+                            } else {
+                                grid.innerHTML = topPhotos.map(p => `
+                                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
+                                        data-src="${p.imageUrl}">
+                                        <div class="aspect-[4/3] w-full overflow-hidden bg-slate-950 relative">
+                                            <img src="${p.imageUrl}" alt="${p.title || 'Festival Photo'}" loading="lazy"
+                                                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                                        </div>
+                                    </div>
+                                `).join('');
+                            }
+                            bindHomeCardListeners();
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            fetchHomeLivePhotos();
+            window.addEventListener('focus', fetchHomeLivePhotos);
 
             if (homeCloseBtn) homeCloseBtn.addEventListener('click', closeHomeLightbox);
             if (homeNextBtn) homeNextBtn.addEventListener('click', showNextHomePhoto);

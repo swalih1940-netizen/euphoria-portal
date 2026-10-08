@@ -156,7 +156,7 @@ app.get('/', async (req, res) => {
             title: `EVENT EUPHORIA '26 | Annual Fest | SIRAJUL IRFAN`,
             houses: festflowService.FALLBACK_HOUSES,
             competitions: [],
-            photos: galleryService.INITIAL_PHOTOS.slice(0, 8),
+            photos: galleryService.getAllPhotos().slice(0, 8),
             isLandingPage: true
         });
     }
@@ -232,6 +232,9 @@ app.get(['/eventeuphoria', '/eventeuphoria/*'], (req, res) => {
 
 // 4. Dedicated Festival Gallery Controller & Route
 const renderGalleryPage = (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
         const photos = galleryService.getAllPhotos();
         res.render('gallery', {
@@ -244,7 +247,7 @@ const renderGalleryPage = (req, res) => {
         console.error('[Euphoria Portal] Error rendering gallery:', err);
         res.render('gallery', {
             title: `FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN`,
-            photos: galleryService.INITIAL_PHOTOS,
+            photos: [],
             activeNav: 'gallery',
             isLandingPage: false
         });
@@ -255,6 +258,9 @@ app.get('/gallery', renderGalleryPage);
 
 // 5. Gallery Public JSON API
 app.get('/api/gallery', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
         const category = req.query.category;
         const photos = category ? galleryService.getPhotosByCategory(category) : galleryService.getAllPhotos();
