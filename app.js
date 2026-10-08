@@ -1,9 +1,11 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const hbs = require('hbs');
 require('dotenv').config();
 
 const festflowService = require('./services/festflowService');
+const galleryService = require('./services/galleryService');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,18 +16,19 @@ const MAIN_SITE_URL = (process.env.MAIN_SITE_URL || 'https://sirajulirfan.com').
 const FESTIVAL_NAME = process.env.FESTIVAL_NAME || "Event Euphoria '26";
 const FESTIVAL_DATE_RAW = process.env.FESTIVAL_DATE || '2026-10-10T06:00:00+05:30';
 
-// Setup View Engine
+// Setup View Engine & Register Partials
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+hbs.registerPartials(path.join(__dirname, 'views', 'partials'));
 
 // Static Files with caching
 app.use(express.static(path.join(__dirname, 'public'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
 }));
 
-// Body Parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body Parsers with generous limit for compressed photo payloads
+app.use(express.json({ limit: '35mb' }));
+app.use(express.urlencoded({ extended: true, limit: '35mb' }));
 
 // Helper Functions for IST Date Formatting
 function formatISTDisplay(date) {
@@ -90,6 +93,12 @@ const padTwoFn = function (val) {
 
 hbs.registerHelper('padTwo', padTwoFn);
 
+const orFn = function (...args) {
+    const values = args.slice(0, -1);
+    return values.some(Boolean);
+};
+hbs.registerHelper('or', orFn);
+
 if (hbs.handlebars) {
     hbs.handlebars.registerHelper('json', function (context) {
         const jsonStr = JSON.stringify(context !== undefined ? context : []);
@@ -97,6 +106,7 @@ if (hbs.handlebars) {
     });
     hbs.handlebars.registerHelper('padTwo', padTwoFn);
     hbs.handlebars.registerHelper('eq', function (a, b) { return a === b; });
+    hbs.handlebars.registerHelper('or', orFn);
 }
 
 // Global Context Middleware
@@ -130,11 +140,13 @@ app.get('/', async (req, res) => {
     try {
         const competitions = await festflowService.fetchCompetitions();
         const houses = await festflowService.fetchTeamPoints(competitions);
+        const photos = galleryService.getAllPhotos().slice(0, 8);
 
         res.render('eventeuphoria', {
             title: `EVENT EUPHORIA '26 | Annual Fest | SIRAJUL IRFAN`,
             houses: houses,
             competitions: competitions,
+            photos: photos,
             isLandingPage: true
         });
     } catch (err) {
@@ -143,25 +155,51 @@ app.get('/', async (req, res) => {
             title: `EVENT EUPHORIA '26 | Annual Fest | SIRAJUL IRFAN`,
             houses: festflowService.FALLBACK_HOUSES,
             competitions: [],
+            photos: galleryService.INITIAL_PHOTOS.slice(0, 8),
             isLandingPage: true
         });
     }
 });
 
+// Helper to filter and sort only top 3 position winners (First, Second, and Third place / 1st, 2nd, 3rd)
+function filterToTopThreeWinners(competitionsList) {
+    if (!Array.isArray(competitionsList)) return [];
+    return competitionsList.map(comp => {
+        const rawWinners = Array.isArray(comp.winners) ? comp.winners : [];
+        const topThreeWinners = rawWinners
+            .filter(w => {
+                if (festflowService.isTopThreeWinner && festflowService.isTopThreeWinner(w)) return true;
+                return w.isFirst || w.isSecond || w.isThird;
+            })
+            .sort((a, b) => (Number(a.rank) || 99) - (Number(b.rank) || 99));
+
+        return {
+            ...comp,
+            winners: topThreeWinners
+        };
+    });
+}
+
 // 2. Official Results Controller & Route
 const renderResultsPage = async (req, res) => {
     try {
-        const competitions = await festflowService.fetchCompetitions();
+        const rawCompetitions = await festflowService.fetchCompetitions();
+        // Strictly filter to ensure only the top 3 position winners are passed to the template
+        const competitions = filterToTopThreeWinners(rawCompetitions);
+
         res.render('results', {
             title: `OFFICIAL RESULTS | Event Euphoria '26 | SIRAJUL IRFAN`,
-            competitions: Array.isArray(competitions) ? competitions : [],
+            competitions: competitions,
+            activeNav: 'results',
             isLandingPage: true
         });
     } catch (err) {
         console.error('[Euphoria Portal] Error rendering results:', err);
+        const fallbackCompetitions = filterToTopThreeWinners(festflowService.FALLBACK_COMPETITIONS);
         res.render('results', {
             title: `OFFICIAL RESULTS | Event Euphoria '26 | SIRAJUL IRFAN`,
-            competitions: festflowService.FALLBACK_COMPETITIONS,
+            competitions: fallbackCompetitions,
+            activeNav: 'results',
             isLandingPage: true
         });
     }
@@ -191,13 +229,319 @@ app.get(['/eventeuphoria', '/eventeuphoria/*'], (req, res) => {
     return res.redirect(301, '/');
 });
 
-// 4. Quick SPA Deep-Link Anchors
+// 4. Dedicated Festival Gallery Controller & Route
+const renderGalleryPage = (req, res) => {
+    try {
+        const photos = galleryService.getAllPhotos();
+        res.render('gallery', {
+            title: `FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN`,
+            photos: photos,
+            activeNav: 'gallery',
+            isLandingPage: false
+        });
+    } catch (err) {
+        console.error('[Euphoria Portal] Error rendering gallery:', err);
+        res.render('gallery', {
+            title: `FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN`,
+            photos: galleryService.INITIAL_PHOTOS,
+            activeNav: 'gallery',
+            isLandingPage: false
+        });
+    }
+};
+
+app.get('/gallery', renderGalleryPage);
+
+// 5. Gallery Public JSON API
+app.get('/api/gallery', (req, res) => {
+    try {
+        const category = req.query.category;
+        const photos = category ? galleryService.getPhotosByCategory(category) : galleryService.getAllPhotos();
+        res.json({ success: true, count: photos.length, photos });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 6. Live TV Broadcast Display & Real-Time Stream (/tv)
+app.get(['/tv', '/tv/', '/live-tv', '/display'], async (req, res) => {
+    try {
+        const [houses, competitions] = await Promise.all([
+            festflowService.fetchTeamPoints().catch(() => festflowService.FALLBACK_HOUSES),
+            festflowService.fetchCompetitions().catch(() => festflowService.FALLBACK_COMPETITIONS)
+        ]);
+        const enrichedCompetitions = (competitions || []).map(comp => {
+            let rawZone = comp.zone || comp.zoneName || comp.zone_name || comp.category || comp.categoryName || comp.stageCategory || 'Alpha Zone';
+            if (typeof rawZone === 'object' && rawZone !== null) {
+                rawZone = rawZone.name || rawZone.title || rawZone.label || rawZone.zone || 'Alpha Zone';
+            }
+            let normalizedZone = String(rawZone).trim();
+            const zUpper = normalizedZone.toUpperCase();
+            if (zUpper === 'PRIME' || zUpper === 'PRIME ZONE') normalizedZone = 'Prime Zone';
+            else if (zUpper === 'ALPHA' || zUpper === 'ALPHA ZONE') normalizedZone = 'Alpha Zone';
+            else if (zUpper === 'CORE' || zUpper === 'CORE ZONE') normalizedZone = 'Core Zone';
+            else if (!zUpper.includes('ZONE') && normalizedZone.length > 0) normalizedZone = `${normalizedZone} Zone`;
+
+            return {
+                ...comp,
+                zone: normalizedZone,
+                zoneName: normalizedZone,
+                category: normalizedZone,
+                categoryName: normalizedZone
+            };
+        });
+
+        // Support direct JSON requests via header or query
+        if (req.query.format === 'json' || req.query.json === 'true' || (req.headers.accept && req.headers.accept.includes('application/json') && !req.headers.accept.includes('text/html'))) {
+            return res.json({
+                success: true,
+                title: `LIVE TV DISPLAY | Standings & Real-Time Results | Event Euphoria '26`,
+                houses: houses && houses.length > 0 ? houses : festflowService.FALLBACK_HOUSES,
+                competitions: enrichedCompetitions
+            });
+        }
+
+        res.render('tv', {
+            title: `LIVE TV DISPLAY | Standings & Real-Time Results | Event Euphoria '26`,
+            houses: houses && houses.length > 0 ? houses : festflowService.FALLBACK_HOUSES,
+            competitions: enrichedCompetitions,
+            isLandingPage: false
+        });
+    } catch (err) {
+        console.error('[Euphoria Portal] Error rendering TV view:', err);
+        if (req.query.format === 'json' || req.query.json === 'true') {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.render('tv', {
+            title: `LIVE TV DISPLAY | Standings & Real-Time Results | Event Euphoria '26`,
+            houses: festflowService.FALLBACK_HOUSES,
+            competitions: [],
+            isLandingPage: false
+        });
+    }
+});
+
+// TV API Aliases
+app.get(['/api/tv', '/api/tv/data'], (req, res) => {
+    res.redirect(307, '/api/tv/live-data');
+});
+
+
+// In-memory queue for instant result broadcasts triggered from admin or fest floor
+const pendingTvBroadcasts = [];
+
+app.post('/api/tv/broadcast', (req, res) => {
+    try {
+        const item = req.body;
+        if (!item || (!item.name && !item.title && !item.competitionName)) {
+            return res.status(400).json({ success: false, error: 'Valid competition/result payload required.' });
+        }
+        let rawZone = item.zone || item.zoneName || item.zone_name || item.category || item.categoryName || item.stageCategory || 'Alpha Zone';
+        if (typeof rawZone === 'object' && rawZone !== null) {
+            rawZone = rawZone.name || rawZone.title || rawZone.label || rawZone.zone || 'Alpha Zone';
+        }
+        let normalizedZone = String(rawZone).trim();
+        const zUpper = normalizedZone.toUpperCase();
+        if (zUpper === 'PRIME' || zUpper === 'PRIME ZONE') normalizedZone = 'Prime Zone';
+        else if (zUpper === 'ALPHA' || zUpper === 'ALPHA ZONE') normalizedZone = 'Alpha Zone';
+        else if (zUpper === 'CORE' || zUpper === 'CORE ZONE') normalizedZone = 'Core Zone';
+        else if (!zUpper.includes('ZONE') && normalizedZone.length > 0) normalizedZone = `${normalizedZone} Zone`;
+
+        const broadcastPayload = {
+            id: item.id || `broadcast_${Date.now()}`,
+            timestamp: Date.now(),
+            ...item,
+            zone: normalizedZone,
+            zoneName: normalizedZone,
+            category: normalizedZone,
+            categoryName: normalizedZone
+        };
+        pendingTvBroadcasts.push(broadcastPayload);
+        if (pendingTvBroadcasts.length > 30) pendingTvBroadcasts.shift();
+        res.json({ success: true, broadcast: broadcastPayload });
+    } catch (err) {
+        console.error('[TV Broadcast API Error]:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/tv/live-data', async (req, res) => {
+    try {
+        const [houses, competitions] = await Promise.all([
+            festflowService.fetchTeamPoints(null, true).catch(() => festflowService.FALLBACK_HOUSES),
+            festflowService.fetchCompetitions(true).catch(() => festflowService.FALLBACK_COMPETITIONS)
+        ]);
+
+        // Clean broadcasts older than 3 minutes
+        const cutoff = Date.now() - (3 * 60 * 1000);
+        while (pendingTvBroadcasts.length > 0 && pendingTvBroadcasts[0].timestamp < cutoff) {
+            pendingTvBroadcasts.shift();
+        }
+
+        // Ensure every competition item explicitly guarantees zone and zoneName
+        const enrichedCompetitions = (competitions || []).map(comp => {
+            let rawZone = comp.zone || comp.zoneName || comp.zone_name || comp.category || comp.categoryName || comp.stageCategory || 'Alpha Zone';
+            if (typeof rawZone === 'object' && rawZone !== null) {
+                rawZone = rawZone.name || rawZone.title || rawZone.label || rawZone.zone || 'Alpha Zone';
+            }
+            let normalizedZone = String(rawZone).trim();
+            const zUpper = normalizedZone.toUpperCase();
+            if (zUpper === 'PRIME' || zUpper === 'PRIME ZONE') normalizedZone = 'Prime Zone';
+            else if (zUpper === 'ALPHA' || zUpper === 'ALPHA ZONE') normalizedZone = 'Alpha Zone';
+            else if (zUpper === 'CORE' || zUpper === 'CORE ZONE') normalizedZone = 'Core Zone';
+            else if (!zUpper.includes('ZONE') && normalizedZone.length > 0) normalizedZone = `${normalizedZone} Zone`;
+
+            return {
+                ...comp,
+                zone: normalizedZone,
+                zoneName: normalizedZone,
+                category: normalizedZone,
+                categoryName: normalizedZone
+            };
+        });
+
+        res.json({
+            success: true,
+            timestamp: Date.now(),
+            houses: houses && houses.length > 0 ? houses : festflowService.FALLBACK_HOUSES,
+            competitions: enrichedCompetitions,
+            broadcasts: pendingTvBroadcasts
+        });
+    } catch (err) {
+        console.error('[TV API Live Data Error]:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 7. Admin Panel: Festival Photo Upload & Management
+app.get(['/admin', '/admin/gallery', '/admin/photos'], (req, res) => {
+    try {
+        const photos = galleryService.getAllPhotos();
+        res.render('adminGallery', {
+            title: `ADMIN PANEL | Festival Photo Manager | Event Euphoria '26`,
+            photos: photos,
+            isLandingPage: false
+        });
+    } catch (err) {
+        console.error('[Euphoria Portal] Error rendering admin gallery:', err);
+        res.status(500).send('Internal Server Error loading Admin Panel');
+    }
+});
+
+app.get('/api/admin/gallery/list', (req, res) => {
+    try {
+        const photos = galleryService.getAllPhotos();
+        res.json({ success: true, photos });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/gallery/upload', (req, res) => {
+    try {
+        const { title, caption, category, house, imageData, imageUrl, originalSize, compressedSize, originalFilename } = req.body;
+        if (!imageData && !imageUrl) {
+            return res.status(400).json({ success: false, error: 'No image data or image URL provided.' });
+        }
+        const photo = galleryService.savePhoto({
+            title,
+            caption,
+            category,
+            house,
+            imageData,
+            imageUrl,
+            originalSize,
+            compressedSize,
+            originalFilename
+        });
+        res.json({ success: true, photo });
+    } catch (err) {
+        console.error('[Admin Photo Upload Error]:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/gallery/upload-batch', (req, res) => {
+    try {
+        const { photos: incomingPhotos, category, house } = req.body;
+        if (!Array.isArray(incomingPhotos) || incomingPhotos.length === 0) {
+            return res.status(400).json({ success: false, error: 'No photos provided for bulk upload.' });
+        }
+        const savedPhotos = incomingPhotos.map(item => {
+            return galleryService.savePhoto({
+                title: item.title,
+                originalFilename: item.originalFilename || item.name,
+                category: category || item.category || 'Stage & Performance',
+                house: house || item.house || 'General',
+                imageData: item.imageData,
+                originalSize: item.originalSize,
+                compressedSize: item.compressedSize
+            });
+        });
+        res.json({ success: true, count: savedPhotos.length, photos: savedPhotos });
+    } catch (err) {
+        console.error('[Admin Batch Photo Upload Error]:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/gallery/delete/:id', (req, res) => {
+    try {
+        const success = galleryService.deletePhoto(req.params.id);
+        if (success) {
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ success: false, error: 'Photo not found in gallery storage.' });
+        }
+    } catch (err) {
+        console.error('[Admin Photo Delete Error]:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Photo Download Proxy Endpoint (forces 'Euphoria Photo.jpg' attachment & strips WebP)
+app.get('/api/gallery/download', (req, res) => {
+    try {
+        const { url, name } = req.query;
+        if (!url) return res.status(400).send('Image URL is required');
+        const filename = (name && name.trim()) ? name.trim() : 'Euphoria Photo';
+
+        // 1. If it's a local file in /public/
+        if (url.startsWith('/')) {
+            const cleanPath = url.split('?')[0];
+            const localFile = path.join(__dirname, 'public', cleanPath);
+            if (fs.existsSync(localFile)) {
+                const ext = path.extname(localFile).toLowerCase();
+                const safeExt = ext === '.webp' ? '.jpg' : (ext || '.jpg');
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}${safeExt}"`);
+                return res.sendFile(localFile);
+            }
+        }
+
+        // 2. If it's a Cloudinary URL, force f_jpg & fl_attachment
+        let targetUrl = url;
+        if (targetUrl.includes('cloudinary.com')) {
+            targetUrl = targetUrl.replace(/\.webp(\?.*)?$/i, '.jpg$1');
+            targetUrl = targetUrl.replace(/([/,])f_(?:auto|webp)([,/])/g, '$1f_jpg$2');
+            const safeName = encodeURIComponent(filename.replace(/\s+/g, '_'));
+            if (targetUrl.includes('/image/upload/') && !targetUrl.includes('fl_attachment')) {
+                targetUrl = targetUrl.replace('/image/upload/', `/image/upload/fl_attachment:${safeName},f_jpg/`);
+            }
+        }
+
+        return res.redirect(targetUrl);
+    } catch (err) {
+        console.error('[Gallery Download Route Error]:', err);
+        res.status(500).send('Error preparing download: ' + err.message);
+    }
+});
+
+// 7. Quick Deep-Link Anchors & Compatibility
 app.get('/team-points', (req, res) => res.redirect('/result'));
-app.get('/gallery', (req, res) => res.redirect('/#gallery'));
 app.get('/schedule', (req, res) => res.redirect('/#schedule'));
 app.get('/news', (req, res) => res.redirect('/#schedule'));
 
-// 5. SEO: Sitemap XML
+// 8. SEO: Sitemap XML
 app.get('/sitemap.xml', (req, res) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -211,17 +555,29 @@ app.get('/sitemap.xml', (req, res) => {
         <changefreq>always</changefreq>
         <priority>0.9</priority>
     </url>
+    <url>
+        <loc>${SUBDOMAIN_URL}/gallery</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.85</priority>
+    </url>
+    <url>
+        <loc>${SUBDOMAIN_URL}/tv</loc>
+        <changefreq>always</changefreq>
+        <priority>0.9</priority>
+    </url>
 </urlset>`;
     res.header('Content-Type', 'application/xml');
     res.send(xml);
 });
 
-// 6. SEO: Robots.txt
+// 9. SEO: Robots.txt
 app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
     res.send(`User-agent: *
 Allow: /
 Allow: /result
+Allow: /gallery
+Allow: /tv
 
 Sitemap: ${SUBDOMAIN_URL}/sitemap.xml`);
 });
@@ -251,14 +607,35 @@ app.get('/api/debug-festflow', async (req, res) => {
 
 // Start Server locally or in non-serverless standalone execution
 if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`====================================================`);
-        console.log(`🎉 EVENT EUPHORIA PORTAL STANDALONE SERVER`);
-        console.log(`🌐 Local URL:     http://localhost:${PORT}`);
-        console.log(`🌐 Subdomain:     ${SUBDOMAIN_URL}`);
-        console.log(`🔗 FestFlow API:  ${festflowService.getBaseUrl()}`);
-        console.log(`====================================================`);
-    });
+    const startServer = (port, retryCount = 0) => {
+        const maxRetries = 10;
+        const server = app.listen(port, () => {
+            console.log(`====================================================`);
+            console.log(`🎉 EVENT EUPHORIA PORTAL STANDALONE SERVER`);
+            console.log(`🌐 Local URL:     http://localhost:${port}`);
+            console.log(`🌐 Subdomain:     ${SUBDOMAIN_URL}`);
+            console.log(`🔗 FestFlow API:  ${festflowService.getBaseUrl()}`);
+            console.log(`====================================================`);
+        });
+
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                if (retryCount < maxRetries) {
+                    const nextPort = Number(port) + 1;
+                    console.warn(`⚠️  Port ${port} is in use. Automatically falling back to port ${nextPort}...`);
+                    startServer(nextPort, retryCount + 1);
+                } else {
+                    console.error(`❌ Port ${port} is in use and maximum fallback retries reached.`);
+                    process.exit(1);
+                }
+            } else {
+                console.error('❌ Server startup error:', err);
+                process.exit(1);
+            }
+        });
+    };
+
+    startServer(PORT);
 }
 
 // Export for Vercel Serverless Function Deployment

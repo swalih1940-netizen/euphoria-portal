@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#030610</color>
+    <color name="card_dark">#0a0f24</color>
+    <color name="brand_gold">#f59e0b</color>
+    <color name="brand_gold_light">#fbbf24</color>
+    <color name="brand_cyan">#06b6d4</color>
+    <color name="text_white">#ffffff</color>
+    <color name="text_muted">#94a3b8</color>
+    <color name="border_glow">#1e293b</color>
+</resources>

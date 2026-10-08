@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/card_dark"
+    android:orientation="vertical"
+    android:padding="28dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings_title"
+        android:textColor="@color/brand_gold"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Configure the Euphoria TV portal server address. Use production cloud or local festival server IP."
+        android:textColor="@color/text_muted"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/editPortalUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="#151d3b"
+        android:hint="@string/enter_url_hint"
+        android:inputType="textUri"
+        android:padding="16dp"
+        android:textColor="@color/text_white"
+        android:textColorHint="#64748b"
+        android:textSize="16sp" />
+
+    <!-- Preset quick shortcuts for TV remote navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnPresetLocal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#1e293b"
+            android:text="Local Server"
+            android:textColor="@color/brand_cyan"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnPresetCloud"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:backgroundTint="#1e293b"
+            android:text="Cloud URL"
+            android:textColor="@color/brand_gold_light"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnClearCache"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:backgroundTint="#1e293b"
+            android:text="Clear Cache"
+            android:textColor="@color/text_white"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#334155"
+            android:text="@string/btn_cancel"
+            android:textColor="@color/text_white" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:backgroundTint="@color/brand_gold"
+            android:text="@string/save_and_reload"
+            android:textColor="#000000"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

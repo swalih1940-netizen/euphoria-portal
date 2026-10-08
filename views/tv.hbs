@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html class="dark overflow-hidden" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" name="viewport" />
+    <title>{{title}}</title>
+
+    <!-- PWA & Theme Color -->
+    <link rel="manifest" href="/manifest-tv.json" />
+    <meta name="theme-color" content="#030610" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Euphoria TV" />
+    <meta name="application-name" content="Euphoria TV" />
+
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logo-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/logo-192.png">
+    <link rel="shortcut icon" href="/images/favicon.ico">
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#f59e0b',
+                            goldLight: '#fbbf24',
+                            amberDark: '#b45309',
+                            emerald: '#10b981',
+                            emeraldDark: '#047857',
+                            cyan: '#06b6d4',
+                            deepDark: '#030610',
+                            cardDark: '#0a0f24',
+                            panelDark: '#070c1d'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Outfit', 'sans-serif'],
+                        heading: ['Outfit', 'Chakra Petch', 'sans-serif'],
+                        mono: ['Chakra Petch', 'ui-monospace', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Custom TV Styling, Typography & Poster Fonts -->
+    <style>
+        /* TV Layout Scaling & 100% Screen Stretch */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            min-height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        /* Exact High-Resolution Poster Fonts */
+        @font-face {
+            font-family: 'Nohemi-Light';
+            src: url('/Font/Poster%20Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-Regular';
+            src: url('/Font/Poster%20Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-Medium';
+            src: url('/Font/Poster%20Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi-SemiBold';
+            src: url('/Font/Poster%20Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi';
+            src: url('/Font/Poster%20Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi';
+            src: url('/Font/Poster%20Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi';
+            src: url('/Font/Poster%20Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Nohemi';
+            src: url('/Font/Poster%20Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* Ambient Glow & High-Contrast Scorecards */
+        .tv-fanora-card {
+            background: radial-gradient(circle at 10% 10%, rgba(245, 158, 11, 0.28) 0%, rgba(15, 23, 42, 0.92) 55%),
+                        linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(4, 7, 18, 0.98) 100%);
+            border: 2px solid rgba(245, 158, 11, 0.45);
+            box-shadow: 0 0 80px rgba(245, 158, 11, 0.18), inset 0 1px 0 rgba(251, 191, 36, 0.35);
+        }
+
+        .tv-zahora-card {
+            background: radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.28) 0%, rgba(15, 23, 42, 0.92) 55%),
+                        linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(4, 7, 18, 0.98) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.45);
+            box-shadow: 0 0 80px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(52, 211, 153, 0.35);
+        }
+
+        .gold-shimmer {
+            background: linear-gradient(90deg, #fef08a 0%, #f59e0b 35%, #ffffff 50%, #f59e0b 65%, #d97706 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textShimmer 4s linear infinite;
+        }
+
+        @keyframes textShimmer {
+            to { background-position: 200% center; }
+        }
+
+        /* Animated Full-Screen Result Poster Popup Overlay */
+        #result-popup-modal {
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+        }
+
+        #result-popup-modal.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        #poster-viewport-container {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.88) translateY(30px);
+        }
+
+        #result-popup-modal.active #poster-viewport-container {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Ambient animated backgrounds */
+        .ambient-glow-amber {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(0, 0, 0, 0) 70%);
+            top: -200px;
+            left: -200px;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ambient-glow-emerald {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(0, 0, 0, 0) 70%);
+            bottom: -200px;
+            right: -200px;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ======================================================== */
+        /* TV Live Display: Competition Header & Zone Name Styling   */
+        /* ======================================================== */
+        .tv-poster-zone-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 24px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            margin-bottom: 14px;
+            transition: all 0.4s ease;
+        }
+
+        .tv-poster-zone-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: inline-block;
+            transition: all 0.4s ease;
+        }
+
+        .tv-poster-zone-text {
+            font-family: 'Nohemi-Medium', 'Nohemi-Regular', 'Nohemi', sans-serif;
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+            white-space: nowrap;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+            transition: color 0.3s ease;
+        }
+
+        /* Prime Zone Theme (Warm Festival Gold / Amber) */
+        .tv-poster-zone-badge.zone-prime {
+            background: rgba(245, 158, 11, 0.14);
+            border-color: rgba(245, 158, 11, 0.55);
+            box-shadow: 0 4px 28px rgba(245, 158, 11, 0.28), inset 0 1px 0 rgba(251, 191, 36, 0.35);
+        }
+        .tv-poster-zone-badge.zone-prime .tv-poster-zone-dot {
+            background: #f59e0b;
+            box-shadow: 0 0 14px #f59e0b, 0 0 28px rgba(245, 158, 11, 0.7);
+        }
+        .tv-poster-zone-badge.zone-prime .tv-poster-zone-text {
+            color: #fbbf24;
+        }
+
+        /* Alpha Zone Theme (Cyan / Electric Blue) */
+        .tv-poster-zone-badge.zone-alpha {
+            background: rgba(6, 182, 212, 0.14);
+            border-color: rgba(6, 182, 212, 0.55);
+            box-shadow: 0 4px 28px rgba(6, 182, 212, 0.28), inset 0 1px 0 rgba(103, 232, 249, 0.35);
+        }
+        .tv-poster-zone-badge.zone-alpha .tv-poster-zone-dot {
+            background: #06b6d4;
+            box-shadow: 0 0 14px #06b6d4, 0 0 28px rgba(6, 182, 212, 0.7);
+        }
+        .tv-poster-zone-badge.zone-alpha .tv-poster-zone-text {
+            color: #38bdf8;
+        }
+
+        /* Core Zone Theme (Amethyst / Regal Purple) */
+        .tv-poster-zone-badge.zone-core {
+            background: rgba(168, 85, 247, 0.14);
+            border-color: rgba(168, 85, 247, 0.55);
+            box-shadow: 0 4px 28px rgba(168, 85, 247, 0.28), inset 0 1px 0 rgba(216, 180, 254, 0.35);
+        }
+        .tv-poster-zone-badge.zone-core .tv-poster-zone-dot {
+            background: #a855f7;
+            box-shadow: 0 0 14px #a855f7, 0 0 28px rgba(168, 85, 247, 0.7);
+        }
+        .tv-poster-zone-badge.zone-core .tv-poster-zone-text {
+            color: #c084fc;
+        }
+
+        /* Neutral / Default Zone Theme */
+        .tv-poster-zone-badge.zone-default {
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.30);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+        }
+        .tv-poster-zone-badge.zone-default .tv-poster-zone-dot {
+            background: #ffffff;
+            box-shadow: 0 0 14px #ffffff;
+        }
+        .tv-poster-zone-badge.zone-default .tv-poster-zone-text {
+            color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body class="bg-[#030610] text-slate-100 font-sans h-screen w-full min-w-full max-w-full overflow-hidden select-none p-4 sm:p-6 lg:p-8 relative flex flex-col justify-between">
+
+    <!-- Ambient Background Atmospheric Lights -->
+    <div class="ambient-glow-amber"></div>
+    <div class="ambient-glow-emerald"></div>
+
+    <!-- Canvas for Confetti & Celebration Particles in Result Popup -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- ============================================== -->
+    <!-- 1. TOP CORNER: SUBTLE SCREEN CONTROLS          -->
+    <!-- (Clock/Time completely removed as requested)    -->
+    <!-- ============================================== -->
+    <div class="absolute top-5 right-5 sm:top-6 sm:right-8 lg:top-8 lg:right-10 z-30 flex items-center gap-3">
+        
+        <!-- Audio Chime Toggle Button (Press M) -->
+        <button id="audio-toggle-btn" onclick="toggleAudioChime()" title="Toggle Sound Chime (Press M)"
+            class="p-2.5 rounded-2xl bg-slate-950/80 backdrop-blur-2xl hover:bg-slate-800/80 text-slate-300 hover:text-white border border-slate-800/80 transition-all active:scale-95 shadow-xl">
+            <span id="audio-icon" class="material-symbols-outlined text-lg text-emerald-400">volume_up</span>
+        </button>
+
+        <!-- Fullscreen Controller (Press F) -->
+        <button id="fullscreen-toggle-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (Press F)"
+            class="p-2.5 rounded-2xl bg-slate-950/80 backdrop-blur-2xl hover:bg-slate-800/80 text-slate-300 hover:text-white border border-slate-800/80 transition-all active:scale-95 shadow-xl">
+            <span id="fullscreen-icon" class="material-symbols-outlined text-lg">fullscreen</span>
+        </button>
+
+        <!-- Dynamic Poster Popup Test Alert (Press T) -->
+        <button onclick="triggerDemoResultNotification()" title="Simulate Dynamic Result Poster Popup (Press T)"
+            class="px-3.5 py-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-xl">
+            <span class="material-symbols-outlined text-sm">campaign</span>
+            <span class="hidden sm:inline">Test Poster Alert</span>
+        </button>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 2. TWO MAIN TEAM SCORECARDS (SIDE-BY-SIDE FLEX) -->
+    <!-- ============================================== -->
+    <main class="w-full h-full flex-1 flex flex-row items-stretch justify-center gap-4 sm:gap-5 lg:gap-6 relative z-10 min-h-0 min-w-0">
+
+        <!-- ========================================== -->
+        <!-- A. TEAM FANORA SCORECARD (LEFT)            -->
+        <!-- ========================================== -->
+        <div id="card-team-fanora" class="tv-fanora-card flex-1 w-1/2 min-w-0 rounded-[1.75rem] sm:rounded-[2.25rem] lg:rounded-[2.5rem] p-5 sm:p-6 lg:p-8 flex flex-col justify-between relative overflow-hidden transition-all duration-700 h-full">
+            
+            <!-- Giant Watermark Background Letter -->
+            <div class="absolute -right-6 -bottom-6 text-amber-500/[0.04] select-none pointer-events-none font-black text-[10rem] sm:text-[14rem] lg:text-[18rem] font-heading leading-none">
+                F
+            </div>
+
+            <!-- Top Header: Crest, Team Name & Dynamic Rank Badge with Stars -->
+            <div class="flex items-start justify-between relative z-10 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4 lg:gap-5 min-w-0">
+                    <div class="w-13 h-13 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-2xl sm:rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-extrabold text-2xl sm:text-3xl lg:text-4xl shadow-2xl border border-amber-500/50 shrink-0">
+                        <span class="material-symbols-outlined text-2xl sm:text-3xl lg:text-4xl">local_fire_department</span>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[11px] sm:text-xs lg:text-sm font-mono uppercase tracking-widest text-amber-400 font-bold block truncate">
+                            Championship House
+                        </span>
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-heading font-black text-white tracking-wide uppercase drop-shadow-md truncate">
+                            Team Fanora
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Rank Status Badge with Stars (3 stars for 1st place, 2 stars for 2nd) -->
+                <div id="badge-rank-fanora" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-amber-400 text-slate-950 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0">
+                    <div id="badge-stars-fanora" class="flex items-center gap-1">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <span id="rank-text-fanora">1ST PLACE</span>
+                </div>
+            </div>
+
+            <!-- Centerpiece: Points Counter -->
+            <div class="my-auto py-2 sm:py-3 lg:py-4 text-center relative z-10 flex flex-col items-center justify-center flex-1 min-h-0">
+                <p class="text-[11px] sm:text-xs lg:text-sm uppercase font-mono font-bold tracking-widest text-amber-400/90 mb-1 sm:mb-2">
+                    Total Championship Score
+                </p>
+                <div class="text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem] xl:text-[9rem] font-mono font-black text-amber-400 tracking-tight drop-shadow-[0_20px_45px_rgba(245,158,11,0.35)] leading-none flex items-baseline justify-center gap-2 sm:gap-3">
+                    <span id="pts-count-fanora">0</span>
+                    <span class="text-xl sm:text-2xl lg:text-4xl font-extrabold text-amber-300 font-sans tracking-normal">PTS</span>
+                </div>
+                <div id="fanora-margin-pill" class="mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-xs sm:text-sm font-mono font-bold text-amber-300">
+                    Current Leader
+                </div>
+            </div>
+
+            <!-- Bottom Footer: Team Name & Star Rating Display -->
+            <div class="relative z-10 pt-3 sm:pt-4 border-t border-amber-500/20 flex items-center justify-between shrink-0">
+                <div>
+                    <span class="text-[10px] sm:text-xs font-mono uppercase text-amber-400/80 tracking-wider block font-bold">Team</span>
+                    <span class="text-base sm:text-lg lg:text-2xl font-extrabold text-white tracking-wide">Team Fanora</span>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <span class="text-[10px] sm:text-xs font-mono uppercase text-amber-400/80 tracking-wider block font-bold mb-0.5 sm:mb-1">Championship Stars</span>
+                    <div id="stars-footer-fanora" class="flex items-center gap-1 sm:gap-1.5 text-amber-300">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- B. TEAM ZAHORA SCORECARD (RIGHT)           -->
+        <!-- ========================================== -->
+        <div id="card-team-zahora" class="tv-zahora-card flex-1 w-1/2 min-w-0 rounded-[1.75rem] sm:rounded-[2.25rem] lg:rounded-[2.5rem] p-5 sm:p-6 lg:p-8 flex flex-col justify-between relative overflow-hidden transition-all duration-700 h-full">
+            
+            <!-- Giant Watermark Background Letter -->
+            <div class="absolute -right-6 -bottom-6 text-emerald-500/[0.04] select-none pointer-events-none font-black text-[10rem] sm:text-[14rem] lg:text-[18rem] font-heading leading-none">
+                Z
+            </div>
+
+            <!-- Top Header: Crest, Team Name & Dynamic Rank Badge with Stars -->
+            <div class="flex items-start justify-between relative z-10 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4 lg:gap-5 min-w-0">
+                    <div class="w-13 h-13 sm:w-16 sm:h-16 lg:w-18 lg:h-18 rounded-2xl sm:rounded-3xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-extrabold text-2xl sm:text-3xl lg:text-4xl shadow-2xl border border-emerald-500/50 shrink-0">
+                        <span class="material-symbols-outlined text-2xl sm:text-3xl lg:text-4xl">military_tech</span>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[11px] sm:text-xs lg:text-sm font-mono uppercase tracking-widest text-emerald-400 font-bold block truncate">
+                            Championship House
+                        </span>
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-heading font-black text-white tracking-wide uppercase drop-shadow-md truncate">
+                            Team Zahora
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Rank Status Badge with Stars (3 stars for 1st place, 2 stars for 2nd) -->
+                <div id="badge-rank-zahora" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0">
+                    <div id="badge-stars-zahora" class="flex items-center gap-1">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <span id="rank-text-zahora">2ND PLACE</span>
+                </div>
+            </div>
+
+            <!-- Centerpiece: Points Counter -->
+            <div class="my-auto py-2 sm:py-3 lg:py-4 text-center relative z-10 flex flex-col items-center justify-center flex-1 min-h-0">
+                <p class="text-[11px] sm:text-xs lg:text-sm uppercase font-mono font-bold tracking-widest text-emerald-400/90 mb-1 sm:mb-2">
+                    Total Championship Score
+                </p>
+                <div class="text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem] xl:text-[9rem] font-mono font-black text-emerald-400 tracking-tight drop-shadow-[0_20px_45px_rgba(16,185,129,0.35)] leading-none flex items-baseline justify-center gap-2 sm:gap-3">
+                    <span id="pts-count-zahora">0</span>
+                    <span class="text-xl sm:text-2xl lg:text-4xl font-extrabold text-emerald-300 font-sans tracking-normal">PTS</span>
+                </div>
+                <div id="zahora-margin-pill" class="mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs sm:text-sm font-mono font-bold text-emerald-300">
+                    Contender
+                </div>
+            </div>
+
+            <!-- Bottom Footer: Team Name & Star Rating Display -->
+            <div class="relative z-10 pt-3 sm:pt-4 border-t border-emerald-500/20 flex items-center justify-between shrink-0">
+                <div>
+                    <span class="text-[10px] sm:text-xs font-mono uppercase text-emerald-400/80 tracking-wider block font-bold">Team</span>
+                    <span class="text-base sm:text-lg lg:text-2xl font-extrabold text-white tracking-wide">Team Zahora</span>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <span class="text-[10px] sm:text-xs font-mono uppercase text-emerald-400/80 tracking-wider block font-bold mb-0.5 sm:mb-1">Championship Stars</span>
+                    <div id="stars-footer-zahora" class="flex items-center gap-1 sm:gap-1.5 text-emerald-300">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ============================================== -->
+    <!-- 3. DYNAMIC FULL-SCREEN RESULT POSTER POPUP     -->
+    <!-- (Pops up full-screen for 10-15s on publish)    -->
+    <!-- ============================================== -->
+    <div id="result-popup-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-5 bg-slate-950/92 backdrop-blur-3xl opacity-0 invisible pointer-events-none transition-all duration-500 overflow-hidden" onclick="if(event.target === this) dismissResultPopup();">
+        
+        <!-- Ambient Glowing Aura Behind Poster -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+            <div class="w-[85vw] h-[85vh] max-w-[1200px] bg-gradient-to-r from-amber-500/15 via-yellow-500/20 to-emerald-500/15 rounded-full blur-[140px] animate-pulse"></div>
+        </div>
+
+        <!-- Top Floating Status Bar & Controls -->
+        <div class="w-full max-w-4xl flex items-center justify-between px-4 py-2 sm:py-2.5 mb-2 sm:mb-3 rounded-2xl bg-slate-900/85 border border-slate-700/60 backdrop-blur-2xl shadow-2xl relative z-20">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span class="w-3 h-3 rounded-full bg-amber-400 animate-ping"></span>
+                <div class="px-3 py-1 rounded-xl bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs font-mono tracking-widest uppercase flex items-center gap-1.5 shadow-md">
+                    <span class="material-symbols-outlined text-sm sm:text-base">campaign</span>
+                    <span>OFFICIAL RESULT ANNOUNCEMENT</span>
+                </div>
+                <span id="popup-category-badge" class="px-3 py-1 rounded-xl bg-slate-800 text-cyan-400 font-bold text-[11px] sm:text-xs font-mono border border-cyan-500/30 uppercase">
+                    ALPHA ZONE
+                </span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-950/70 border border-slate-800 text-xs font-mono text-amber-300">
+                    <span class="material-symbols-outlined text-sm">schedule</span>
+                    <span id="popup-countdown-badge">12s</span>
+                </div>
+                <button onclick="dismissResultPopup()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800/90 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 flex items-center justify-center transition-all border border-slate-700 active:scale-95" title="Dismiss (Esc)">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Scaled Poster Viewport Container (16:9 Widescreen TV Aspect Ratio) -->
+        <div id="poster-viewport-container" class="relative z-20 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(245,158,11,0.35),0_30px_70px_rgba(0,0,0,0.9)] border-2 border-amber-400/60 bg-[#141414] flex items-center justify-center" style="max-height: 82vh; height: 82vh; aspect-ratio: 16 / 9;">
+            
+            <!-- Exact Generated TV Poster (1920px x 1080px Full HD) -->
+            <div id="tv-poster-card" style="width: 1920px; height: 1080px; position: absolute; top: 0; left: 0; transform-origin: top left; background: #141414; user-select: none; overflow: hidden;">
+                
+                <!-- Background Image Template -->
+                <img src="/images/Tv-Result-Tumblate.jpg" id="tv-poster-bg" alt="Result Poster Background" style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; object-fit: cover; z-index: 1;" />
+
+                <!-- Patch to cover static template circles when custom rows (e.g. multiple 2nd places) are needed -->
+                <div id="tv-poster-circle-cover" style="display: none; position: absolute; top: 450px; left: 310px; width: 130px; height: 460px; background: #141414; z-index: 4;"></div>
+
+                <!-- Result Number on Top Left: Nohemi Medium font -->
+                <div id="tv-poster-res-num" style="position: absolute; top: 256px; left: 324px; font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: 172px; font-weight: 500; color: #ffffff; line-height: 0.88; letter-spacing: -0.02em; margin: 0; z-index: 10;">02</div>
+
+                <!-- Competition Header: Zone Name Badge directly above Competition Title -->
+                <div id="tv-poster-header-wrapper" style="position: absolute; top: 212px; left: 592px; width: 620px; max-width: 620px; display: flex; flex-direction: column; align-items: flex-start; z-index: 10;">
+                    
+                    <!-- Respective Zone Name Badge / Header Element -->
+                    <div id="tv-poster-zone-badge" class="tv-poster-zone-badge zone-alpha">
+                        <span id="tv-poster-zone-dot" class="tv-poster-zone-dot"></span>
+                        <span id="tv-poster-zone" class="tv-poster-zone-text">ALPHA ZONE</span>
+                    </div>
+
+                    <!-- Competition Name: Nohemi Light font -->
+                    <div id="tv-poster-title" style="font-family: 'Nohemi-Light', 'Nohemi', sans-serif; font-size: 62px; font-weight: 300; color: #ffffff; line-height: 1.05; letter-spacing: -0.01em; margin: 0; padding: 0; word-break: break-word; overflow-wrap: break-word; text-align: left;">Poem<br>Making</div>
+                </div>
+
+                <!-- Dynamic Winner Rows Container (1st, 2nd, 3rd only, duplicated downwards cleanly on ties) -->
+                <div id="tv-poster-winners-container" style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 10;"></div>
+
+            </div>
+
+        </div>
+
+        <!-- Bottom 12-Second Countdown Progress Bar (10-15s duration requirement) -->
+        <div class="w-full max-w-4xl mt-2 sm:mt-3 px-1 relative z-20">
+            <div class="flex justify-between items-center text-[11px] sm:text-xs font-mono text-slate-400 mb-1.5">
+                <span class="flex items-center gap-1.5 text-amber-400 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    <span>LIVE TV DISPLAY ANNOUNCEMENT</span>
+                </span>
+                <span id="popup-countdown-label" class="font-bold text-white font-mono">12s remaining</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700/80 shadow-inner">
+                <div id="popup-progress-bar" class="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 w-full transition-all duration-100 ease-linear shadow-lg"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- JAVASCRIPT: TV ENGINE, AUDIO & REAL-TIME SYNC  -->
+    <!-- ============================================== -->
+    <script>
+        // Global State
+        let soundEnabled = true;
+        let seenCompetitionIds = new Set();
+        let seenResultFingerprints = new Set();
+        let notificationQueue = [];
+        let isPopupActive = false;
+        let popupTimer = null;
+        let countdownInterval = null;
+        let previousFanoraPoints = 0;
+        let previousZahoraPoints = 0;
+        let currentPosterVariant = 1;
+
+        // Initialize Data passed from server render
+        const INITIAL_HOUSES = {{{json houses}}};
+        const INITIAL_COMPETITIONS = {{{json competitions}}};
+
+        // 1. Star Icon Helper
+        function getStarSvg(colorClass = 'text-amber-300', sizeClass = 'w-5 h-5') {
+            return `<svg viewBox="0 0 24 24" class="${sizeClass} fill-current ${colorClass} drop-shadow-md shrink-0" style="display:inline-block;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+
+        function renderStarsHtml(count, colorClass = 'text-amber-300', sizeClass = 'w-5 h-5 sm:w-6 sm:h-6') {
+            let out = '';
+            for (let i = 0; i < count; i++) {
+                out += getStarSvg(colorClass, sizeClass);
+            }
+            return out;
+        }
+
+        function renderPoster2StarsHtml(rank, starSize = 34, gap = 10) {
+            const white = '#ffffff';
+            const grey = '#475569';
+            const starSvg = (fill) => `<svg viewBox="0 0 24 24" width="${starSize}" height="${starSize}" fill="${fill}" style="display:inline-block; flex-shrink: 0;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+            let stars = '';
+            if (rank === 1) {
+                stars = starSvg(white) + starSvg(white) + starSvg(white);
+            } else if (rank === 2) {
+                stars = starSvg(white) + starSvg(white) + starSvg(grey);
+            } else if (rank === 3) {
+                stars = starSvg(white) + starSvg(grey) + starSvg(grey);
+            } else {
+                stars = starSvg(grey) + starSvg(grey) + starSvg(grey);
+            }
+            return `<div style="display: flex; align-items: center; gap: ${gap}px;">${stars}</div>`;
+        }
+
+        // 2. Web Audio API Synthetic Chime (Crystal Fanfare Chord)
+        function playChimeSound() {
+            if (!soundEnabled) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+
+                const chordFrequencies = [523.25, 659.25, 783.99, 1046.50];
+                const now = ctx.currentTime;
+
+                chordFrequencies.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+
+                    gain.gain.setValueAtTime(0, now + (idx * 0.08));
+                    gain.gain.linearRampToValueAtTime(0.28, now + (idx * 0.08) + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 1.8);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + (idx * 0.08));
+                    osc.stop(now + (idx * 0.08) + 1.9);
+                });
+            } catch (err) {
+                console.warn('[Web Audio Playback Warning]:', err);
+            }
+        }
+
+        function toggleAudioChime() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('audio-icon');
+            if (soundEnabled) {
+                icon.innerText = 'volume_up';
+                icon.className = 'material-symbols-outlined text-lg text-emerald-400';
+                playChimeSound();
+            } else {
+                icon.innerText = 'volume_off';
+                icon.className = 'material-symbols-outlined text-lg text-slate-500';
+            }
+        }
+
+        // 3. Fullscreen Controller
+        function toggleFullscreen() {
+            const icon = document.getElementById('fullscreen-icon');
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+                icon.innerText = 'fullscreen_exit';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                icon.innerText = 'fullscreen';
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('fullscreen-icon');
+            if (document.fullscreenElement) {
+                icon.innerText = 'fullscreen_exit';
+            } else {
+                icon.innerText = 'fullscreen';
+            }
+        });
+
+        // Keyboard Shortcuts (F: Fullscreen, M: Mute, T: Test Popup, Escape: Dismiss)
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            const key = e.key.toLowerCase();
+            if (key === 'f') toggleFullscreen();
+            if (key === 'm') toggleAudioChime();
+            if (key === 't') triggerDemoResultNotification();
+            if (key === 'escape') dismissResultPopup();
+        });
+
+        // 4. Smooth Points Counter Animator
+        function animateCounter(elemId, startVal, endVal, duration = 800) {
+            const elem = document.getElementById(elemId);
+            if (!elem) return;
+            if (startVal === endVal) {
+                elem.innerText = endVal;
+                return;
+            }
+
+            const startTime = performance.now();
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(startVal + (endVal - startVal) * easeOut);
+                elem.innerText = current;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    elem.innerText = endVal;
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // 5. Update Standings & Team Cards
+        // (Displays 3 stars for 1st place/leading team and 2 stars for 2nd team, removes 'Tied 1st' labels)
+        function updateLeaderboardUI(houses) {
+            if (!Array.isArray(houses) || houses.length === 0) return;
+
+            let fanora = houses.find(h => (h.name && h.name.toLowerCase().includes('fanora')) || (h.captain && h.captain.toLowerCase().includes('afeef')));
+            let zahora = houses.find(h => (h.name && h.name.toLowerCase().includes('zahora')) || (h.captain && h.captain.toLowerCase().includes('jabir')));
+
+            const fPoints = fanora ? parseInt(fanora.points, 10) || 0 : 0;
+            const zPoints = zahora ? parseInt(zahora.points, 10) || 0 : 0;
+
+            // Animate Big Points Counters
+            animateCounter('pts-count-fanora', previousFanoraPoints, fPoints);
+            animateCounter('pts-count-zahora', previousZahoraPoints, zPoints);
+
+            previousFanoraPoints = fPoints;
+            previousZahoraPoints = zPoints;
+
+            const rankFanoraElem = document.getElementById('rank-text-fanora');
+            const rankZahoraElem = document.getElementById('rank-text-zahora');
+            const badgeFanora = document.getElementById('badge-rank-fanora');
+            const badgeZahora = document.getElementById('badge-rank-zahora');
+            const badgeStarsFanora = document.getElementById('badge-stars-fanora');
+            const badgeStarsZahora = document.getElementById('badge-stars-zahora');
+            const footerStarsFanora = document.getElementById('stars-footer-fanora');
+            const footerStarsZahora = document.getElementById('stars-footer-zahora');
+            const fanoraPill = document.getElementById('fanora-margin-pill');
+            const zahoraPill = document.getElementById('zahora-margin-pill');
+
+            if (fPoints >= zPoints) {
+                // Team Fanora is 1st / leading (3 stars), Team Zahora is 2nd (2 stars)
+                const diff = fPoints - zPoints;
+                if (rankFanoraElem) rankFanoraElem.innerText = '1ST PLACE';
+                if (rankZahoraElem) rankZahoraElem.innerText = '2ND PLACE';
+
+                if (badgeFanora) badgeFanora.className = 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-amber-400 text-slate-950 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0';
+                if (badgeZahora) badgeZahora.className = 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0';
+
+                // Display 3 stars for 1st place, 2 stars for 2nd team
+                if (badgeStarsFanora) badgeStarsFanora.innerHTML = renderStarsHtml(3, 'text-slate-950', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
+                if (badgeStarsZahora) badgeStarsZahora.innerHTML = renderStarsHtml(2, 'text-emerald-400', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
+
+                if (footerStarsFanora) footerStarsFanora.innerHTML = renderStarsHtml(3, 'text-amber-300', 'w-5 h-5 sm:w-6 sm:h-6');
+                if (footerStarsZahora) footerStarsZahora.innerHTML = renderStarsHtml(2, 'text-emerald-400', 'w-5 h-5 sm:w-6 sm:h-6');
+
+                if (fanoraPill) {
+                    fanoraPill.innerText = diff > 0 ? `Leading by +${diff} PTS` : 'Championship Leader';
+                    fanoraPill.className = 'mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-xs sm:text-sm font-mono font-bold text-amber-300';
+                }
+                if (zahoraPill) {
+                    zahoraPill.innerText = diff > 0 ? `Trailing by -${diff} PTS` : 'Championship Contender';
+                    zahoraPill.className = 'mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs sm:text-sm font-mono font-bold text-slate-400';
+                }
+            } else {
+                // Team Zahora is 1st / leading (3 stars), Team Fanora is 2nd (2 stars)
+                const diff = zPoints - fPoints;
+                if (rankZahoraElem) rankZahoraElem.innerText = '1ST PLACE';
+                if (rankFanoraElem) rankFanoraElem.innerText = '2ND PLACE';
+
+                if (badgeZahora) badgeZahora.className = 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0';
+                if (badgeFanora) badgeFanora.className = 'px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-slate-800 text-amber-400 border border-amber-500/30 font-black text-xs sm:text-sm lg:text-base tracking-widest uppercase font-mono shadow-2xl flex items-center gap-2 shrink-0';
+
+                // Display 3 stars for 1st place, 2 stars for 2nd team
+                if (badgeStarsZahora) badgeStarsZahora.innerHTML = renderStarsHtml(3, 'text-slate-950', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
+                if (badgeStarsFanora) badgeStarsFanora.innerHTML = renderStarsHtml(2, 'text-amber-400', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
+
+                if (footerStarsZahora) footerStarsZahora.innerHTML = renderStarsHtml(3, 'text-emerald-300', 'w-5 h-5 sm:w-6 sm:h-6');
+                if (footerStarsFanora) footerStarsFanora.innerHTML = renderStarsHtml(2, 'text-amber-400', 'w-5 h-5 sm:w-6 sm:h-6');
+
+                if (zahoraPill) {
+                    zahoraPill.innerText = `Leading by +${diff} PTS`;
+                    zahoraPill.className = 'mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs sm:text-sm font-mono font-bold text-emerald-300';
+                }
+                if (fanoraPill) {
+                    fanoraPill.innerText = `Trailing by -${diff} PTS`;
+                    fanoraPill.className = 'mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs sm:text-sm font-mono font-bold text-slate-400';
+                }
+            }
+        }
+
+        // 6. Confetti Particle Animation
+        function startConfettiExplosion() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#fbbf24', '#10b981', '#06b6d4', '#ffffff', '#ec4899', '#8b5cf6'];
+
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * -canvas.height * 0.5,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedX: (Math.random() - 0.5) * 5,
+                    speedY: Math.random() * 4 + 3,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 8
+                });
+            }
+
+            let animId;
+            let duration = 3500;
+            const start = performance.now();
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const now = performance.now();
+
+                particles.forEach(p => {
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.rotation += p.rotationSpeed;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                    ctx.restore();
+                });
+
+                if (now - start < duration) {
+                    animId = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    cancelAnimationFrame(animId);
+                }
+            }
+            render();
+        }
+
+        // 7. Poster Viewport Responsive Auto-Scale Engine (1920x1080 Native TV Resolution)
+        function updatePosterViewportScale() {
+            const container = document.getElementById('poster-viewport-container');
+            const card = document.getElementById('tv-poster-card');
+            if (!container || !card) return;
+
+            const baseWidth = 1920;
+            const baseHeight = 1080;
+
+            // Maximum allowed height to comfortably fit inside viewport with top bar and bottom bar
+            const maxAvailableH = Math.min(window.innerHeight * 0.80, window.innerHeight - 150);
+            const maxAvailableW = Math.min(window.innerWidth * 0.92, window.innerWidth - 60);
+
+            let targetH = maxAvailableH;
+            let targetW = targetH * (baseWidth / baseHeight);
+
+            if (targetW > maxAvailableW) {
+                targetW = maxAvailableW;
+                targetH = targetW * (baseHeight / baseWidth);
+            }
+
+            const scale = targetW / baseWidth;
+
+            container.style.height = `${targetH}px`;
+            container.style.width = `${targetW}px`;
+            card.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (isPopupActive) {
+                updatePosterViewportScale();
+            }
+        });
+
+        // 8. Normalize & Extract Competition Winners Helper
+        function normalizePosterWinners(compData) {
+            let raw = [];
+            if (Array.isArray(compData.winners) && compData.winners.length > 0) {
+                raw = compData.winners;
+            } else if (Array.isArray(compData.items) && compData.items.length > 0) {
+                raw = compData.items;
+            } else if (Array.isArray(compData.results) && compData.results.length > 0) {
+                raw = compData.results;
+            } else if (Array.isArray(compData.participants) && compData.participants.length > 0) {
+                raw = compData.participants;
+            }
+
+            const list = raw.map((w, idx) => {
+                let rank = 1;
+                const rStr = String(w.rank !== undefined ? w.rank : (w.position !== undefined ? w.position : (w.prize || ''))).toLowerCase().trim();
+                if (w.rank !== undefined && !isNaN(parseInt(w.rank, 10)) && parseInt(w.rank, 10) > 0) {
+                    rank = parseInt(w.rank, 10);
+                } else if (rStr.includes('1st') || rStr === '1' || rStr.includes('first')) {
+                    rank = 1;
+                } else if (rStr.includes('2nd') || rStr === '2' || rStr.includes('second')) {
+                    rank = 2;
+                } else if (rStr.includes('3rd') || rStr === '3' || rStr.includes('third')) {
+                    rank = 3;
+                } else {
+                    const match = rStr.match(/\d+/);
+                    rank = match ? parseInt(match[0], 10) : (idx + 1);
+                }
+
+                const name = (w.participant || w.participantName || w.name || w.candidateName || w.studentName || '').trim();
+                const team = (w.team || w.teamName || w.rawTeamName || w.displayTeam || '').trim();
+
+                return {
+                    ...w,
+                    rank: rank > 0 ? rank : (idx + 1),
+                    participant: name || 'Participant',
+                    team: team || '-'
+                };
+            });
+
+            const valid = list.filter(w => w.participant && w.participant !== '-');
+            valid.sort((a, b) => a.rank - b.rank);
+            return valid;
+        }
+
+        function escapePosterHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatCompetitionTitle(title) {
+            if (!title) return '';
+            const trimmed = String(title).trim();
+            const words = trimmed.split(/\s+/);
+            if (words.length === 2 && trimmed.length <= 26) {
+                return `${escapePosterHtml(words[0])}<br>${escapePosterHtml(words[1])}`;
+            }
+            if (words.length >= 3 && words.length <= 5 && trimmed.length <= 34) {
+                const mid = Math.ceil(words.length / 2);
+                return `${escapePosterHtml(words.slice(0, mid).join(' '))}<br>${escapePosterHtml(words.slice(mid).join(' '))}`;
+            }
+            return escapePosterHtml(trimmed);
+        }
+
+        function getRankBadgeHtml(rank, top, left = 332, diameter = 78) {
+            let num = '1';
+            let ord = 'st';
+            if (rank === 2) { num = '2'; ord = 'nd'; }
+            else if (rank === 3) { num = '3'; ord = 'rd'; }
+            const fontSize = Math.round(diameter * 0.40);
+            return `
+            <div style="position: absolute; top: ${top}px; left: ${left}px; width: ${diameter}px; height: ${diameter}px; border-radius: 50%; border: 2.5px solid #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: ${fontSize}px; font-weight: 500; color: #ffffff; z-index: 10;">
+                <span style="display: flex; align-items: baseline; justify-content: center; transform: translateY(-1px);">
+                    <span>${num}</span><span style="font-size: 0.58em; font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; transform: translateY(-6px); margin-left: 1px;">${ord}</span>
+                </span>
+            </div>`;
+        }
+
+        // Helper: Zone Theme Classes for TV Poster & Status Bar
+        function getZoneThemeClass(zone) {
+            const z = String(zone || '').toUpperCase();
+            if (z.includes('PRIME')) return 'zone-prime';
+            if (z.includes('CORE')) return 'zone-core';
+            if (z.includes('ALPHA')) return 'zone-alpha';
+            return 'zone-default';
+        }
+
+        function getStatusBarZoneClass(zone) {
+            const z = String(zone || '').toUpperCase();
+            if (z.includes('PRIME')) return 'bg-amber-950/70 text-amber-300 border-amber-500/50';
+            if (z.includes('CORE')) return 'bg-purple-950/70 text-purple-300 border-purple-500/50';
+            if (z.includes('ALPHA')) return 'bg-slate-800 text-cyan-400 border-cyan-500/40';
+            return 'bg-slate-800 text-slate-200 border-slate-600/30';
+        }
+
+        // 9. Dynamic Result Poster Popup Engine (10-15s duration with instant display)
+        function showResultPopup(compData) {
+            if (!compData) return;
+            isPopupActive = true;
+
+            const modal = document.getElementById('result-popup-modal');
+            const categoryBadge = document.getElementById('popup-category-badge');
+            const progressBar = document.getElementById('popup-progress-bar');
+            const countdownLabel = document.getElementById('popup-countdown-label');
+            const countdownBadge = document.getElementById('popup-countdown-badge');
+
+            // 1. Format Result Number on top left with Nohemi Medium font
+            let resNum = compData.formattedCode || compData.code || compData.resultNumber || compData.resultNo || compData.itemCode || '01';
+            resNum = String(resNum).trim();
+            if (/^\d+$/.test(resNum) && resNum.length < 2) {
+                resNum = resNum.padStart(2, '0');
+            }
+            const resNumElem = document.getElementById('tv-poster-res-num');
+            if (resNumElem) resNumElem.innerText = resNum;
+
+            // 2. Zone Name Processing & Update (Dynamic Header directly above Competition Title)
+            let rawZone = compData.zone || compData.zoneName || compData.zone_name || compData.category || compData.categoryName || compData.catName || compData.stageCategory || 'ALPHA ZONE';
+            if (typeof rawZone === 'object' && rawZone !== null) {
+                rawZone = rawZone.name || rawZone.title || rawZone.label || rawZone.zone || 'ALPHA ZONE';
+            }
+            let cleanZone = String(rawZone).trim().toUpperCase();
+            if (cleanZone === 'PRIME' || cleanZone === 'PRIME ZONE') cleanZone = 'PRIME ZONE';
+            else if (cleanZone === 'CORE' || cleanZone === 'CORE ZONE') cleanZone = 'CORE ZONE';
+            else if (cleanZone === 'ALPHA' || cleanZone === 'ALPHA ZONE') cleanZone = 'ALPHA ZONE';
+            else if (!cleanZone.includes('ZONE') && cleanZone.length > 0) cleanZone = `${cleanZone} ZONE`;
+            else if (!cleanZone) cleanZone = 'ALPHA ZONE';
+
+            // Update TV Poster Zone Badge directly above competition title
+            const zoneTextElem = document.getElementById('tv-poster-zone');
+            if (zoneTextElem) zoneTextElem.innerText = cleanZone;
+
+            const zoneBadgeElem = document.getElementById('tv-poster-zone-badge');
+            if (zoneBadgeElem) {
+                zoneBadgeElem.className = 'tv-poster-zone-badge ' + getZoneThemeClass(cleanZone);
+            }
+
+            // Update Top Floating Status Bar Zone Badge
+            if (categoryBadge) {
+                categoryBadge.innerText = cleanZone;
+                categoryBadge.className = 'px-3 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold uppercase border ' + getStatusBarZoneClass(cleanZone);
+            }
+
+            // 3. Competition Name with Nohemi Light font
+            const compTitle = compData.title || compData.name || compData.competitionName || 'Competition Item';
+            const titleElem = document.getElementById('tv-poster-title');
+            if (titleElem) {
+                titleElem.innerHTML = formatCompetitionTitle(compTitle);
+                const rawLen = compTitle.length;
+                if (rawLen > 32) {
+                    titleElem.style.fontSize = '44px';
+                    titleElem.style.lineHeight = '1.12';
+                } else if (rawLen > 20) {
+                    titleElem.style.fontSize = '52px';
+                    titleElem.style.lineHeight = '1.08';
+                } else {
+                    titleElem.style.fontSize = '62px';
+                    titleElem.style.lineHeight = '1.05';
+                }
+            }
+
+            // 3. Display ONLY 1st, 2nd, and 3rd place winner details (filter out rank > 3)
+            const allWinners = normalizePosterWinners(compData);
+            const winnersList = allWinners.filter(w => w.rank >= 1 && w.rank <= 3);
+            const winnerCount = winnersList.length;
+
+            const bgImg = document.getElementById('tv-poster-bg');
+            const circleCover = document.getElementById('tv-poster-circle-cover');
+            const winnersContainer = document.getElementById('tv-poster-winners-container');
+
+            const rankSequence = winnersList.map(w => w.rank).join(',');
+
+            // 4. Handle multiple winners for the same rank (e.g., two 3rd places or two 2nd places)
+            if (winnerCount === 4 && rankSequence === '1,2,3,3') {
+                // Exact Two 3rd Places reference: Tv-Result-Model-If-(2-Third).jpg with template
+                if (bgImg) bgImg.src = '/images/Tv-Result-Model-If-(2-Third)-Tublate.jpg';
+                if (circleCover) circleCover.style.display = 'none';
+
+                const rowCoords = [
+                    { top: 472, left: 488 },
+                    { top: 578, left: 488 },
+                    { top: 682, left: 488 },
+                    { top: 793, left: 488 }
+                ];
+
+                let rowsHtml = '';
+                winnersList.forEach((w, idx) => {
+                    const coord = rowCoords[idx] || { top: 472 + (idx * 108), left: 488 };
+                    rowsHtml += `
+                    <div style="position: absolute; top: ${coord.top}px; left: ${coord.left}px; width: 880px; z-index: 10;">
+                        <div style="font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${escapePosterHtml(w.participant)}
+                        </div>
+                        <div style="font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; font-size: 24px; font-weight: 400; color: #ffffff; margin-top: 5px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${escapePosterHtml(w.team)}
+                        </div>
+                    </div>`;
+                });
+                if (winnersContainer) winnersContainer.innerHTML = rowsHtml;
+
+            } else if (winnerCount === 3 && rankSequence === '1,2,3') {
+                // Exact Standard 3-Winner reference: Tv-Result-Model.jpg
+                if (bgImg) bgImg.src = '/images/Tv-Result-Tumblate.jpg';
+                if (circleCover) circleCover.style.display = 'none';
+
+                const rowCoords = [
+                    { top: 492, left: 507 },
+                    { top: 622, left: 507 },
+                    { top: 752, left: 507 }
+                ];
+
+                let rowsHtml = '';
+                winnersList.forEach((w, idx) => {
+                    const coord = rowCoords[idx] || { top: 492 + (idx * 130), left: 507 };
+                    rowsHtml += `
+                    <div style="position: absolute; top: ${coord.top}px; left: ${coord.left}px; width: 880px; z-index: 10;">
+                        <div style="font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: 54px; font-weight: 500; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${escapePosterHtml(w.participant)}
+                        </div>
+                        <div style="font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; font-size: 26px; font-weight: 400; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${escapePosterHtml(w.team)}
+                        </div>
+                    </div>`;
+                });
+                if (winnersContainer) winnersContainer.innerHTML = rowsHtml;
+
+            } else {
+                // Multiple winners for same rank (e.g., two 2nd places [1, 2, 2, 3], two 1st places, or ties)
+                // Duplicate the rank row downwards cleanly!
+                if (bgImg) bgImg.src = '/images/Tv-Result-Tumblate.jpg';
+                if (circleCover) circleCover.style.display = 'block';
+
+                let rowsHtml = '';
+                if (winnerCount === 4) {
+                    // 4 rows (e.g. two 2nd places: 1st, 2nd, 2nd, 3rd)
+                    const rowCoords = [
+                        { textTop: 472, circleTop: 476 },
+                        { textTop: 578, circleTop: 588 },
+                        { textTop: 682, circleTop: 696 },
+                        { textTop: 793, circleTop: 808 }
+                    ];
+
+                    winnersList.forEach((w, idx) => {
+                        const coord = rowCoords[idx] || { textTop: 472 + (idx * 108), circleTop: 476 + (idx * 108) };
+                        rowsHtml += getRankBadgeHtml(w.rank, coord.circleTop, 332, 74);
+                        rowsHtml += `
+                        <div style="position: absolute; top: ${coord.textTop}px; left: 488px; width: 880px; z-index: 10;">
+                            <div style="font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.participant)}
+                            </div>
+                            <div style="font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; font-size: 24px; font-weight: 400; color: #ffffff; margin-top: 5px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.team)}
+                            </div>
+                        </div>`;
+                    });
+                } else if (winnerCount >= 5) {
+                    // 5 or more winners (multiple ties): scale spacing gracefully downwards
+                    const spacing = Math.floor(410 / winnerCount);
+                    const nameSize = Math.max(34, Math.floor(210 / winnerCount));
+                    const teamSize = Math.max(18, Math.floor(115 / winnerCount));
+                    const badgeDia = Math.max(56, Math.floor(320 / winnerCount));
+
+                    winnersList.forEach((w, idx) => {
+                        const textTop = 460 + (idx * spacing);
+                        const circleTop = 460 + (idx * spacing) + 4;
+                        rowsHtml += getRankBadgeHtml(w.rank, circleTop, 336, badgeDia);
+                        rowsHtml += `
+                        <div style="position: absolute; top: ${textTop}px; left: 488px; width: 880px; z-index: 10;">
+                            <div style="font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: ${nameSize}px; font-weight: 500; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.participant)}
+                            </div>
+                            <div style="font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; font-size: ${teamSize}px; font-weight: 400; color: #ffffff; margin-top: 4px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.team)}
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    // 1, 2, or 3 winners with non-standard distribution
+                    const rowCoords = [
+                        { textTop: 492, circleTop: 496 },
+                        { textTop: 622, circleTop: 628 },
+                        { textTop: 752, circleTop: 758 }
+                    ];
+
+                    winnersList.forEach((w, idx) => {
+                        const coord = rowCoords[idx] || { textTop: 492 + (idx * 130), circleTop: 496 + (idx * 130) };
+                        rowsHtml += getRankBadgeHtml(w.rank, coord.circleTop, 332, 84);
+                        rowsHtml += `
+                        <div style="position: absolute; top: ${coord.textTop}px; left: 507px; width: 880px; z-index: 10;">
+                            <div style="font-family: 'Nohemi-Medium', 'Nohemi', sans-serif; font-size: 54px; font-weight: 500; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.participant)}
+                            </div>
+                            <div style="font-family: 'Nohemi-Regular', 'Nohemi', sans-serif; font-size: 26px; font-weight: 400; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${escapePosterHtml(w.team)}
+                            </div>
+                        </div>`;
+                    });
+                }
+                if (winnersContainer) winnersContainer.innerHTML = rowsHtml;
+            }
+
+            // Adjust scaling to fit TV viewport
+            updatePosterViewportScale();
+
+            // Play Chime & Festive Particles
+            playChimeSound();
+            startConfettiExplosion();
+
+            // Display Modal
+            modal.classList.add('active');
+
+            // 12-Second Countdown Progress Bar (10-15s duration requirement)
+            const totalDurationMs = 12000;
+            const startTime = Date.now();
+            progressBar.style.width = '100%';
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, totalDurationMs - elapsed);
+                const percent = Math.max(0, (remaining / totalDurationMs) * 100);
+                progressBar.style.width = `${percent}%`;
+                const sec = Math.ceil(remaining / 1000);
+                countdownLabel.innerText = `${sec}s remaining`;
+                countdownBadge.innerText = `${sec}s`;
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 100);
+
+            clearTimeout(popupTimer);
+            popupTimer = setTimeout(() => {
+                dismissResultPopup();
+            }, totalDurationMs);
+        }
+
+        function dismissResultPopup() {
+            const modal = document.getElementById('result-popup-modal');
+            modal.classList.remove('active');
+            clearInterval(countdownInterval);
+            clearTimeout(popupTimer);
+            isPopupActive = false;
+
+            // Process next notification in queue if any
+            setTimeout(() => {
+                if (notificationQueue.length > 0) {
+                    const nextComp = notificationQueue.shift();
+                    showResultPopup(nextComp);
+                }
+            }, 600);
+        }
+
+        function enqueueNotification(comp) {
+            if (isPopupActive) {
+                notificationQueue.push(comp);
+            } else {
+                showResultPopup(comp);
+            }
+        }
+
+        // 10. Manual Simulation / Demo Trigger (Press T)
+        let demoCycleIndex = 0;
+        function triggerDemoResultNotification() {
+            demoCycleIndex = (demoCycleIndex + 1) % 4;
+
+            let demoComp;
+            if (demoCycleIndex === 1) {
+                // Demo 1: Alpha Zone standard 3-winners layout (Poem Making)
+                demoComp = {
+                    id: 'demo_' + Date.now(),
+                    formattedCode: '02',
+                    code: '02',
+                    resultNumber: '02',
+                    name: 'Poem Making',
+                    title: 'Poem Making',
+                    zone: 'ALPHA ZONE',
+                    zoneName: 'ALPHA ZONE',
+                    category: 'ALPHA ZONE',
+                    winners: [
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 1, team: 'Team Fanora' },
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 2, team: 'Team Fanora' },
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 3, team: 'Team Fanora' }
+                    ]
+                };
+            } else if (demoCycleIndex === 2) {
+                // Demo 2: Alpha Zone with Two 3rd Places
+                demoComp = {
+                    id: 'demo_' + Date.now(),
+                    formattedCode: '02',
+                    code: '02',
+                    resultNumber: '02',
+                    name: 'Poem Making',
+                    title: 'Poem Making',
+                    zone: 'ALPHA ZONE',
+                    zoneName: 'ALPHA ZONE',
+                    category: 'ALPHA ZONE',
+                    winners: [
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 1, team: 'Team Fanora' },
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 2, team: 'Team Fanora' },
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 3, team: 'Team Fanora' },
+                        { participant: 'Muhammed Swalih', name: 'Muhammed Swalih', rank: 3, team: 'Team Fanora' }
+                    ]
+                };
+            } else if (demoCycleIndex === 3) {
+                // Demo 3: Prime Zone with Two 2nd Places (Essay Writing)
+                demoComp = {
+                    id: 'demo_' + Date.now(),
+                    formattedCode: '03',
+                    code: '03',
+                    resultNumber: '03',
+                    name: 'Essay Writing',
+                    title: 'Essay Writing',
+                    zone: 'PRIME ZONE',
+                    zoneName: 'PRIME ZONE',
+                    category: 'PRIME ZONE',
+                    winners: [
+                        { participant: 'Afeef Rahman', name: 'Afeef Rahman', rank: 1, team: 'Team Fanora' },
+                        { participant: 'Jabir Ali', name: 'Jabir Ali', rank: 2, team: 'Team Zahora' },
+                        { participant: 'Salman Faris', name: 'Salman Faris', rank: 2, team: 'Team Fanora' },
+                        { participant: 'Bilal Ahmad', name: 'Bilal Ahmad', rank: 3, team: 'Team Zahora' }
+                    ]
+                };
+            } else {
+                // Demo 4: Core Zone (Elocution English)
+                demoComp = {
+                    id: 'demo_' + Date.now(),
+                    formattedCode: '04',
+                    code: '04',
+                    resultNumber: '04',
+                    name: 'Elocution English',
+                    title: 'Elocution English',
+                    zone: 'CORE ZONE',
+                    zoneName: 'CORE ZONE',
+                    category: 'CORE ZONE',
+                    winners: [
+                        { participant: 'Zayan Abdullah', name: 'Zayan Abdullah', rank: 1, team: 'Team Zahora' },
+                        { participant: 'Rayan Kabeer', name: 'Rayan Kabeer', rank: 2, team: 'Team Fanora' },
+                        { participant: 'Hafiz Ameen', name: 'Hafiz Ameen', rank: 3, team: 'Team Zahora' }
+                    ]
+                };
+            }
+            enqueueNotification(demoComp);
+        }
+
+        // 11. Automated Real-Time Poller (Runs every 3 seconds)
+        async function pollLiveData() {
+            try {
+                const res = await fetch('/api/tv/live-data');
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update Standings & Points
+                    if (data.houses) {
+                        updateLeaderboardUI(data.houses);
+                    }
+
+                    // Check for immediate direct broadcast items
+                    if (Array.isArray(data.broadcasts)) {
+                        data.broadcasts.forEach(b => {
+                            const bId = String(b.id);
+                            if (!seenCompetitionIds.has(bId)) {
+                                seenCompetitionIds.add(bId);
+                                enqueueNotification(b);
+                            }
+                        });
+                    }
+
+                    // Check for newly published competitions or updated results from fest floor
+                    if (Array.isArray(data.competitions)) {
+                        data.competitions.forEach(comp => {
+                            const compId = String(comp.id || comp._id || comp.code);
+                            const winners = Array.isArray(comp.winners) ? comp.winners : (Array.isArray(comp.items) ? comp.items : []);
+                            
+                            if (winners.length > 0) {
+                                const winnerFingerprint = `${compId}_${winners.length}_${winners.map(w => w.participant || w.name || '').join('_')}`;
+                                if (!seenCompetitionIds.has(compId) && !seenResultFingerprints.has(winnerFingerprint)) {
+                                    seenCompetitionIds.add(compId);
+                                    seenResultFingerprints.add(winnerFingerprint);
+                                    enqueueNotification(comp);
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('[TV Real-Time Poll Warning]:', err);
+            }
+        }
+
+        // Initialize seen set with server-rendered competitions so they don't pop up immediately on load
+        if (Array.isArray(INITIAL_COMPETITIONS)) {
+            INITIAL_COMPETITIONS.forEach(c => {
+                const cid = String(c.id || c._id || c.code);
+                seenCompetitionIds.add(cid);
+                const winners = Array.isArray(c.winners) ? c.winners : (Array.isArray(c.items) ? c.items : []);
+                const fingerprint = `${cid}_${winners.length}_${winners.map(w => w.participant || w.name || '').join('_')}`;
+                seenResultFingerprints.add(fingerprint);
+            });
+        }
+
+        if (Array.isArray(INITIAL_HOUSES)) {
+            updateLeaderboardUI(INITIAL_HOUSES);
+        }
+
+        // Start 3-second Polling Loop
+        setInterval(pollLiveData, 3000);
+
+        // Register Dedicated TV Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw-tv.js')
+                    .then(reg => console.log('[Euphoria TV SW] Registered successfully, scope:', reg.scope))
+                    .catch(err => console.warn('[Euphoria TV SW] Registration skipped or failed:', err));
+            });
+        }
+
+        // TV Remote & Browser Fullscreen Handlers (Key 'F', Remote OK/Enter, or double-click)
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen request ignored:', e));
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(e => console.log('Exit fullscreen ignored:', e));
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // 'f', 'F' or F11 toggles fullscreen
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullScreen();
+            }
+        });
+        document.body.addEventListener('dblclick', toggleFullScreen);
+    </script>
+
+</body>
+
+</html>

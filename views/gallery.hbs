@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html class="dark scroll-smooth" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN</title>
+    
+    <!-- PWA & Theme Color -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#070a12" />
+
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logo-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/logo-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/logo-192.png">
+    <link rel="shortcut icon" href="/images/favicon.ico">
+
+    <!-- Primary SEO Meta Tags -->
+    <meta name="description"
+        content="Official Festival Gallery of Event Euphoria '26. Relive the stages, award ceremonies, candidate performances, and grand moments of Sirajul Irfan Da'wa Dars." />
+    <meta name="keywords"
+        content="Event Euphoria Gallery, Festival Photos, Sirajul Irfan Arts Fest, Kodampuzha Euphoria Photos, Euphoria 2026 Memories" />
+    <link rel="canonical" href="{{#if subdomainUrl}}{{subdomainUrl}}/gallery{{else}}https://euphoria.sirajulirfan.com/gallery{{/if}}" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN" />
+    <meta property="og:description"
+        content="Explore high-definition photos and highlights from Event Euphoria '26 Arts & Cultural Fest." />
+    <meta property="og:image" content="https://sirajulirfan.com/images/logo.png" />
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#f59e0b',
+                            goldLight: '#fbbf24',
+                            purple: '#8b5cf6',
+                            deepDark: '#070a12',
+                            cardDark: '#0f172a',
+                            cyan: '#06b6d4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Outfit', 'sans-serif'],
+                        heading: ['Outfit', 'Chakra Petch', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Custom Styling & Animations -->
+    <style>
+        @font-face {
+            font-family: 'TraditionalCivilization';
+            src: url('/Font/Traditional%20Civilization%20Demo.ttf') format('truetype'),
+                url('/Font/Traditional Civilization Demo.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        .euphoria-logo-brand {
+            font-family: 'TraditionalCivilization', sans-serif;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .glass-nav {
+            background: rgba(7, 10, 18, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .gradient-text-gold {
+            background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bg-grid-mesh {
+            background-image: radial-gradient(rgba(245, 158, 11, 0.12) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Image Skeleton Loading Shimmer */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Smooth card hover lift */
+        .gallery-card {
+            border-radius: 0 !important;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+        }
+        .gallery-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        /* Smooth Lightbox fade */
+        #lightbox-modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #lightbox-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 overflow-x-hidden min-h-screen pb-32">
+
+    <!-- Top Fixed Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 z-40 glass-nav border-b border-slate-800/80 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
+            
+            <!-- Left: Brand Logo & Title -->
+            <a href="/" class="flex items-center gap-3 group transition-transform duration-300 hover:scale-105 shrink-0">
+                <img src="/images/EUPHORIA LOGO.svg" alt="Event Euphoria '26 Logo"
+                    class="h-7 sm:h-9 md:h-10 w-auto object-contain brightness-0 invert drop-shadow-md" />
+                <span class="hidden md:inline-block text-xs font-bold text-slate-400 border-l border-slate-700/80 pl-3 uppercase tracking-wider">
+                    Gallery
+                </span>
+            </a>
+
+            <!-- Right Controls: Results Link & Home Link -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/result"
+                    class="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs hover:bg-amber-500/20 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-base">trophy</span>
+                    <span class="hidden xs:inline">Official Results</span>
+                    <span class="xs:hidden">Results</span>
+                </a>
+
+                <a href="/"
+                    class="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-semibold text-xs border border-slate-700/80 transition-all">
+                    <span class="material-symbols-outlined text-base">home</span>
+                    <span>Home</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
+
+        <!-- Hero Header Section -->
+        <section class="text-left mb-10 sm:mb-14 relative">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>FESTIVAL GALLERY & MOMENTS</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-heading font-extrabold text-white tracking-tight leading-tight">
+                In <span class="gradient-text-gold">Pictures</span>
+            </h1>
+
+            <p class="text-slate-400 text-sm sm:text-base mt-3 sm:mt-4 leading-relaxed max-w-2xl">
+                Moments from Euphoria 2026 at Perimalam, Off Campus Of Darul Ma'arif Kodampuzha
+            </p>
+        </section>
+
+        <!-- Gallery Grid: 2-column layout on mobile (2 x 4 arrangement), responsive on tablet and desktop -->
+        <section id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+            {{#if photos}}
+                {{#each photos}}
+                <div class="gallery-card group relative bg-slate-900/80 border border-slate-800 rounded-none overflow-hidden cursor-pointer shadow-lg sm:shadow-xl hover:border-amber-500/50 transition-all duration-300"
+                    data-id="{{this.id}}"
+                    data-category="{{this.category}}"
+                    data-src="{{this.imageUrl}}">
+                    
+                    <!-- Aspect Ratio Wrapper with Skeleton -->
+                    <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden">
+                        <!-- Skeleton Shimmer Placeholder -->
+                        <div class="skeleton-shimmer absolute inset-0 z-0"></div>
+                        
+                        <!-- Image -->
+                        <img src="{{this.imageUrl}}" alt="Event Euphoria Festival Photo" loading="lazy"
+                            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 opacity-0 transition-opacity duration-500"
+                            onload="this.classList.remove('opacity-0'); if(this.previousElementSibling) this.previousElementSibling.style.display='none';" />
+
+                        <!-- Floating Quick Action Overlay on Hover -->
+                        <div class="absolute inset-0 z-20 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-2 sm:p-3 pointer-events-none">
+                            <span class="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold text-amber-400 bg-slate-950/80 px-2 py-1 rounded-lg border border-amber-500/30 backdrop-blur-sm">
+                                <span class="material-symbols-outlined text-xs sm:text-sm">zoom_in</span>
+                                <span>Preview</span>
+                            </span>
+                            <div class="flex items-center gap-1 pointer-events-auto">
+                                <button type="button" onclick="event.stopPropagation(); downloadPhoto('{{this.imageUrl}}')" title="Download Photo"
+                                    class="p-1.5 sm:p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold active:scale-95 transition-all shadow-md">
+                                    <span class="material-symbols-outlined text-xs sm:text-sm">download</span>
+                                </button>
+                                <button type="button" onclick="event.stopPropagation(); sharePhoto('{{this.imageUrl}}')" title="Share Photo"
+                                    class="p-1.5 sm:p-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold active:scale-95 transition-all shadow-md">
+                                    <span class="material-symbols-outlined text-xs sm:text-sm">share</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {{/each}}
+            {{else}}
+                <!-- Empty State -->
+                <div id="no-photos-state" class="col-span-full text-center py-20 bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl">
+                    <span class="material-symbols-outlined text-5xl text-slate-600 mb-3">photo_library</span>
+                    <h3 class="text-xl font-bold text-white mb-2">No Festival Photos Yet</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto mb-6">
+                        Photos from Event Euphoria '26 will be published right here throughout the festival days.
+                    </p>
+                </div>
+            {{/if}}
+        </section>
+
+        <!-- Dynamic Filter Empty State (Hidden by default) -->
+        <div id="filter-empty-state" class="hidden text-center py-16 bg-slate-900/40 border border-slate-800/80 rounded-2xl my-8">
+            <span class="material-symbols-outlined text-4xl text-slate-500 mb-2">image_not_supported</span>
+            <p class="text-slate-300 font-semibold text-base">No photos found in this category.</p>
+            <button onclick="resetCategoryFilter()" class="mt-4 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-colors">
+                View All Photos
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Clean Fullscreen Lightbox Modal -->
+    <div id="lightbox-modal"
+        class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl opacity-0 invisible flex flex-col justify-between p-3 sm:p-6 transition-all duration-300">
+        
+        <!-- Lightbox Top Bar: Counter & Close Button Only (Zero extra clutter/descriptions) -->
+        <div class="flex items-center justify-between text-white z-30 w-full max-w-6xl mx-auto pt-1 sm:pt-2 px-1 sm:px-4">
+            <!-- Counter Badge -->
+            <span id="lb-counter" class="text-white text-xs sm:text-sm font-mono font-semibold bg-black/80 border border-white/40 px-3 sm:px-4 py-1.5 rounded-none shadow-lg">
+                1 / 8
+            </span>
+
+            <!-- Close Modal -->
+            <button id="lb-close-btn" type="button" title="Close Photo View (Esc)"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white flex items-center justify-center transition-all shadow-xl active:scale-90">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">close</span>
+            </button>
+        </div>
+
+        <!-- Lightbox Main Stage (Pure Clean Image + Navigation Chevrons) -->
+        <div class="relative flex-1 flex items-center justify-center my-auto overflow-hidden select-none w-full max-w-6xl mx-auto px-1 sm:px-12">
+            <!-- Previous Button -->
+            <button id="lb-prev-btn" type="button" title="Previous Photo (Left Arrow)"
+                class="absolute left-1 sm:left-3 z-30 p-2 sm:p-2.5 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white transition-all active:scale-90 shadow-2xl backdrop-blur-md">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">chevron_left</span>
+            </button>
+
+            <!-- Active Clean Photo (Pure high-resolution photo focus with object-fit: contain) -->
+            <div class="max-w-5xl max-h-[72vh] sm:max-h-[78vh] flex items-center justify-center p-1 w-full h-full">
+                <img id="lb-img" src="" alt="Festival Euphoria Photo"
+                    class="max-w-full max-h-[72vh] sm:max-h-[78vh] w-auto h-auto object-contain rounded-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] transition-all duration-300 transform scale-100"
+                    style="object-fit: contain;" />
+            </div>
+
+            <!-- Next Button -->
+            <button id="lb-next-btn" type="button" title="Next Photo (Right Arrow)"
+                class="absolute right-1 sm:right-3 z-30 p-2 sm:p-2.5 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white transition-all active:scale-90 shadow-2xl backdrop-blur-md">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">chevron_right</span>
+            </button>
+        </div>
+
+        <!-- Bottom Action Bar: Clear Interactive Buttons for 'FULL SCREEN', 'DOWNLOAD', and 'SHARE' -->
+        <div class="w-full z-30 pb-3 sm:pb-5 pt-1 px-2 flex justify-center">
+            <div class="flex items-center justify-center gap-2 sm:gap-2.5 p-0 bg-transparent border-0 w-[72%] min-w-[275px] max-w-[330px] sm:w-auto sm:min-w-[360px] sm:max-w-[400px]">
+                
+                <!-- 1. Full Screen Button -->
+                <button id="lb-fullscreen-btn" type="button" title="Toggle Fullscreen View"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span id="lb-fullscreen-icon" class="material-symbols-outlined text-base sm:text-base text-white">fullscreen</span>
+                    <span id="lb-fullscreen-text" class="text-white">FULL SCREEN</span>
+                </button>
+
+                <!-- 2. Download Button -->
+                <button id="lb-download-btn" type="button" title="Download Raw Photo"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span class="material-symbols-outlined text-base sm:text-base text-white">download</span>
+                    <span class="text-white">DOWNLOAD</span>
+                </button>
+
+                <!-- 3. Share Button -->
+                <button id="lb-share-btn" type="button" title="Share Photo"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span class="material-symbols-outlined text-base sm:text-base text-white">share</span>
+                    <span class="text-white">SHARE</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Include Floating Mobile-Style Bottom Navigation Bar (Results & Gallery) -->
+    {{> bottomNav}}
+
+    <!-- Footer -->
+    <footer class="py-12 bg-[#05070d] border-t border-slate-900 text-center text-xs text-slate-500 mt-20">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 Sirajul Irfan Da'wa Dars. Official Event Euphoria Festival Engine.</p>
+            <div class="mt-4 flex flex-wrap justify-center gap-6 text-slate-400">
+                <a href="/" class="hover:text-white">Festival Home</a>
+                <a href="/result" class="hover:text-amber-400">Official Results</a>
+                <a href="/gallery" class="text-amber-400 font-semibold">Gallery</a>
+                <a href="/admin/gallery" class="hover:text-cyan-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                    <span>Admin Upload</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Lightbox & Client-side Filtering Script -->
+    <script>
+        let currentPhotoIndex = 0;
+        let visiblePhotoCards = [];
+        let currentPhotoSrc = '';
+
+        function updateVisibleCards() {
+            visiblePhotoCards = Array.from(document.querySelectorAll('.gallery-card:not(.hidden)'));
+        }
+
+        // Helper to convert any image Blob (including WebP/AVIF) to standard JPEG Blob
+        function convertBlobToJpeg(blob, quality = 0.95) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                const tempUrl = URL.createObjectURL(blob);
+                img.onload = function () {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        URL.revokeObjectURL(tempUrl);
+                        canvas.toBlob((jpegBlob) => {
+                            resolve(jpegBlob || blob);
+                        }, 'image/jpeg', quality);
+                    } catch (e) {
+                        URL.revokeObjectURL(tempUrl);
+                        resolve(blob);
+                    }
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(tempUrl);
+                    resolve(blob);
+                };
+                img.src = tempUrl;
+            });
+        }
+
+        // Transforms Cloudinary URLs: strips .webp, replaces f_auto/f_webp with f_jpg, adds fl_attachment
+        function formatCloudinaryUrlForDownload(url, filename = 'Euphoria Photo') {
+            if (!url || !url.includes('cloudinary.com')) return url;
+            let target = url;
+
+            // 1. Remove .webp extension if present and force .jpg
+            target = target.replace(/\.webp(\?.*)?$/i, '.jpg$1');
+
+            // 2. Replace f_auto or f_webp with f_jpg in transformations
+            target = target.replace(/([/,])f_(?:auto|webp)([,/])/g, '$1f_jpg$2');
+
+            // 3. Inject fl_attachment with desired filename and f_jpg
+            const safeName = encodeURIComponent(filename.replace(/\s+/g, '_'));
+            if (target.includes('/image/upload/')) {
+                if (!target.includes('fl_attachment')) {
+                    target = target.replace('/image/upload/', `/image/upload/fl_attachment:${safeName},f_jpg/`);
+                } else {
+                    target = target.replace(/fl_attachment:[^,/]+/, `fl_attachment:${safeName}`);
+                }
+            }
+            return target;
+        }
+
+        // High-Reliability Photo Downloader
+        // 1. Prevents .webp format from Cloudinary or local files (converts to standard JPG or original PNG)
+        // 2. Always names the downloaded file 'Euphoria Photo.jpg' (or 'Euphoria Photo.png')
+        async function downloadPhoto(url, customName) {
+            if (!url) return;
+
+            const baseName = (customName && customName.trim()) ? customName.replace(/\.[^/.]+$/, '').trim() : 'Euphoria Photo';
+            const targetUrl = formatCloudinaryUrlForDownload(url, baseName);
+            const cleanUrl = targetUrl.split('?')[0].toLowerCase();
+
+            try {
+                const response = await fetch(targetUrl, { mode: 'cors' });
+                if (!response.ok) throw new Error('Fetch status ' + response.status);
+                let blob = await response.blob();
+
+                let ext = '.jpg';
+                // If WebP, AVIF, or unknown, convert to standard JPEG
+                if (blob.type === 'image/webp' || blob.type === 'image/avif' || cleanUrl.endsWith('.webp')) {
+                    blob = await convertBlobToJpeg(blob, 0.95);
+                    ext = '.jpg';
+                } else if (blob.type === 'image/png' || cleanUrl.endsWith('.png')) {
+                    ext = '.png';
+                } else {
+                    ext = '.jpg';
+                }
+
+                const finalFilename = `${baseName}${ext}`;
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = finalFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            } catch (err) {
+                console.warn('[downloadPhoto] Blob fetch failed, falling back to direct link:', err);
+                const isPng = cleanUrl.endsWith('.png');
+                const finalFilename = `${baseName}${isPng ? '.png' : '.jpg'}`;
+                const link = document.createElement('a');
+                link.href = targetUrl;
+                link.download = finalFilename;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Instant Photo Sharer (Web Share API + WhatsApp Fallback)
+        async function sharePhoto(url) {
+            if (!url) return;
+            const fullUrl = url.startsWith('http') ? url : window.location.origin + url;
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "Event Euphoria '26 Festival Photo",
+                        text: "Event Euphoria '26 Festival Moments:",
+                        url: fullUrl
+                    });
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                }
+            }
+            const whatsappText = `📸 *Event Euphoria '26 Festival Photo*\n\n${fullUrl}`;
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Category Filtering
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const filter = this.dataset.filter;
+
+                filterButtons.forEach(b => {
+                    b.classList.remove('active', 'bg-amber-500', 'text-slate-950', 'shadow-md', 'shadow-amber-500/20');
+                    b.classList.add('bg-slate-900/80', 'text-slate-300', 'border', 'border-slate-800');
+                });
+
+                this.classList.add('active', 'bg-amber-500', 'text-slate-950', 'shadow-md', 'shadow-amber-500/20');
+                this.classList.remove('bg-slate-900/80', 'text-slate-300', 'border', 'border-slate-800');
+
+                const cards = document.querySelectorAll('.gallery-card');
+                let matchCount = 0;
+
+                cards.forEach(card => {
+                    const cardCategory = card.dataset.category || '';
+                    if (filter === 'ALL' || cardCategory.toLowerCase() === filter.toLowerCase()) {
+                        card.classList.remove('hidden');
+                        matchCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                const emptyState = document.getElementById('filter-empty-state');
+                if (emptyState) {
+                    if (matchCount === 0 && cards.length > 0) {
+                        emptyState.classList.remove('hidden');
+                    } else {
+                        emptyState.classList.add('hidden');
+                    }
+                }
+
+                updateVisibleCards();
+            });
+        });
+
+        function resetCategoryFilter() {
+            const allBtn = document.querySelector('.filter-btn[data-filter="ALL"]');
+            if (allBtn) allBtn.click();
+        }
+
+        // Lightbox Logic (Clean Fullscreen Display: Zero extra text/descriptions)
+        const modal = document.getElementById('lightbox-modal');
+        const lbImg = document.getElementById('lb-img');
+        const lbCounter = document.getElementById('lb-counter');
+        const lbFullscreenBtn = document.getElementById('lb-fullscreen-btn');
+        const lbFullscreenIcon = document.getElementById('lb-fullscreen-icon');
+        const lbFullscreenText = document.getElementById('lb-fullscreen-text');
+        const lbDownloadBtn = document.getElementById('lb-download-btn');
+        const lbShareBtn = document.getElementById('lb-share-btn');
+        const lbCloseBtn = document.getElementById('lb-close-btn');
+        const lbPrevBtn = document.getElementById('lb-prev-btn');
+        const lbNextBtn = document.getElementById('lb-next-btn');
+
+        function isCurrentlyFullscreen() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        }
+
+        function updateFullscreenBtnState() {
+            if (!lbFullscreenIcon || !lbFullscreenText) return;
+            if (isCurrentlyFullscreen()) {
+                lbFullscreenIcon.textContent = 'fullscreen_exit';
+                lbFullscreenText.textContent = 'EXIT FULL SCREEN';
+            } else {
+                lbFullscreenIcon.textContent = 'fullscreen';
+                lbFullscreenText.textContent = 'FULL SCREEN';
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!isCurrentlyFullscreen()) {
+                const elem = modal || document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(() => {});
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function openLightbox(index) {
+            updateVisibleCards();
+            if (visiblePhotoCards.length === 0) return;
+            if (index < 0) index = visiblePhotoCards.length - 1;
+            if (index >= visiblePhotoCards.length) index = 0;
+
+            currentPhotoIndex = index;
+            const card = visiblePhotoCards[index];
+            currentPhotoSrc = card.dataset.src;
+
+            // Load high-resolution image cleanly without extra text or descriptions
+            lbImg.src = currentPhotoSrc;
+            lbCounter.innerText = `${currentPhotoIndex + 1} / ${visiblePhotoCards.length}`;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Hide floating bottom nav so lightbox controls have unobstructed view
+            const bottomNav = document.getElementById('floating-bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.display = 'none';
+            }
+
+            updateFullscreenBtnState();
+        }
+
+        function closeLightbox() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            lbImg.src = '';
+
+            // Exit fullscreen if active when closed
+            if (isCurrentlyFullscreen()) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+
+            // Restore floating bottom navigation bar smoothly
+            const bottomNav = document.getElementById('floating-bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.display = '';
+            }
+        }
+
+        function showNextPhoto() {
+            openLightbox(currentPhotoIndex + 1);
+        }
+
+        function showPrevPhoto() {
+            openLightbox(currentPhotoIndex - 1);
+        }
+
+        // Attach Card Click Handlers
+        document.querySelectorAll('.gallery-card').forEach((card) => {
+            card.addEventListener('click', function () {
+                updateVisibleCards();
+                const cardIndex = visiblePhotoCards.indexOf(card);
+                openLightbox(cardIndex >= 0 ? cardIndex : 0);
+            });
+        });
+
+        lbCloseBtn.addEventListener('click', closeLightbox);
+        lbNextBtn.addEventListener('click', showNextPhoto);
+        lbPrevBtn.addEventListener('click', showPrevPhoto);
+
+        // Full Screen Button Handler
+        if (lbFullscreenBtn) {
+            lbFullscreenBtn.addEventListener('click', toggleFullScreen);
+        }
+
+        // Download Button Handler
+        if (lbDownloadBtn) {
+            lbDownloadBtn.addEventListener('click', function () {
+                if (currentPhotoSrc) {
+                    downloadPhoto(currentPhotoSrc);
+                }
+            });
+        }
+
+        // Share Button Handler
+        if (lbShareBtn) {
+            lbShareBtn.addEventListener('click', function () {
+                if (currentPhotoSrc) {
+                    sharePhoto(currentPhotoSrc);
+                }
+            });
+        }
+
+        // Fullscreen Change Listeners
+        document.addEventListener('fullscreenchange', updateFullscreenBtnState);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenBtnState);
+        document.addEventListener('mozfullscreenchange', updateFullscreenBtnState);
+        document.addEventListener('MSFullscreenChange', updateFullscreenBtnState);
+
+        // Backdrop click to close (when clicking outside image and controls)
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal || e.target.classList.contains('overflow-hidden')) {
+                closeLightbox();
+            }
+        });
+
+        // Keyboard Navigation (ESC, Left, Right)
+        document.addEventListener('keydown', function (e) {
+            if (!modal.classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') showNextPhoto();
+            if (e.key === 'ArrowLeft') showPrevPhoto();
+        });
+
+        // Swipe Gestures for Mobile Lightbox
+        let touchStartX = 0;
+        let touchEndX = 0;
+        modal.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        modal.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) {
+                showNextPhoto();
+            } else if (touchEndX - touchStartX > 50) {
+                showPrevPhoto();
+            }
+        }, { passive: true });
+
+        // Expose functions globally for card buttons
+        window.downloadPhoto = downloadPhoto;
+        window.sharePhoto = sharePhoto;
+
+        // Initialize cards list
+        updateVisibleCards();
+    </script>
+</body>
+
+</html>

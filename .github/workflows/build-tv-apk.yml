@@ -1,0 +1,42 @@
+name: Build Euphoria Android TV APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android-tv/**'
+      - '.github/workflows/build-tv-apk.yml'
+
+jobs:
+  build-apk:
+    name: Build Android TV Standalone APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./android-tv/gradlew || true
+
+      - name: Build APK with Gradle
+        working-directory: ./android-tv
+        run: |
+          gradle wrapper --gradle-version 8.2
+          ./gradlew assembleRelease --stacktrace || ./gradlew assembleDebug --stacktrace
+
+      - name: Upload Built APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: euphoria-tv-standalone-apk
+          path: ./android-tv/app/build/outputs/apk/**/*.apk
+          retention-days: 14

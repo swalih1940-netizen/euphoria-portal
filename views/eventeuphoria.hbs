@@ -360,6 +360,28 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #f59e0b;
         }
+
+        /* Clean sharp corners for home gallery cards */
+        .home-gallery-card {
+            border-radius: 0 !important;
+        }
+
+        /* Smooth Lightbox fade */
+        #home-lightbox-modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #home-lightbox-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 
@@ -410,12 +432,19 @@
                 </div>
             </div>
 
-            <!-- Right: Results Button Only (Hidden on Mobile) -->
-            <a href="/result"
-                class="hidden sm:flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all shrink-0">
-                <span class="material-symbols-outlined text-sm sm:text-base">trophy</span>
-                <span>Results</span>
-            </a>
+            <!-- Right: Results & Gallery Buttons -->
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="/gallery"
+                    class="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-bold text-xs border border-slate-700/80 transition-all shadow-sm">
+                    <span class="material-symbols-outlined text-sm text-cyan-400">photo_library</span>
+                    <span>Gallery</span>
+                </a>
+                <a href="/result"
+                    class="hidden sm:flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-sm sm:text-base">trophy</span>
+                    <span>Results</span>
+                </a>
+            </div>
         </div>
     </header>
 
@@ -784,13 +813,129 @@
         }
     </script>
 
+    <!-- ========================================== -->
+    <!-- FESTIVAL GALLERY SHOWCASE SECTION          -->
+    <!-- ========================================== -->
+    <section id="gallery" class="py-16 sm:py-24 border-t border-slate-800/80 bg-slate-950/70 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            
+            <div class="mb-10 sm:mb-12">
+                <div>
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-3">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>FESTIVAL MOMENTS & MEMORIES</span>
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold text-white tracking-tight">
+                        In <span class="gradient-text-gold">Pictures</span>
+                    </h2>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-2 max-w-xl">
+                        Moments from Euphoria 2026 at Perimalam, Off Campus Of Darul Ma'arif Kodampuzha
+                    </p>
+                </div>
+            </div>
+
+            <!-- Photos Grid Preview: 2-column layout on mobile (2 x 4 arrangement), responsive on tablet and desktop -->
+            <div id="home-gallery-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                {{#if photos}}
+                    {{#each photos}}
+                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
+                        data-src="{{this.imageUrl}}">
+                        <div class="aspect-[4/3] w-full overflow-hidden bg-slate-950 relative">
+                            <img src="{{this.imageUrl}}" alt="Event Euphoria Festival Photo" loading="lazy"
+                                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                        </div>
+                    </div>
+                    {{/each}}
+                {{else}}
+                    <!-- Default Curated Preview Cards -->
+                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all shadow-xl cursor-pointer"
+                        data-src="/images/euphoria_trophy.jpg">
+                        <div class="aspect-[4/3] w-full overflow-hidden relative">
+                            <img src="/images/euphoria_trophy.jpg" alt="Festival Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                    </div>
+                {{/if}}
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Clean Fullscreen Lightbox Modal (Landing Page Gallery) -->
+    <div id="home-lightbox-modal"
+        class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl opacity-0 invisible flex flex-col justify-between p-3 sm:p-6 transition-all duration-300">
+        
+        <!-- Lightbox Top Bar: Counter & Close Button Only -->
+        <div class="flex items-center justify-between text-white z-30 w-full max-w-6xl mx-auto pt-1 sm:pt-2 px-1 sm:px-4">
+            <span id="home-lb-counter" class="text-white text-xs sm:text-sm font-mono font-semibold bg-black/80 border border-white/40 px-3 sm:px-4 py-1.5 rounded-none shadow-lg">
+                1 / 8
+            </span>
+
+            <button id="home-lb-close-btn" type="button" title="Close Photo View (Esc)"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white flex items-center justify-center transition-all shadow-xl active:scale-90">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">close</span>
+            </button>
+        </div>
+
+        <!-- Lightbox Main Stage (Pure Clean Image + Navigation Chevrons) -->
+        <div class="relative flex-1 flex items-center justify-center my-auto overflow-hidden select-none w-full max-w-6xl mx-auto px-1 sm:px-12">
+            <button id="home-lb-prev-btn" type="button" title="Previous Photo (Left Arrow)"
+                class="absolute left-1 sm:left-3 z-30 p-2 sm:p-2.5 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white transition-all active:scale-90 shadow-2xl backdrop-blur-md">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">chevron_left</span>
+            </button>
+
+            <div class="max-w-5xl max-h-[72vh] sm:max-h-[78vh] flex items-center justify-center p-1 w-full h-full">
+                <img id="home-lb-img" src="" alt="Festival Euphoria Photo"
+                    class="max-w-full max-h-[72vh] sm:max-h-[78vh] w-auto h-auto object-contain rounded-none shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] transition-all duration-300 transform scale-100"
+                    style="object-fit: contain;" />
+            </div>
+
+            <button id="home-lb-next-btn" type="button" title="Next Photo (Right Arrow)"
+                class="absolute right-1 sm:right-3 z-30 p-2 sm:p-2.5 rounded-none bg-black/80 hover:bg-white/20 text-white border border-white transition-all active:scale-90 shadow-2xl backdrop-blur-md">
+                <span class="material-symbols-outlined text-xl sm:text-2xl text-white">chevron_right</span>
+            </button>
+        </div>
+
+        <!-- Bottom Action Bar: Clear Interactive Buttons for 'FULL SCREEN', 'DOWNLOAD', and 'SHARE' -->
+        <div class="w-full z-30 pb-3 sm:pb-5 pt-1 px-2 flex justify-center">
+            <div class="flex items-center justify-center gap-2 sm:gap-2.5 p-0 bg-transparent border-0 w-[72%] min-w-[275px] max-w-[330px] sm:w-auto sm:min-w-[360px] sm:max-w-[400px]">
+                
+                <!-- 1. Full Screen Button -->
+                <button id="home-lb-fullscreen-btn" type="button" title="Toggle Fullscreen View"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span id="home-lb-fullscreen-icon" class="material-symbols-outlined text-base sm:text-base text-white">fullscreen</span>
+                    <span id="home-lb-fullscreen-text" class="text-white">FULL SCREEN</span>
+                </button>
+
+                <!-- 2. Download Button -->
+                <button id="home-lb-download-btn" type="button" title="Download Raw Photo"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span class="material-symbols-outlined text-base sm:text-base text-white">download</span>
+                    <span class="text-white">DOWNLOAD</span>
+                </button>
+
+                <!-- 3. Share Button -->
+                <button id="home-lb-share-btn" type="button" title="Share Photo"
+                    class="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-none bg-black/60 hover:bg-white/15 text-white border border-white text-[10.5px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all backdrop-blur-md">
+                    <span class="material-symbols-outlined text-base sm:text-base text-white">share</span>
+                    <span class="text-white">SHARE</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
     <!-- Footer -->
-    <footer class="py-12 bg-[#05070d] border-t border-slate-900 text-center text-xs text-slate-500">
+    <footer class="py-12 bg-[#05070d] border-t border-slate-900 text-center text-xs text-slate-500 pb-28">
         <div class="max-w-7xl mx-auto px-4">
             <p>© 2026 Sirajul Irfan Da'wa Dars. Official Event Euphoria Festival Engine.</p>
-            <div class="mt-4 flex justify-center gap-6 text-slate-400">
+            <div class="mt-4 flex flex-wrap justify-center gap-6 text-slate-400">
                 <a href="{{#if mainSiteUrl}}{{mainSiteUrl}}{{else}}https://sirajulirfan.com{{/if}}" class="hover:text-white" target="_blank" rel="noopener noreferrer">Main Website ↗</a>
                 <a href="/result" class="hover:text-amber-400">Official Results</a>
+                <a href="/gallery" class="hover:text-amber-400">Festival Gallery</a>
+                <a href="/admin/gallery" class="hover:text-cyan-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">admin_panel_settings</span>
+                    <span>Admin Upload</span>
+                </a>
                 <a href="{{#if mainSiteUrl}}{{mainSiteUrl}}/#contact{{else}}https://sirajulirfan.com/#contact{{/if}}" class="hover:text-white" target="_blank" rel="noopener noreferrer">Contact Administration</a>
             </div>
         </div>
@@ -883,7 +1028,291 @@
                 prompt('Copy result link:', shareUrl);
             }
         }
+
+        // Helper to convert any image Blob (including WebP/AVIF) to standard JPEG Blob
+        function convertBlobToJpeg(blob, quality = 0.95) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                const tempUrl = URL.createObjectURL(blob);
+                img.onload = function () {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        URL.revokeObjectURL(tempUrl);
+                        canvas.toBlob((jpegBlob) => {
+                            resolve(jpegBlob || blob);
+                        }, 'image/jpeg', quality);
+                    } catch (e) {
+                        URL.revokeObjectURL(tempUrl);
+                        resolve(blob);
+                    }
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(tempUrl);
+                    resolve(blob);
+                };
+                img.src = tempUrl;
+            });
+        }
+
+        // Transforms Cloudinary URLs: strips .webp, replaces f_auto/f_webp with f_jpg, adds fl_attachment
+        function formatCloudinaryUrlForDownload(url, filename = 'Euphoria Photo') {
+            if (!url || !url.includes('cloudinary.com')) return url;
+            let target = url;
+
+            // 1. Remove .webp extension if present and force .jpg
+            target = target.replace(/\.webp(\?.*)?$/i, '.jpg$1');
+
+            // 2. Replace f_auto or f_webp with f_jpg in transformations
+            target = target.replace(/([/,])f_(?:auto|webp)([,/])/g, '$1f_jpg$2');
+
+            // 3. Inject fl_attachment with desired filename and f_jpg
+            const safeName = encodeURIComponent(filename.replace(/\s+/g, '_'));
+            if (target.includes('/image/upload/')) {
+                if (!target.includes('fl_attachment')) {
+                    target = target.replace('/image/upload/', `/image/upload/fl_attachment:${safeName},f_jpg/`);
+                } else {
+                    target = target.replace(/fl_attachment:[^,/]+/, `fl_attachment:${safeName}`);
+                }
+            }
+            return target;
+        }
+
+        // High-Reliability Photo Downloader
+        // 1. Prevents .webp format from Cloudinary or local files (converts to standard JPG or original PNG)
+        // 2. Always names the downloaded file 'Euphoria Photo.jpg' (or 'Euphoria Photo.png')
+        async function downloadPhoto(url, customName) {
+            if (!url) return;
+
+            const baseName = (customName && customName.trim()) ? customName.replace(/\.[^/.]+$/, '').trim() : 'Euphoria Photo';
+            const targetUrl = formatCloudinaryUrlForDownload(url, baseName);
+            const cleanUrl = targetUrl.split('?')[0].toLowerCase();
+
+            try {
+                const response = await fetch(targetUrl, { mode: 'cors' });
+                if (!response.ok) throw new Error('Fetch status ' + response.status);
+                let blob = await response.blob();
+
+                let ext = '.jpg';
+                // If WebP, AVIF, or unknown, convert to standard JPEG
+                if (blob.type === 'image/webp' || blob.type === 'image/avif' || cleanUrl.endsWith('.webp')) {
+                    blob = await convertBlobToJpeg(blob, 0.95);
+                    ext = '.jpg';
+                } else if (blob.type === 'image/png' || cleanUrl.endsWith('.png')) {
+                    ext = '.png';
+                } else {
+                    ext = '.jpg';
+                }
+
+                const finalFilename = `${baseName}${ext}`;
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = finalFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            } catch (err) {
+                console.warn('[downloadPhoto] Blob fetch failed, falling back to direct link:', err);
+                const isPng = cleanUrl.endsWith('.png');
+                const finalFilename = `${baseName}${isPng ? '.png' : '.jpg'}`;
+                const link = document.createElement('a');
+                link.href = targetUrl;
+                link.download = finalFilename;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Direct Raw Photo Sharer
+        async function sharePhoto(url) {
+            if (!url) return;
+            const fullUrl = url.startsWith('http') ? url : window.location.origin + url;
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "Event Euphoria '26 Festival Photo",
+                        text: "Event Euphoria '26 Festival Photo:",
+                        url: fullUrl
+                    });
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                }
+            }
+            const whatsappText = `📸 *Event Euphoria '26 Festival Photo*\n\n${fullUrl}`;
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Home Festival Gallery Clean Lightbox Logic
+        (function() {
+            let currentHomeIndex = 0;
+            let homeCards = [];
+            let currentHomePhotoSrc = '';
+
+            const homeModal = document.getElementById('home-lightbox-modal');
+            const homeLbImg = document.getElementById('home-lb-img');
+            const homeLbCounter = document.getElementById('home-lb-counter');
+            const homeFullscreenBtn = document.getElementById('home-lb-fullscreen-btn');
+            const homeFullscreenIcon = document.getElementById('home-lb-fullscreen-icon');
+            const homeFullscreenText = document.getElementById('home-lb-fullscreen-text');
+            const homeDownloadBtn = document.getElementById('home-lb-download-btn');
+            const homeShareBtn = document.getElementById('home-lb-share-btn');
+            const homeCloseBtn = document.getElementById('home-lb-close-btn');
+            const homePrevBtn = document.getElementById('home-lb-prev-btn');
+            const homeNextBtn = document.getElementById('home-lb-next-btn');
+
+            if (!homeModal) return;
+
+            function updateHomeCards() {
+                homeCards = Array.from(document.querySelectorAll('.home-gallery-card'));
+            }
+
+            function isHomeFullscreen() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            }
+
+            function updateHomeFullscreenBtn() {
+                if (!homeFullscreenIcon || !homeFullscreenText) return;
+                if (isHomeFullscreen()) {
+                    homeFullscreenIcon.textContent = 'fullscreen_exit';
+                    homeFullscreenText.textContent = 'EXIT FULL SCREEN';
+                } else {
+                    homeFullscreenIcon.textContent = 'fullscreen';
+                    homeFullscreenText.textContent = 'FULL SCREEN';
+                }
+            }
+
+            function toggleHomeFullscreen() {
+                if (!isHomeFullscreen()) {
+                    const elem = homeModal || document.documentElement;
+                    if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+                    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+                    else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+                    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                    else if (document.msExitFullscreen) document.msExitFullscreen();
+                }
+            }
+
+            function openHomeLightbox(index) {
+                updateHomeCards();
+                if (homeCards.length === 0) return;
+                if (index < 0) index = homeCards.length - 1;
+                if (index >= homeCards.length) index = 0;
+
+                currentHomeIndex = index;
+                const card = homeCards[index];
+                currentHomePhotoSrc = card.dataset.src;
+
+                homeLbImg.src = currentHomePhotoSrc;
+                homeLbCounter.innerText = `${currentHomeIndex + 1} / ${homeCards.length}`;
+
+                homeModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                const bottomNav = document.getElementById('floating-bottom-nav');
+                if (bottomNav) {
+                    bottomNav.style.display = 'none';
+                }
+
+                updateHomeFullscreenBtn();
+            }
+
+            function closeHomeLightbox() {
+                homeModal.classList.remove('active');
+                document.body.style.overflow = '';
+                homeLbImg.src = '';
+
+                if (isHomeFullscreen()) {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                }
+
+                const bottomNav = document.getElementById('floating-bottom-nav');
+                if (bottomNav) {
+                    bottomNav.style.display = '';
+                }
+            }
+
+            function showNextHomePhoto() {
+                openHomeLightbox(currentHomeIndex + 1);
+            }
+
+            function showPrevHomePhoto() {
+                openHomeLightbox(currentHomeIndex - 1);
+            }
+
+            updateHomeCards();
+            homeCards.forEach((card, idx) => {
+                card.addEventListener('click', function() {
+                    openHomeLightbox(idx);
+                });
+            });
+
+            if (homeCloseBtn) homeCloseBtn.addEventListener('click', closeHomeLightbox);
+            if (homeNextBtn) homeNextBtn.addEventListener('click', showNextHomePhoto);
+            if (homePrevBtn) homePrevBtn.addEventListener('click', showPrevHomePhoto);
+
+            if (homeFullscreenBtn) homeFullscreenBtn.addEventListener('click', toggleHomeFullscreen);
+            if (homeDownloadBtn) {
+                homeDownloadBtn.addEventListener('click', function() {
+                    if (currentHomePhotoSrc) downloadPhoto(currentHomePhotoSrc);
+                });
+            }
+            if (homeShareBtn) {
+                homeShareBtn.addEventListener('click', function() {
+                    if (currentHomePhotoSrc) sharePhoto(currentHomePhotoSrc);
+                });
+            }
+
+            document.addEventListener('fullscreenchange', updateHomeFullscreenBtn);
+            document.addEventListener('webkitfullscreenchange', updateHomeFullscreenBtn);
+            document.addEventListener('mozfullscreenchange', updateHomeFullscreenBtn);
+            document.addEventListener('MSFullscreenChange', updateHomeFullscreenBtn);
+
+            homeModal.addEventListener('click', function(e) {
+                if (e.target === homeModal || e.target.classList.contains('overflow-hidden')) {
+                    closeHomeLightbox();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (!homeModal.classList.contains('active')) return;
+                if (e.key === 'Escape') closeHomeLightbox();
+                if (e.key === 'ArrowRight') showNextHomePhoto();
+                if (e.key === 'ArrowLeft') showPrevHomePhoto();
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+            homeModal.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            homeModal.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchStartX - touchEndX > 50) showNextHomePhoto();
+                else if (touchEndX - touchStartX > 50) showPrevHomePhoto();
+            }, { passive: true });
+        })();
     </script>
+
+    <!-- Floating Mobile-Style Bottom Navigation Bar (Results & Gallery) -->
+    {{> bottomNav}}
 </body>
 
 </html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ADMIN PANEL | Festival Photo Manager | Event Euphoria '26</title>
+    
+    <!-- PWA & Theme Color -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#070a12" />
+
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/logo-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/logo-192.png">
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#f59e0b',
+                            goldLight: '#fbbf24',
+                            purple: '#8b5cf6',
+                            deepDark: '#070a12',
+                            cardDark: '#0f172a',
+                            cyan: '#06b6d4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Outfit', 'sans-serif'],
+                        heading: ['Outfit', 'Chakra Petch', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .gradient-text-gold {
+            background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Drag & Drop Highlight */
+        .dropzone.dragover {
+            border-color: #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.08) !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen pb-24">
+
+    <!-- PIN Authentication Screen (Shown if not yet authenticated) -->
+    <div id="admin-pin-screen" class="fixed inset-0 z-50 bg-[#070a12] flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-8 rounded-3xl border border-amber-500/20 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl"></div>
+            
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
+            </div>
+
+            <h2 class="text-2xl font-bold font-heading text-white">Event Euphoria Admin</h2>
+            <p class="text-slate-400 text-xs mt-1.5 mb-6">Enter Admin PIN or Master Password to manage festival photos and uploads.</p>
+
+            <form id="pin-login-form" class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="admin-pin-input" placeholder="Enter Admin PIN" required autofocus
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-center text-lg text-white font-mono tracking-widest placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" />
+                </div>
+                <div id="pin-error-msg" class="text-xs text-red-400 font-semibold hidden">Incorrect PIN. Please try again.</div>
+
+                <button type="submit"
+                    class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/20 active:scale-95 transition-all">
+                    Unlock Admin Access
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
+                <span>Default PIN: <strong class="text-slate-400 font-mono">euphoria2026</strong></span>
+                <a href="/" class="text-amber-400 hover:underline">Return to Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Admin Dashboard (Hidden until PIN verified) -->
+    <div id="admin-dashboard-container" class="hidden">
+
+        <!-- Top Admin Header -->
+        <header class="bg-[#0b101e]/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-3">
+                    <a href="/" class="flex items-center group">
+                        <img src="/images/EUPHORIA LOGO.svg" alt="Event Euphoria Logo" class="h-7 sm:h-9 w-auto brightness-0 invert" />
+                    </a>
+                    <span class="px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                        Admin Suite
+                    </span>
+                </div>
+
+                <!-- Navigation Shortcuts -->
+                <div class="flex items-center gap-2 sm:gap-3 text-xs">
+                    <a href="/gallery" target="_blank"
+                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 font-semibold flex items-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-sm text-cyan-400">visibility</span>
+                        <span class="hidden sm:inline">View Live Gallery</span>
+                        <span class="sm:hidden">Gallery</span>
+                    </a>
+                    <a href="/tv" target="_blank"
+                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 font-semibold flex items-center gap-1.5 transition-all"
+                        title="Launch Full-Screen Live TV Display">
+                        <span class="material-symbols-outlined text-sm text-red-400">tv</span>
+                        <span class="hidden sm:inline">Live TV</span>
+                    </a>
+                    <a href="/"
+                        class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 font-semibold flex items-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-sm">home</span>
+                        <span class="hidden sm:inline">Portal</span>
+                    </a>
+                    <button id="admin-logout-btn"
+                        class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1 transition-all"
+                        title="Lock Admin Session">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+
+            <!-- Title & Quick Stats -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-white tracking-tight">
+                        Festival Photo Upload & <span class="gradient-text-gold">Storage Hub</span>
+                    </h1>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-1">
+                        Upload high-resolution festival moments with instant on-the-fly client compression & permanent storage.
+                    </p>
+                </div>
+
+                <!-- Quick Stats Badge -->
+                <div class="flex items-center gap-3">
+                    <div class="glass-card px-4 py-2.5 rounded-2xl border border-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined text-xl">photo_library</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Gallery Photos</p>
+                            <p id="stat-total-photos" class="text-lg font-bold text-white leading-tight">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Toast / Alert Box -->
+            <div id="admin-alert-banner" class="hidden mb-6 p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all">
+                <div class="flex items-center gap-2">
+                    <span id="admin-alert-icon" class="material-symbols-outlined text-lg">check_circle</span>
+                    <span id="admin-alert-text">Message</span>
+                </div>
+                <button onclick="hideAlert()" class="text-xs hover:opacity-75">Dismiss</button>
+            </div>
+
+            <!-- Grid: Left (Upload Form + Compression) | Right (Recent Uploads / Manage) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <!-- ============================================== -->
+                <!-- 1. PHOTO UPLOAD & AUTOMATIC COMPRESSION SECTION -->
+                <!-- ============================================== -->
+                <div class="lg:col-span-6 glass-card rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-2xl relative">
+                    <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-800/80">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-400">cloud_upload</span>
+                            <span>Upload Festival Photos (Bulk Upload)</span>
+                        </h2>
+                        <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Auto Compression Active</span>
+                        </span>
+                    </div>
+
+                    <form id="photo-upload-form" class="space-y-5">
+                        
+                        <!-- Drag & Drop Zone (Supports Multiple Files) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                                Photo Files (Bulk Upload Supported)
+                            </label>
+                            <div id="dropzone"
+                                class="dropzone relative border-2 border-dashed border-slate-700 hover:border-amber-500/70 rounded-2xl p-6 text-center bg-slate-950/60 cursor-pointer transition-all duration-300 group">
+                                <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/jpg" multiple
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                
+                                <div id="dropzone-prompt" class="space-y-2 pointer-events-none">
+                                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                                        <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                                    </div>
+                                    <p class="text-xs sm:text-sm font-semibold text-white">
+                                        Drag & drop photos here, or <span class="text-amber-400 underline">browse multiple files</span>
+                                    </p>
+                                    <p class="text-[11px] text-slate-500">
+                                        Select multiple high-res festival photos at once. Photos will automatically retain their original file names.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Files / Batch Preview Card -->
+                        <div id="selected-files-card" class="hidden bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
+                                <span class="font-bold text-amber-400 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">photo_library</span>
+                                    <span id="selected-count-badge">0 Photos Selected</span>
+                                </span>
+                                <button type="button" id="clear-selected-btn" onclick="clearSelectedFiles()" class="text-[11px] text-red-400 hover:text-red-300 font-semibold flex items-center gap-0.5">
+                                    <span class="material-symbols-outlined text-xs">close</span> Clear All
+                                </button>
+                            </div>
+
+                            <!-- List of selected photos -->
+                            <div id="selected-files-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Category Selector & House Tag Selector -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" for="photo-category">
+                                    Festival Category
+                                </label>
+                                <select id="photo-category"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition-colors font-semibold">
+                                    <option value="Stage & Performance">Stage & Performance</option>
+                                    <option value="Crowd & Vibes">Crowd & Vibes</option>
+                                    <option value="Awards & Glory">Awards & Glory</option>
+                                    <option value="Behind The Scenes">Behind The Scenes</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" for="photo-house">
+                                    Associated House / Team
+                                </label>
+                                <select id="photo-house"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition-colors font-semibold">
+                                    <option value="General">General / All Houses</option>
+                                    <option value="Team fanora">Team Fanora</option>
+                                    <option value="Team zahora">Team Zahora</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress Bar (Hidden during normal state) -->
+                        <div id="upload-progress-container" class="hidden space-y-2">
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span id="upload-status-label">Compressing & Uploading...</span>
+                                <span id="upload-percentage">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                                <div id="upload-progress-bar" class="bg-gradient-to-r from-amber-500 to-amber-400 h-full w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Upload Button -->
+                        <button type="submit" id="submit-upload-btn"
+                            class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-lg">publish</span>
+                            <span id="btn-text">Upload Photos</span>
+                        </button>
+
+                    </form>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- 2. PHOTO STORAGE & GALLERY MANAGEMENT SECTION   -->
+                <!-- ============================================== -->
+                <div class="lg:col-span-6 space-y-6">
+                    
+                    <div class="glass-card rounded-3xl p-6 border border-slate-800 shadow-2xl">
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/80">
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-cyan-400">collections</span>
+                                <span>Published Gallery Photos</span>
+                            </h2>
+                            <button onclick="loadAdminPhotos()" class="text-slate-400 hover:text-white flex items-center gap-1 text-xs font-semibold">
+                                <span class="material-symbols-outlined text-sm">refresh</span>
+                                <span>Reload</span>
+                            </button>
+                        </div>
+
+                        <!-- Search Filter -->
+                        <div class="relative mb-4">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base">search</span>
+                            <input type="text" id="admin-search-input" placeholder="Search by title or category..."
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500" />
+                        </div>
+
+                        <!-- Photos List / Cards -->
+                        <div id="admin-photos-container" class="space-y-3 max-h-[580px] overflow-y-auto pr-1">
+                            <div class="text-center py-10 text-slate-500">
+                                <span class="material-symbols-outlined animate-spin text-3xl">sync</span>
+                                <p class="text-xs mt-2">Loading gallery photos...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Admin Panel JavaScript Logic -->
+    <script>
+        // Master Admin PIN verification
+        const CORRECT_PIN = 'euphoria2026';
+        let allAdminPhotos = [];
+
+        // Check auth status on load
+        function checkAdminAuth() {
+            const isAuth = localStorage.getItem('euphoria_admin_auth') === 'true';
+            const pinScreen = document.getElementById('admin-pin-screen');
+            const dashboard = document.getElementById('admin-dashboard-container');
+
+            if (isAuth) {
+                pinScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                loadAdminPhotos();
+            } else {
+                pinScreen.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
+        }
+
+        // Handle PIN submit
+        document.getElementById('pin-login-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const enteredPin = document.getElementById('admin-pin-input').value.trim();
+            const errorMsg = document.getElementById('pin-error-msg');
+
+            if (enteredPin === CORRECT_PIN || enteredPin === 'sisa2026') {
+                localStorage.setItem('euphoria_admin_auth', 'true');
+                errorMsg.classList.add('hidden');
+                checkAdminAuth();
+            } else {
+                errorMsg.classList.remove('hidden');
+                document.getElementById('admin-pin-input').focus();
+            }
+        });
+
+        // Logout / Lock
+        document.getElementById('admin-logout-btn')?.addEventListener('click', function () {
+            localStorage.removeItem('euphoria_admin_auth');
+            checkAdminAuth();
+        });
+
+        // Alert Banner Helper
+        function showAlert(msg, isSuccess = true) {
+            const banner = document.getElementById('admin-alert-banner');
+            const text = document.getElementById('admin-alert-text');
+            const icon = document.getElementById('admin-alert-icon');
+
+            banner.className = `mb-6 p-4 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all ${
+                isSuccess 
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                : 'bg-red-500/10 border-red-500/30 text-red-400'
+            }`;
+            icon.innerText = isSuccess ? 'check_circle' : 'error';
+            text.innerText = msg;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 6000);
+        }
+
+        function hideAlert() {
+            document.getElementById('admin-alert-banner').classList.add('hidden');
+        }
+
+        // ==============================================
+        // AUTOMATIC IMAGE COMPRESSION ENGINE & BATCH UPLOAD (Canvas)
+        // ==============================================
+        let selectedFilesQueue = [];
+        const fileInput = document.getElementById('file-input');
+        const dropzone = document.getElementById('dropzone');
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            const files = Array.from(dt.files || []).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) {
+                addFilesToQueue(files);
+            }
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                const files = Array.from(this.files).filter(f => f.type.startsWith('image/'));
+                addFilesToQueue(files);
+            }
+        });
+
+        function formatBytes(bytes, decimals = 1) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function addFilesToQueue(newFiles) {
+            newFiles.forEach(file => {
+                const exists = selectedFilesQueue.some(f => f.name === file.name && f.size === file.size);
+                if (!exists) {
+                    selectedFilesQueue.push(file);
+                }
+            });
+            renderSelectedFilesUI();
+        }
+
+        function removeSelectedFile(index) {
+            if (index >= 0 && index < selectedFilesQueue.length) {
+                selectedFilesQueue.splice(index, 1);
+                renderSelectedFilesUI();
+            }
+        }
+
+        function clearSelectedFiles() {
+            selectedFilesQueue = [];
+            fileInput.value = '';
+            renderSelectedFilesUI();
+        }
+
+        function renderSelectedFilesUI() {
+            const card = document.getElementById('selected-files-card');
+            const list = document.getElementById('selected-files-list');
+            const badge = document.getElementById('selected-count-badge');
+            const btnText = document.getElementById('btn-text');
+            const prompt = document.getElementById('dropzone-prompt');
+
+            if (selectedFilesQueue.length === 0) {
+                card.classList.add('hidden');
+                list.innerHTML = '';
+                btnText.innerText = 'Upload Photos';
+                prompt.innerHTML = `
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                    </div>
+                    <p class="text-xs sm:text-sm font-semibold text-white">
+                        Drag & drop photos here, or <span class="text-amber-400 underline">browse multiple files</span>
+                    </p>
+                    <p class="text-[11px] text-slate-500">
+                        Select multiple high-res festival photos at once. Photos will automatically retain their original file names.
+                    </p>
+                `;
+                return;
+            }
+
+            card.classList.remove('hidden');
+            const count = selectedFilesQueue.length;
+            badge.innerText = `${count} Photo${count > 1 ? 's' : ''} Selected`;
+            btnText.innerText = `Upload ${count} Photo${count > 1 ? 's' : ''}`;
+
+            prompt.innerHTML = `
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+                    <span class="material-symbols-outlined text-xl">library_add</span>
+                </div>
+                <p class="text-xs font-semibold text-emerald-400">${count} photo${count > 1 ? 's' : ''} selected</p>
+                <p class="text-[11px] text-slate-400 font-normal">Drag & drop or click to add more photos</p>
+            `;
+
+            list.innerHTML = selectedFilesQueue.map((file, idx) => {
+                const previewUrl = URL.createObjectURL(file);
+                const sizeStr = formatBytes(file.size);
+                return `
+                    <div class="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
+                        <div class="flex items-center gap-2.5 overflow-hidden">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-900 border border-slate-700 shrink-0">
+                                <img src="${previewUrl}" alt="" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="truncate">
+                                <p class="font-bold text-white truncate font-mono text-[11px]">${file.name}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">${sizeStr}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removeSelectedFile(${idx})" class="p-1 text-slate-400 hover:text-red-400 transition-colors" title="Remove Photo">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function compressImageFile(file, maxDimension = 1920, quality = 0.84) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function () {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = Math.round((height * maxDimension) / width);
+                                width = maxDimension;
+                            } else {
+                                width = Math.round((width * maxDimension) / height);
+                                height = maxDimension;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Output as standard JPEG (or PNG if original file was PNG)
+                        const isPng = file.type === 'image/png';
+                        let dataUrl = canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', isPng ? 0.92 : quality);
+
+                        const byteLength = Math.round((dataUrl.length - 22) * 3 / 4);
+
+                        resolve({
+                            dataUrl,
+                            byteLength,
+                            width,
+                            height
+                        });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ==============================================
+        // SUBMIT & BULK UPLOAD HANDLING
+        // ==============================================
+        const form = document.getElementById('photo-upload-form');
+        const submitBtn = document.getElementById('submit-upload-btn');
+        const btnText = document.getElementById('btn-text');
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const percentageText = document.getElementById('upload-percentage');
+        const statusLabel = document.getElementById('upload-status-label');
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (selectedFilesQueue.length === 0) {
+                alert('Please select at least one festival photo first.');
+                return;
+            }
+
+            const category = document.getElementById('photo-category').value;
+            const house = document.getElementById('photo-house').value;
+            const total = selectedFilesQueue.length;
+
+            submitBtn.disabled = true;
+            progressContainer.classList.remove('hidden');
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < total; i++) {
+                const file = selectedFilesQueue[i];
+                const pctStart = Math.round((i / total) * 100);
+                progressBar.style.width = `${pctStart}%`;
+                percentageText.innerText = `${pctStart}%`;
+                statusLabel.innerText = `Compressing & Uploading (${i + 1}/${total}): ${file.name}`;
+                btnText.innerText = `Uploading ${i + 1} of ${total}...`;
+
+                try {
+                    const compressed = await compressImageFile(file, 1920, 0.84);
+                    const response = await fetch('/api/admin/gallery/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            originalFilename: file.name,
+                            category,
+                            house,
+                            imageData: compressed.dataUrl,
+                            originalSize: formatBytes(file.size),
+                            compressedSize: formatBytes(compressed.byteLength)
+                        })
+                    });
+
+                    const resData = await response.json();
+                    if (resData.success) {
+                        successCount++;
+                    } else {
+                        console.error(`Failed to upload ${file.name}:`, resData.error);
+                        failCount++;
+                    }
+                } catch (err) {
+                    console.error(`Error uploading ${file.name}:`, err);
+                    failCount++;
+                }
+
+                const pctEnd = Math.round(((i + 1) / total) * 100);
+                progressBar.style.width = `${pctEnd}%`;
+                percentageText.innerText = `${pctEnd}%`;
+            }
+
+            if (successCount > 0) {
+                showAlert(`Successfully uploaded ${successCount} photo${successCount > 1 ? 's' : ''}! Original file names retained.`, true);
+                clearSelectedFiles();
+                loadAdminPhotos();
+            }
+            if (failCount > 0) {
+                showAlert(`Failed to upload ${failCount} photo(s). Please try again.`, false);
+            }
+
+            submitBtn.disabled = false;
+            btnText.innerText = 'Upload Photos';
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+                progressBar.style.width = '0%';
+                percentageText.innerText = '0%';
+                statusLabel.innerText = 'Compressing & Uploading...';
+            }, 1200);
+        });
+
+        // ==============================================
+        // LOAD & MANAGE EXISTING PHOTOS
+        // ==============================================
+        async function loadAdminPhotos() {
+            const container = document.getElementById('admin-photos-container');
+            const statTotal = document.getElementById('stat-total-photos');
+
+            try {
+                const res = await fetch('/api/admin/gallery/list');
+                const data = await res.json();
+
+                if (data.photos) {
+                    allAdminPhotos = data.photos;
+                    statTotal.innerText = allAdminPhotos.length;
+                    renderPhotosList(allAdminPhotos);
+                }
+            } catch (err) {
+                console.error('[Failed to fetch admin photos]:', err);
+                container.innerHTML = `
+                    <div class="text-center py-8 text-red-400 text-xs">
+                        Failed to load photos. Please refresh.
+                    </div>
+                `;
+            }
+        }
+
+        function renderPhotosList(photos) {
+            const container = document.getElementById('admin-photos-container');
+            if (photos.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-500">
+                        <span class="material-symbols-outlined text-3xl mb-1">no_photography</span>
+                        <p class="text-xs font-semibold">No photos in the gallery yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = photos.map(photo => `
+                <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
+                            <img src="${photo.imageUrl}" alt="${photo.title}" class="w-full h-full object-cover" />
+                        </div>
+                        <div class="truncate">
+                            <h4 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
+                                ${photo.title}
+                            </h4>
+                            <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 font-semibold text-[10px]">
+                                    ${photo.category || 'Stage'}
+                                </span>
+                                <span class="truncate">${photo.house || 'General'}</span>
+                                <span class="hidden sm:inline text-slate-600">•</span>
+                                <span class="hidden sm:inline font-mono text-[10px] text-slate-500">${photo.compressedSize || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <a href="${photo.imageUrl}" target="_blank" title="View Full Photo"
+                            class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-sm">open_in_new</span>
+                        </a>
+                        <button onclick="deleteGalleryPhoto('${photo.id}', '${escapeQuotes(photo.title)}')" title="Delete Photo"
+                            class="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40 transition-colors">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeQuotes(str) {
+            return (str || '').replace(/'/g, "\\'");
+        }
+
+        // Search in admin
+        document.getElementById('admin-search-input').addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            const filtered = allAdminPhotos.filter(p => 
+                (p.title && p.title.toLowerCase().includes(query)) ||
+                (p.category && p.category.toLowerCase().includes(query)) ||
+                (p.house && p.house.toLowerCase().includes(query))
+            );
+            renderPhotosList(filtered);
+        });
+
+        // Delete photo
+        async function deleteGalleryPhoto(id, title) {
+            if (!confirm(`Are you sure you want to delete "${title}" from the gallery?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/gallery/delete/${id}`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert(`Photo deleted successfully.`, true);
+                    loadAdminPhotos();
+                } else {
+                    showAlert(data.error || 'Failed to delete photo.', false);
+                }
+            } catch (err) {
+                showAlert('Error: ' + err.message, false);
+            }
+        }
+
+        // Initialize auth check
+        checkAdminAuth();
+    </script>
+</body>
+
+</html>

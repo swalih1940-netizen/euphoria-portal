@@ -87,23 +87,29 @@
 
         @font-face {
             font-family: 'Nohemi-Light';
-            src: url('/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype');
+            src: url('/Font/Poster%20Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf') format('opentype');
             font-weight: 300;
             font-style: normal;
+            font-display: swap;
         }
 
         @font-face {
             font-family: 'Nohemi-Regular';
-            src: url('/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype');
+            src: url('/Font/Poster%20Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf') format('opentype');
             font-weight: 400;
             font-style: normal;
+            font-display: swap;
         }
 
         @font-face {
             font-family: 'Nohemi-SemiBold';
-            src: url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
+            src: url('/Font/Poster%20Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf') format('truetype');
             font-weight: 600;
             font-style: normal;
+            font-display: swap;
         }
 
         .material-symbols-outlined {
@@ -178,7 +184,7 @@
     class="bg-[#070a12] text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between">
 
     <!-- Main Results Portal Area (Clean Headerless Festival Design) -->
-    <main class="pt-6 sm:pt-12 pb-20 max-w-4xl mx-auto px-3 sm:px-6 w-full flex-grow">
+    <main class="pt-6 sm:pt-12 pb-32 max-w-4xl mx-auto px-3 sm:px-6 w-full flex-grow">
 
         <!-- Top Navigation Bar (Official Euphoria Logo & Official Results Badge) -->
         <div class="flex items-center justify-between mb-8 sm:mb-10 px-1">
@@ -189,11 +195,18 @@
                     Euphoria
                 </span>
             </a>
-            <span
-                class="text-[10px] sm:text-xs font-bold text-amber-400 tracking-wider uppercase px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 shadow-sm flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>Official Results</span>
-            </span>
+            <div class="flex items-center gap-2">
+                <a href="/gallery"
+                    class="text-[10px] sm:text-xs font-bold text-slate-300 hover:text-white tracking-wider px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm">
+                    <span class="material-symbols-outlined text-xs sm:text-sm text-cyan-400">photo_library</span>
+                    <span>Gallery</span>
+                </a>
+                <span
+                    class="text-[10px] sm:text-xs font-bold text-amber-400 tracking-wider uppercase px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 shadow-sm flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span>Official Results</span>
+                </span>
+            </div>
         </div>
 
         <!-- Header Title Banner -->
@@ -299,6 +312,7 @@
                     <!-- Mobile View: Clean, Spacious Candidate Cards (Avoids cramped tables on phones) -->
                     <div class="sm:hidden p-3 space-y-2.5">
                         {{#each this.winners}}
+                        {{#if (or this.isFirst this.isSecond this.isThird)}}
                         <div
                             class="flex items-center justify-between p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 gap-3">
                             <div class="flex items-center gap-3 min-w-0">
@@ -332,6 +346,7 @@
                             </div>
                             {{/if}}
                         </div>
+                        {{/if}}
                         {{/each}}
                     </div>
 
@@ -349,6 +364,7 @@
                             </thead>
                             <tbody class="divide-y divide-slate-800/60">
                                 {{#each this.winners}}
+                                {{#if (or this.isFirst this.isSecond this.isThird)}}
                                 <tr class="hover:bg-slate-900/50 transition-colors">
                                     <!-- RANK -->
                                     <td class="py-3.5 px-4 font-bold text-white">
@@ -383,6 +399,7 @@
                                         {{/if}}
                                     </td>
                                 </tr>
+                                {{/if}}
                                 {{/each}}
                             </tbody>
                         </table>
@@ -396,13 +413,27 @@
                             <span class="material-symbols-outlined text-xs text-amber-400">verified</span>
                             <span>Official Verified Result</span>
                         </div>
-                        <div class="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+                            <!-- Design Variant Selector Pills -->
+                            <div class="inline-flex p-0.5 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-semibold shrink-0">
+                                <button type="button" onclick="setCardPosterVariant('{{this.id}}', 1, this)" id="var-btn-1-{{this.id}}"
+                                    class="card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm"
+                                    title="Poster Design 1 (Classic)">
+                                    Poster 1
+                                </button>
+                                <button type="button" onclick="setCardPosterVariant('{{this.id}}', 2, this)" id="var-btn-2-{{this.id}}"
+                                    class="card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white"
+                                    title="Poster Design 2 (Anchor Edition)">
+                                    Poster 2
+                                </button>
+                            </div>
+
                             <!-- Download Poster Button (Outlined Yellow Stroke, Sharp Minimal Radius) -->
                             <button onclick="downloadCompetitionPoster('{{this.id}}', this)"
                                 class="flex-1 sm:flex-initial h-9 px-2.5 sm:px-4 rounded-md font-bold text-[11px] sm:text-xs tracking-wider uppercase text-amber-400 hover:text-slate-950 bg-transparent hover:bg-amber-400 border border-amber-400 active:scale-95 transition-all duration-150 inline-flex items-center justify-center gap-1.5 shrink-0"
                                 title="Download high-resolution poster">
                                 <span class="material-symbols-outlined text-base">download</span>
-                                <span class="whitespace-nowrap">Download Poster</span>
+                                <span class="whitespace-nowrap">Download</span>
                             </button>
 
                             <!-- Share Button (Outlined White Stroke, Sharp Minimal Radius) -->
@@ -459,18 +490,38 @@
             onclick="event.stopPropagation();">
             <!-- Header Bar -->
             <div
-                class="w-full px-3.5 sm:px-5 py-3 flex items-center justify-between gap-2.5 border-b border-slate-800 bg-slate-950/95">
-                <div class="flex items-center gap-2 min-w-0 flex-1">
+                class="w-full px-3.5 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800 bg-slate-950/95">
+                <div class="flex items-center gap-2 min-w-0">
                     <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
                     <span id="preview-modal-title"
-                        class="font-bold text-xs sm:text-sm text-white uppercase tracking-wider truncate">Competition
-                        Result</span>
+                        class="font-bold text-xs sm:text-sm text-white uppercase tracking-wider truncate max-w-[140px] sm:max-w-[200px]">Competition Result</span>
                 </div>
-                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+                <!-- Design Variant Switcher in Modal -->
+                <div class="inline-flex p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold shrink-0">
+                    <button id="modal-var-1-btn" onclick="switchModalPosterVariant(1)"
+                        class="px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm">
+                        Poster 1
+                    </button>
+                    <button id="modal-var-2-btn" onclick="switchModalPosterVariant(2)"
+                        class="px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white">
+                        Poster 2
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
                     <button onclick="downloadPosterFromModal()" id="preview-modal-download-btn"
                         class="h-8 px-3 sm:px-3.5 rounded-md border border-amber-400 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-150 whitespace-nowrap">
                         <span class="material-symbols-outlined text-sm">download</span>
                         <span>Download</span>
+                    </button>
+                    <button onclick="sharePosterFromModal()" id="preview-modal-share-btn"
+                        class="h-8 px-2.5 sm:px-3 rounded-md border border-slate-700 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-150 whitespace-nowrap"
+                        title="Share poster on WhatsApp">
+                        <svg class="w-3.5 h-3.5 fill-current text-emerald-400" viewBox="0 0 24 24">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.072-2.106-.512-1.805-.747-2.956-2.58-3.045-2.699-.089-.12-0.732-.974-.732-1.858 0-.885.464-1.32.63-1.498.167-.179.365-.224.486-.224.12 0 .241.002.346.007.11.005.258-.042.404.308.149.359.513 1.25.558 1.341.045.09.075.195.015.315-.059.12-.089.195-.179.3-.089.105-.188.234-.269.315-.09.09-.184.188-.079.368.105.18.468.773 1.004 1.25.69.614 1.272.805 1.452.895.18.09.285.075.39-.045.106-.12.45-.525.57-.705.12-.18.24-.15.405-.09.165.06 1.05.495 1.23.585.18.09.3.135.345.21.045.075.045.435-.099.84zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.442 5.177L2 22l4.981-1.398A9.957 9.957 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+                        </svg>
+                        <span class="hidden sm:inline">Share</span>
                     </button>
                     <button onclick="closePosterPreviewModal()"
                         class="w-8 h-8 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all shrink-0"
@@ -483,50 +534,63 @@
             <div
                 class="p-2 sm:p-4 flex items-center justify-center overflow-auto max-h-[calc(92vh-65px)] w-full bg-slate-950/60">
                 <img id="preview-modal-img" src="" alt="Competition Poster"
-                    class="max-w-full max-h-[75vh] object-contain rounded-lg sm:rounded-xl shadow-2xl border border-slate-800" />
+                    class="max-w-full max-h-[75vh] object-contain rounded-lg sm:rounded-xl shadow-2xl border border-slate-800 transition-opacity duration-200" />
             </div>
         </div>
     </div>
 
-    <!-- Hidden High-Res Poster Template (2480px x 2953px) for html-to-image Export -->
+    <!-- Hidden High-Res Poster Template 1: Classic (2480px x 2953px) for html-to-image Export -->
     <div id="poster-render-wrapper"
-        style="position: fixed; top: 0; left: 0; width: 2480px; height: 2953px; overflow: hidden; pointer-events: none; opacity: 0; z-index: -99999;">
+        style="position: fixed; top: 0; left: -9999px; width: 2480px; height: 2953px; overflow: hidden; pointer-events: none; opacity: 0; z-index: -99999;">
         <div id="poster-render-card"
             style="width: 2480px; height: 2953px; position: relative; margin: 0; padding: 0; box-sizing: border-box; background: #070a12;">
 
-            <!-- Clean Background Template Image -->
-            <img src="/images/Result.jpg"
+            <!-- Clean Background Template Image (Variant 1) -->
+            <img src="/images/Result.jpg" id="poster-1-bg-img"
                 style="position: absolute; top: 0; left: 0; width: 2480px; height: 2953px; object-fit: cover; z-index: 1;"
                 alt="Poster Background" />
 
-            <!-- 1st Winner Row (Circle 01) -->
-            <div id="poster-winner-1" style="position: absolute; top: 37.8%; left: 28.6%; right: 10%; z-index: 10;">
-                <div id="poster-p1-name"
-                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
-                    -</div>
-                <div id="poster-t1-name"
-                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
-                    -</div>
+            <!-- Standard 3-Winner Rows for Poster 1 (used when winners <= 3) -->
+            <div id="poster1-standard-winners">
+                <!-- 1st Winner Row (Circle 01) -->
+                <div id="poster-winner-1" style="position: absolute; top: 37.8%; left: 28.6%; right: 10%; z-index: 10;">
+                    <div id="poster-p1-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster-t1-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 52px; font-weight: 400; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 2nd Winner Row (Circle 02) -->
+                <div id="poster-winner-2" style="position: absolute; top: 44.5%; left: 28.6%; right: 10%; z-index: 10;">
+                    <div id="poster-p2-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster-t2-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 52px; font-weight: 400; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 3rd Winner Row (Circle 03) -->
+                <div id="poster-winner-3" style="position: absolute; top: 51.1%; left: 28.6%; right: 10%; z-index: 10;">
+                    <div id="poster-p3-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster-t3-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 52px; font-weight: 400; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
             </div>
 
-            <!-- 2nd Winner Row (Circle 02) -->
-            <div id="poster-winner-2" style="position: absolute; top: 44.5%; left: 28.6%; right: 10%; z-index: 10;">
-                <div id="poster-p2-name"
-                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
-                    -</div>
-                <div id="poster-t2-name"
-                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
-                    -</div>
+            <!-- Dynamic Circle Cover Patch (used when winners >= 4 to conceal static 3 background circles) -->
+            <div id="poster1-circle-cover"
+                style="display: none; position: absolute; top: 35.8%; left: 20.8%; width: 185px; height: 690px; background: linear-gradient(180deg, #222226 0%, #151518 45%, #121216 100%); z-index: 4; border-radius: 18px; box-shadow: inset 0 0 25px rgba(0,0,0,0.7);">
             </div>
 
-            <!-- 3rd Winner Row (Circle 03) -->
-            <div id="poster-winner-3" style="position: absolute; top: 51.1%; left: 28.6%; right: 10%; z-index: 10;">
-                <div id="poster-p3-name"
-                    style="font-family: 'Nohemi-Regular', sans-serif; font-size: 84px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
-                    -</div>
-                <div id="poster-t3-name"
-                    style="font-family: 'Nohemi-Light', sans-serif; font-size: 52px; font-weight: 300; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
-                    -</div>
+            <!-- Dynamic Multi-Winner Container for Poster 1 (used when winners >= 4) -->
+            <div id="poster1-dynamic-container"
+                style="display: none; position: absolute; top: 36.2%; left: 21.0%; right: 10%; height: 670px; z-index: 10; flex-direction: column; justify-content: space-between;">
             </div>
 
             <!-- Result Number -->
@@ -545,6 +609,82 @@
                 <div id="poster-comp-title"
                     style="font-family: 'Nohemi-SemiBold', sans-serif; font-size: 98px; font-weight: 600; color: #FFC700; line-height: 1.12; letter-spacing: -0.015em; margin: 0; padding: 0; word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
                     -</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden High-Res Poster Template 2: Anchor Edition (2000px x 2500px) for html-to-image Export -->
+    <div id="poster-render-wrapper-2"
+        style="position: fixed; top: 0; left: -9999px; width: 2000px; height: 2500px; overflow: hidden; pointer-events: none; opacity: 0; z-index: -99999;">
+        <div id="poster-render-card-2"
+            style="width: 2000px; height: 2500px; position: relative; margin: 0; padding: 0; box-sizing: border-box; background: #070a12;">
+
+            <!-- Background Template Image (Variant 2: /images/2nd-Poster-Mian.jpg) -->
+            <img src="/images/2nd-Poster-Mian.jpg" id="poster-2-bg-img"
+                style="position: absolute; top: 0; left: 0; width: 2000px; height: 2500px; object-fit: cover; z-index: 1;"
+                alt="Poster 2 Background" />
+
+            <!-- Result Number (Top Right Quadrant) -->
+            <div id="poster2-res-num"
+                style="position: absolute; top: 30.5%; left: 54.8%; font-family: 'Nohemi-Light', sans-serif; font-size: 210px; font-weight: 300; color: #FFC700; line-height: 0.9; margin: 0; z-index: 10;">
+                01</div>
+
+            <!-- Competition Name (Directly Below Result Number) -->
+            <div id="poster2-comp-title"
+                style="position: absolute; top: 39.5%; left: 54.8%; width: 780px; font-family: 'Nohemi-SemiBold', sans-serif; font-size: 80px; font-weight: 600; color: #ffffff; line-height: 1.12; letter-spacing: -0.01em; margin: 0; padding: 0; word-wrap: break-word; overflow-wrap: break-word; text-align: left; z-index: 10;">
+                -</div>
+
+            <!-- Standard 3-Winner Rows for Poster 2 (used when winners <= 3) -->
+            <div id="poster2-standard-winners">
+                <!-- 1st Winner Row (3 Filled White Stars) -->
+                <div id="poster2-winner-1" style="position: absolute; top: 49.5%; left: 22.5%; width: 620px; z-index: 10;">
+                    <div id="poster2-stars-1" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <div id="poster2-p1-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 72px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster2-t1-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 44px; font-weight: 400; color: #e2e8f0; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 2nd Winner Row (2 Filled White Stars, 1 Grey Star) -->
+                <div id="poster2-winner-2" style="position: absolute; top: 58.2%; left: 22.5%; width: 620px; z-index: 10;">
+                    <div id="poster2-stars-2" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#475569"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <div id="poster2-p2-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 72px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster2-t2-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 44px; font-weight: 400; color: #e2e8f0; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 3rd Winner Row (1 Filled White Star, 2 Grey Stars) -->
+                <div id="poster2-winner-3" style="position: absolute; top: 67.0%; left: 22.5%; width: 620px; z-index: 10;">
+                    <div id="poster2-stars-3" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#ffffff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#475569"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="34" height="34" fill="#475569"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    </div>
+                    <div id="poster2-p3-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 72px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster2-t3-name"
+                        style="font-family: 'Nohemi-Regular', sans-serif; font-size: 44px; font-weight: 400; color: #e2e8f0; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Multi-Winner Container for Poster 2 (used when winners >= 4) -->
+            <div id="poster2-dynamic-container"
+                style="display: none; position: absolute; top: 45.2%; left: 22.5%; width: 620px; height: 850px; z-index: 10; flex-direction: column; justify-content: space-between;">
             </div>
         </div>
     </div>
@@ -761,10 +901,39 @@
         }
 
         let cachedPosterBgDataUrl = null;
+        let cachedPoster2BgDataUrl = null;
         let cachedFontEmbedCss = null;
 
-        async function preparePosterAssets() {
-            if (!cachedPosterBgDataUrl) {
+        // Track selected poster variant per card (default is 1)
+        const cardSelectedVariants = {};
+        let activeModalPoster = { compId: '', variant: 1, dataUrl: '', filename: '', compTitle: '' };
+
+        function setCardPosterVariant(compId, variant, btnElement) {
+            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            cardSelectedVariants[compId] = v;
+
+            const btn1 = document.getElementById(`var-btn-1-${compId}`);
+            const btn2 = document.getElementById(`var-btn-2-${compId}`);
+
+            if (btn1 && btn2) {
+                if (v === 1) {
+                    btn1.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                    btn2.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white';
+                } else {
+                    btn1.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white';
+                    btn2.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                }
+            }
+        }
+
+        function getCardPosterVariant(compId) {
+            return cardSelectedVariants[compId] || 1;
+        }
+
+        async function preparePosterAssets(variant = 1) {
+            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+
+            if (v === 1 && !cachedPosterBgDataUrl) {
                 try {
                     const res = await fetch('/images/Result.jpg');
                     const blob = await res.blob();
@@ -776,6 +945,21 @@
                     });
                 } catch (e) {
                     console.warn('[Poster Engine] Could not pre-load Result.jpg as base64 data URL:', e);
+                }
+            }
+
+            if (v === 2 && !cachedPoster2BgDataUrl) {
+                try {
+                    const res = await fetch('/images/2nd-Poster-Mian.jpg');
+                    const blob = await res.blob();
+                    cachedPoster2BgDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (e) {
+                    console.warn('[Poster Engine] Could not pre-load 2nd-Poster-Mian.jpg as base64 data URL:', e);
                 }
             }
 
@@ -810,7 +994,77 @@
             }
         }
 
-        async function generateCompetitionPoster(compId) {
+        // Helper to normalize and sort winners supporting ties and arbitrary counts
+        function normalizeAndSortPosterWinners(rawWinners) {
+            if (!Array.isArray(rawWinners)) return [];
+            const list = rawWinners.map((w, idx) => {
+                let rank = 1;
+                const rStr = String(w.rank !== undefined ? w.rank : (w.position !== undefined ? w.position : (w.prize || ''))).toLowerCase().trim();
+                if (w.rank !== undefined && !isNaN(parseInt(w.rank, 10)) && parseInt(w.rank, 10) > 0) {
+                    rank = parseInt(w.rank, 10);
+                } else if (rStr.includes('1st') || rStr === '1' || rStr.includes('first')) {
+                    rank = 1;
+                } else if (rStr.includes('2nd') || rStr === '2' || rStr.includes('second')) {
+                    rank = 2;
+                } else if (rStr.includes('3rd') || rStr === '3' || rStr.includes('third')) {
+                    rank = 3;
+                } else {
+                    const match = rStr.match(/\d+/);
+                    rank = match ? parseInt(match[0], 10) : (idx + 1);
+                }
+
+                const name = (w.participant || w.participantName || w.name || w.candidateName || w.studentName || '').trim();
+                const team = (w.team || w.teamName || w.rawTeamName || w.displayTeam || '').trim();
+                const prize = (w.prize || (rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`)).trim();
+
+                return {
+                    ...w,
+                    rank: rank > 0 ? rank : (idx + 1),
+                    prize,
+                    participant: name || 'Participant',
+                    team: team || '-'
+                };
+            });
+
+            // Filter out empty rows and keep strictly top 3 position winners (1st, 2nd, and 3rd place only)
+            const valid = list.filter(w => w.participant && w.participant !== '-' && w.rank >= 1 && w.rank <= 3);
+            // Sort ascending by rank (1st -> 2nd -> 3rd)
+            valid.sort((a, b) => a.rank - b.rank);
+            return valid;
+        }
+
+        function escapePosterHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getPoster2StarSvg(fill, size = 34) {
+            return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${fill}" style="display:inline-block; flex-shrink: 0;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+
+        function renderPoster2StarsHtml(rank, starSize = 34, gap = 10) {
+            const white = '#ffffff';
+            const grey = '#475569';
+            let stars = '';
+            if (rank === 1) {
+                stars = getPoster2StarSvg(white, starSize) + getPoster2StarSvg(white, starSize) + getPoster2StarSvg(white, starSize);
+            } else if (rank === 2) {
+                stars = getPoster2StarSvg(white, starSize) + getPoster2StarSvg(white, starSize) + getPoster2StarSvg(grey, starSize);
+            } else if (rank === 3) {
+                stars = getPoster2StarSvg(white, starSize) + getPoster2StarSvg(grey, starSize) + getPoster2StarSvg(grey, starSize);
+            } else {
+                stars = getPoster2StarSvg(grey, starSize) + getPoster2StarSvg(grey, starSize) + getPoster2StarSvg(grey, starSize);
+            }
+            return `<div style="display: flex; align-items: center; gap: ${gap}px;">${stars}</div>`;
+        }
+
+        async function generateCompetitionPoster(compId, variant = 1) {
+            const v = parseInt(variant, 10) === 2 ? 2 : 1;
             const rawCompsData = document.getElementById('competitions-json-data')?.textContent;
             let compList = [];
             try {
@@ -824,16 +1078,16 @@
                 throw new Error('Competition details not found for poster export.');
             }
 
-            const wrapperElem = document.getElementById('poster-render-wrapper');
+            const wrapperElem = v === 2
+                ? document.getElementById('poster-render-wrapper-2')
+                : (document.getElementById('poster-render-wrapper') || document.getElementById('poster-render-wrapper-1'));
+            const cardElem = v === 2
+                ? document.getElementById('poster-render-card-2')
+                : (document.getElementById('poster-render-card') || document.getElementById('poster-render-card-1'));
 
             try {
                 // Pre-load assets as Base64 Data URLs to avoid CORS and fetch failures
-                await preparePosterAssets();
-
-                const bgImgElem = document.querySelector('#poster-render-card img');
-                if (bgImgElem && cachedPosterBgDataUrl) {
-                    bgImgElem.src = cachedPosterBgDataUrl;
-                }
+                await preparePosterAssets(v);
 
                 // Format Result Number
                 let resNum = comp.formattedCode || comp.code || comp.resultNumber || '01';
@@ -845,75 +1099,292 @@
                 // Competition Title
                 const compTitle = comp.title || comp.name || 'Competition';
 
-                // Extract 1st, 2nd, 3rd place winners
-                const winners = Array.isArray(comp.winners) ? comp.winners : [];
-                const w1 = winners.find(w => w.rank === 1 || String(w.prize).includes('1st') || String(w.rank) === '1');
-                const w2 = winners.find(w => w.rank === 2 || String(w.prize).includes('2nd') || String(w.rank) === '2');
-                const w3 = winners.find(w => w.rank === 3 || String(w.prize).includes('3rd') || String(w.rank) === '3');
+                // Extract all winners (including ties, multiple 1st/2nd/3rd places, or 4+ candidates)
+                const winnersList = normalizeAndSortPosterWinners(comp.winners);
+                const winnerCount = winnersList.length;
 
-                // Populate Poster DOM Template
-                const cardElem = document.getElementById('poster-render-card');
+                if (v === 1) {
+                    // Populate Variant 1 DOM elements
+                    const bgImgElem = document.getElementById('poster-1-bg-img') || cardElem.querySelector('img');
+                    if (bgImgElem && cachedPosterBgDataUrl) {
+                        bgImgElem.src = cachedPosterBgDataUrl;
+                    }
 
-                // 1st Winner
-                const row1 = document.getElementById('poster-winner-1');
-                if (w1) {
-                    row1.style.display = 'block';
-                    document.getElementById('poster-p1-name').innerText = w1.participant || w1.participantName || w1.name || '-';
-                    document.getElementById('poster-t1-name').innerText = w1.team || w1.teamName || w1.rawTeamName || '-';
-                } else {
-                    row1.style.display = 'none';
-                }
+                    const stdWinners1 = document.getElementById('poster1-standard-winners');
+                    const dynWinners1 = document.getElementById('poster1-dynamic-container');
+                    const circleCover1 = document.getElementById('poster1-circle-cover');
 
-                // 2nd Winner
-                const row2 = document.getElementById('poster-winner-2');
-                if (w2) {
-                    row2.style.display = 'block';
-                    document.getElementById('poster-p2-name').innerText = w2.participant || w2.participantName || w2.name || '-';
-                    document.getElementById('poster-t2-name').innerText = w2.team || w2.teamName || w2.rawTeamName || '-';
-                } else {
-                    row2.style.display = 'none';
-                }
+                    if (winnerCount >= 4) {
+                        // MULTI-WINNER DYNAMIC LAYOUT (4 or more candidates/winners e.g. ties or multiple prizes)
+                        if (stdWinners1) stdWinners1.style.display = 'none';
+                        if (circleCover1) circleCover1.style.display = 'block';
+                        if (dynWinners1) {
+                            dynWinners1.style.display = 'flex';
 
-                // 3rd Winner
-                const row3 = document.getElementById('poster-winner-3');
-                if (w3) {
-                    row3.style.display = 'block';
-                    document.getElementById('poster-p3-name').innerText = w3.participant || w3.participantName || w3.name || '-';
-                    document.getElementById('poster-t3-name').innerText = w3.team || w3.teamName || w3.rawTeamName || '-';
-                } else {
-                    row3.style.display = 'none';
-                }
+                            const N = winnerCount;
+                            let nameFontSize = 62;
+                            let teamFontSize = 38;
+                            let badgeSize = 78;
+                            let badgeFontSize = 34;
+                            let marginBetween = 4;
 
-                document.getElementById('poster-res-num').innerText = resNum;
+                            if (N === 4) {
+                                nameFontSize = 62;
+                                teamFontSize = 38;
+                                badgeSize = 78;
+                                badgeFontSize = 34;
+                                marginBetween = 4;
+                            } else if (N === 5) {
+                                nameFontSize = 52;
+                                teamFontSize = 32;
+                                badgeSize = 68;
+                                badgeFontSize = 30;
+                                marginBetween = 3;
+                            } else if (N === 6) {
+                                nameFontSize = 42;
+                                teamFontSize = 26;
+                                badgeSize = 58;
+                                badgeFontSize = 25;
+                                marginBetween = 2;
+                            } else {
+                                nameFontSize = Math.max(28, Math.floor(250 / N));
+                                teamFontSize = Math.max(18, Math.floor(160 / N));
+                                badgeSize = Math.max(46, Math.floor(350 / N));
+                                badgeFontSize = Math.max(20, Math.floor(155 / N));
+                                marginBetween = 2;
+                            }
 
-                // Category / Zone Subheading
-                let compCategory = comp.category || comp.categoryName || comp.catName || comp.stageCategory || 'GENERAL';
-                if (typeof compCategory === 'object') {
-                    compCategory = compCategory.name || compCategory.title || compCategory.label || 'GENERAL';
-                }
-                compCategory = String(compCategory).trim().toUpperCase();
-                if (compCategory === 'PRIME') compCategory = 'PRIME ZONE';
-                if (compCategory === 'CORE') compCategory = 'CORE ZONE';
-                if (compCategory === 'ALPHA') compCategory = 'ALPHA ZONE';
+                            dynWinners1.innerHTML = winnersList.map(w => {
+                                let borderColor = '#64748b';
+                                let textColor = '#cbd5e1';
+                                if (w.rank === 1) {
+                                    borderColor = '#FFC700';
+                                    textColor = '#FFC700';
+                                } else if (w.rank === 2) {
+                                    borderColor = '#cbd5e1';
+                                    textColor = '#ffffff';
+                                } else if (w.rank === 3) {
+                                    borderColor = '#f59e0b';
+                                    textColor = '#fbbf24';
+                                }
+                                const badgeText = String(w.rank).padStart(2, '0');
 
-                const catElem = document.getElementById('poster-comp-category');
-                if (catElem) {
-                    catElem.innerText = compCategory;
-                }
-
-                const titleElem = document.getElementById('poster-comp-title');
-                if (titleElem) {
-                    titleElem.innerText = compTitle;
-                    // Balanced font sizing and line height based on title length
-                    if (compTitle.length > 24) {
-                        titleElem.style.fontSize = '84px';
-                        titleElem.style.lineHeight = '1.14';
-                    } else if (compTitle.length > 14) {
-                        titleElem.style.fontSize = '96px';
-                        titleElem.style.lineHeight = '1.12';
+                                return `
+                                <div style="display: flex; align-items: center; width: 100%; min-height: 0;">
+                                    <div style="width: 188px; min-width: 188px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <div style="width: ${badgeSize}px; height: ${badgeSize}px; border-radius: 50%; border: 3px solid ${borderColor}; background: #0b0d14; display: flex; align-items: center; justify-content: center; font-family: 'Nohemi-SemiBold', sans-serif; font-size: ${badgeFontSize}px; font-weight: 600; color: ${textColor}; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
+                                            ${badgeText}
+                                        </div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0; padding-left: 6px;">
+                                        <div style="font-family: 'Nohemi-Regular', sans-serif; font-size: ${nameFontSize}px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${escapePosterHtml(w.participant)}
+                                        </div>
+                                        <div style="font-family: 'Nohemi-Regular', sans-serif; font-size: ${teamFontSize}px; font-weight: 400; color: #ffffff; margin-top: ${marginBetween}px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${escapePosterHtml(w.team)}
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        }
                     } else {
-                        titleElem.style.fontSize = '104px';
-                        titleElem.style.lineHeight = '1.1';
+                        // STANDARD 3-WINNER LAYOUT (<= 3 winners)
+                        if (circleCover1) circleCover1.style.display = 'none';
+                        if (dynWinners1) dynWinners1.style.display = 'none';
+                        if (stdWinners1) stdWinners1.style.display = 'block';
+
+                        const w1 = winnersList[0];
+                        const w2 = winnersList[1];
+                        const w3 = winnersList[2];
+
+                        const row1 = document.getElementById('poster-winner-1');
+                        if (w1) {
+                            row1.style.display = 'block';
+                            document.getElementById('poster-p1-name').innerText = w1.participant || '-';
+                            document.getElementById('poster-t1-name').innerText = w1.team || '-';
+                        } else {
+                            row1.style.display = 'none';
+                        }
+
+                        const row2 = document.getElementById('poster-winner-2');
+                        if (w2) {
+                            row2.style.display = 'block';
+                            document.getElementById('poster-p2-name').innerText = w2.participant || '-';
+                            document.getElementById('poster-t2-name').innerText = w2.team || '-';
+                        } else {
+                            row2.style.display = 'none';
+                        }
+
+                        const row3 = document.getElementById('poster-winner-3');
+                        if (w3) {
+                            row3.style.display = 'block';
+                            document.getElementById('poster-p3-name').innerText = w3.participant || '-';
+                            document.getElementById('poster-t3-name').innerText = w3.team || '-';
+                        } else {
+                            row3.style.display = 'none';
+                        }
+                    }
+
+                    document.getElementById('poster-res-num').innerText = resNum;
+
+                    // Category / Zone Subheading
+                    let compCategory = comp.category || comp.categoryName || comp.catName || comp.stageCategory || 'GENERAL';
+                    if (typeof compCategory === 'object') {
+                        compCategory = compCategory.name || compCategory.title || compCategory.label || 'GENERAL';
+                    }
+                    compCategory = String(compCategory).trim().toUpperCase();
+                    if (compCategory === 'PRIME') compCategory = 'PRIME ZONE';
+                    if (compCategory === 'CORE') compCategory = 'CORE ZONE';
+                    if (compCategory === 'ALPHA') compCategory = 'ALPHA ZONE';
+
+                    const catElem = document.getElementById('poster-comp-category');
+                    if (catElem) catElem.innerText = compCategory;
+
+                    const titleElem = document.getElementById('poster-comp-title');
+                    if (titleElem) {
+                        titleElem.innerText = compTitle;
+                        if (compTitle.length > 24) {
+                            titleElem.style.fontSize = '84px';
+                            titleElem.style.lineHeight = '1.14';
+                        } else if (compTitle.length > 14) {
+                            titleElem.style.fontSize = '96px';
+                            titleElem.style.lineHeight = '1.12';
+                        } else {
+                            titleElem.style.fontSize = '104px';
+                            titleElem.style.lineHeight = '1.1';
+                        }
+                    }
+                } else {
+                    // Populate Variant 2 (Anchor Edition) DOM elements
+                    const bgImgElem2 = document.getElementById('poster-2-bg-img') || cardElem.querySelector('img');
+                    if (bgImgElem2 && cachedPoster2BgDataUrl) {
+                        bgImgElem2.src = cachedPoster2BgDataUrl;
+                    }
+
+                    // Result Number
+                    const numElem2 = document.getElementById('poster2-res-num');
+                    if (numElem2) numElem2.innerText = resNum;
+
+                    // Competition Title
+                    const titleElem2 = document.getElementById('poster2-comp-title');
+                    if (titleElem2) {
+                        titleElem2.innerText = compTitle;
+                        if (compTitle.length > 28) {
+                            titleElem2.style.fontSize = '58px';
+                            titleElem2.style.lineHeight = '1.1';
+                        } else if (compTitle.length > 18) {
+                            titleElem2.style.fontSize = '68px';
+                            titleElem2.style.lineHeight = '1.1';
+                        } else {
+                            titleElem2.style.fontSize = '80px';
+                            titleElem2.style.lineHeight = '1.12';
+                        }
+                    }
+
+                    const stdWinners2 = document.getElementById('poster2-standard-winners');
+                    const dynWinners2 = document.getElementById('poster2-dynamic-container');
+
+                    if (winnerCount >= 4) {
+                        // MULTI-WINNER DYNAMIC LAYOUT (4 or more candidates/winners)
+                        if (stdWinners2) stdWinners2.style.display = 'none';
+                        if (dynWinners2) {
+                            dynWinners2.style.display = 'flex';
+
+                            const N = winnerCount;
+                            let nameFontSize = 58;
+                            let teamFontSize = 36;
+                            let starSize = 28;
+                            let starGap = 8;
+                            let starMarginBottom = 10;
+                            let marginBetween = 4;
+
+                            if (N === 4) {
+                                nameFontSize = 58;
+                                teamFontSize = 36;
+                                starSize = 28;
+                                starGap = 8;
+                                starMarginBottom = 10;
+                                marginBetween = 4;
+                            } else if (N === 5) {
+                                nameFontSize = 48;
+                                teamFontSize = 30;
+                                starSize = 23;
+                                starGap = 7;
+                                starMarginBottom = 8;
+                                marginBetween = 3;
+                            } else if (N === 6) {
+                                nameFontSize = 40;
+                                teamFontSize = 25;
+                                starSize = 19;
+                                starGap = 6;
+                                starMarginBottom = 6;
+                                marginBetween = 2;
+                            } else {
+                                nameFontSize = Math.max(28, Math.floor(250 / N));
+                                teamFontSize = Math.max(18, Math.floor(160 / N));
+                                starSize = Math.max(15, Math.floor(120 / N));
+                                starGap = 5;
+                                starMarginBottom = 5;
+                                marginBetween = 2;
+                            }
+
+                            dynWinners2.innerHTML = winnersList.map(w => {
+                                const starsHtml = renderPoster2StarsHtml(w.rank, starSize, starGap);
+                                return `
+                                <div style="width: 100%; min-height: 0;">
+                                    <div style="margin-bottom: ${starMarginBottom}px;">
+                                        ${starsHtml}
+                                    </div>
+                                    <div style="font-family: 'Nohemi-Regular', sans-serif; font-size: ${nameFontSize}px; font-weight: 400; color: #ffffff; line-height: 1.1; margin: 0; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ${escapePosterHtml(w.participant)}
+                                    </div>
+                                    <div style="font-family: 'Nohemi-Regular', sans-serif; font-size: ${teamFontSize}px; font-weight: 400; color: #e2e8f0; margin-top: ${marginBetween}px; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        ${escapePosterHtml(w.team)}
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        }
+                    } else {
+                        // STANDARD 3-WINNER LAYOUT (<= 3 winners)
+                        if (dynWinners2) dynWinners2.style.display = 'none';
+                        if (stdWinners2) stdWinners2.style.display = 'block';
+
+                        const w1 = winnersList[0];
+                        const w2 = winnersList[1];
+                        const w3 = winnersList[2];
+
+                        const row1 = document.getElementById('poster2-winner-1');
+                        if (w1) {
+                            row1.style.display = 'block';
+                            document.getElementById('poster2-p1-name').innerText = w1.participant || '-';
+                            document.getElementById('poster2-t1-name').innerText = w1.team || '-';
+                            const stars1 = document.getElementById('poster2-stars-1');
+                            if (stars1) stars1.innerHTML = renderPoster2StarsHtml(w1.rank, 34, 10);
+                        } else {
+                            row1.style.display = 'none';
+                        }
+
+                        const row2 = document.getElementById('poster2-winner-2');
+                        if (w2) {
+                            row2.style.display = 'block';
+                            document.getElementById('poster2-p2-name').innerText = w2.participant || '-';
+                            document.getElementById('poster2-t2-name').innerText = w2.team || '-';
+                            const stars2 = document.getElementById('poster2-stars-2');
+                            if (stars2) stars2.innerHTML = renderPoster2StarsHtml(w2.rank, 34, 10);
+                        } else {
+                            row2.style.display = 'none';
+                        }
+
+                        const row3 = document.getElementById('poster2-winner-3');
+                        if (w3) {
+                            row3.style.display = 'block';
+                            document.getElementById('poster2-p3-name').innerText = w3.participant || '-';
+                            document.getElementById('poster2-t3-name').innerText = w3.team || '-';
+                            const stars3 = document.getElementById('poster2-stars-3');
+                            if (stars3) stars3.innerHTML = renderPoster2StarsHtml(w3.rank, 34, 10);
+                        } else {
+                            row3.style.display = 'none';
+                        }
                     }
                 }
 
@@ -942,7 +1413,6 @@
 
                 let renderEngine = getEngine();
                 if (!renderEngine) {
-                    // Fallback dynamic load if script was delayed or blocked
                     await new Promise((resolve) => {
                         const s = document.createElement('script');
                         s.src = '/js/html-to-image.js';
@@ -958,10 +1428,12 @@
                 }
 
                 const toPng = renderEngine.toPng.bind(renderEngine);
+                const width = v === 2 ? 2000 : 2480;
+                const height = v === 2 ? 2500 : 2953;
 
                 const options = {
-                    width: 2480,
-                    height: 2953,
+                    width: width,
+                    height: height,
                     pixelRatio: 1,
                     cacheBust: true
                 };
@@ -978,14 +1450,15 @@
                 // Capture high-res PNG image
                 const dataUrl = await toPng(cardElem, options);
                 const cleanName = compTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-                const filename = `Result_#${resNum}_${cleanName}.png`;
+                const filename = `Result_#${resNum}_${cleanName}${v === 2 ? '_v2' : ''}.png`;
 
                 return {
                     comp,
                     compTitle,
                     resNum,
                     filename,
-                    dataUrl
+                    dataUrl,
+                    variant: v
                 };
             } finally {
                 // Restore poster wrapper hidden state
@@ -997,7 +1470,7 @@
             }
         }
 
-        function formatWhatsAppCaption(comp, compTitle, resNum) {
+        function formatWhatsAppCaption(comp, compTitle, resNum, variant = 1) {
             let num = resNum || comp.formattedCode || comp.code || comp.resultNumber || '01';
             num = String(num).trim();
             if (/^\d+$/.test(num) && num.length < 2) {
@@ -1011,13 +1484,23 @@
             return `*EUPHORIA 2K26*\n${title} | Result #${num}\n\n🔗 ${shareUrl}`;
         }
 
-        let activeModalPoster = { dataUrl: '', filename: '', compTitle: '' };
-
-        function openPosterPreviewModal(dataUrl, filename, compTitle) {
-            activeModalPoster = { dataUrl, filename, compTitle };
+        function openPosterPreviewModal(dataUrl, filename, compTitle, compId, variant = 1) {
+            activeModalPoster = { compId, variant, dataUrl, filename, compTitle };
             const modal = document.getElementById('poster-preview-modal');
             const img = document.getElementById('preview-modal-img');
             const title = document.getElementById('preview-modal-title');
+
+            const modalBtn1 = document.getElementById('modal-var-1-btn');
+            const modalBtn2 = document.getElementById('modal-var-2-btn');
+            if (modalBtn1 && modalBtn2) {
+                if (variant === 2) {
+                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                } else {
+                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                }
+            }
 
             if (modal && img) {
                 img.src = dataUrl;
@@ -1025,6 +1508,48 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        async function switchModalPosterVariant(variant) {
+            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            if (activeModalPoster.variant === v && activeModalPoster.dataUrl) return;
+
+            const modalBtn1 = document.getElementById('modal-var-1-btn');
+            const modalBtn2 = document.getElementById('modal-var-2-btn');
+            if (modalBtn1 && modalBtn2) {
+                if (v === 1) {
+                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                } else {
+                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                }
+            }
+
+            if (!activeModalPoster.compId) return;
+
+            const img = document.getElementById('preview-modal-img');
+            if (img) img.style.opacity = '0.5';
+
+            try {
+                const res = await generateCompetitionPoster(activeModalPoster.compId, v);
+                activeModalPoster.variant = v;
+                activeModalPoster.dataUrl = res.dataUrl;
+                activeModalPoster.filename = res.filename;
+                activeModalPoster.compTitle = res.compTitle;
+
+                if (img) {
+                    img.src = res.dataUrl;
+                    img.style.opacity = '1';
+                }
+
+                // Synchronize selection back to the card button
+                setCardPosterVariant(activeModalPoster.compId, v);
+            } catch (err) {
+                console.error('[Modal Switch Variant Error]:', err);
+                if (img) img.style.opacity = '1';
+                alert(`Could not generate Poster Design ${v}: ${err.message || 'Unknown error'}`);
             }
         }
 
@@ -1043,6 +1568,12 @@
             }
         }
 
+        async function sharePosterFromModal() {
+            if (!activeModalPoster || !activeModalPoster.compId) return;
+            const btn = document.getElementById('preview-modal-share-btn');
+            await shareCompetitionWhatsApp(activeModalPoster.compId, btn, activeModalPoster.variant);
+        }
+
         function closePosterPreviewModal() {
             const modal = document.getElementById('poster-preview-modal');
             if (modal) {
@@ -1059,7 +1590,8 @@
             }
         });
 
-        async function downloadCompetitionPoster(compId, btnElement) {
+        async function downloadCompetitionPoster(compId, btnElement, variant) {
+            const v = variant ? parseInt(variant, 10) : getCardPosterVariant(compId);
             const originalBtnHtml = btnElement ? btnElement.innerHTML : '';
             if (btnElement) {
                 btnElement.disabled = true;
@@ -1068,11 +1600,8 @@
             }
 
             try {
-                const { compTitle, filename, dataUrl } = await generateCompetitionPoster(compId);
-
-                // Directly display the generated poster in the centered popup modal (no new tab / blank window)
-                openPosterPreviewModal(dataUrl, filename, compTitle);
-
+                const { compTitle, filename, dataUrl } = await generateCompetitionPoster(compId, v);
+                openPosterPreviewModal(dataUrl, filename, compTitle, compId, v);
             } catch (err) {
                 console.error('[Poster Generation Error Details]:', err);
                 if (err && err.stack) console.error('Stack trace:', err.stack);
@@ -1086,7 +1615,8 @@
             }
         }
 
-        async function shareCompetitionWhatsApp(compId, btnElement) {
+        async function shareCompetitionWhatsApp(compId, btnElement, variant) {
+            const v = variant ? parseInt(variant, 10) : getCardPosterVariant(compId);
             const originalBtnHtml = btnElement ? btnElement.innerHTML : '';
             if (btnElement) {
                 btnElement.disabled = true;
@@ -1095,8 +1625,8 @@
             }
 
             try {
-                const { comp, compTitle, resNum, filename, dataUrl } = await generateCompetitionPoster(compId);
-                const captionText = formatWhatsAppCaption(comp, compTitle, resNum);
+                const { comp, compTitle, resNum, filename, dataUrl } = await generateCompetitionPoster(compId, v);
+                const captionText = formatWhatsAppCaption(comp, compTitle, resNum, v);
 
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 let sharedViaWebShare = false;
@@ -1126,7 +1656,6 @@
 
                 // If not mobile Web Share with image, directly open WhatsApp with pre-formatted caption & download poster
                 if (!sharedViaWebShare) {
-                    // Trigger download of the poster so the user has the image immediately
                     const link = document.createElement('a');
                     link.download = filename;
                     link.href = dataUrl;
@@ -1134,7 +1663,6 @@
                     link.click();
                     document.body.removeChild(link);
 
-                    // Open WhatsApp directly with the pre-formatted caption
                     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(captionText)}`;
                     window.open(whatsappUrl, '_blank');
                 }
@@ -1152,6 +1680,9 @@
             }
         }
     </script>
+
+    <!-- Floating Mobile-Style Bottom Navigation Bar (Results & Gallery) -->
+    {{> bottomNav}}
 </body>
 
 </html>

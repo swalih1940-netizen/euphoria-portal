@@ -6,3 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 .vscode/
 .idea/
+public/uploads/
+
+# Android Build & Local Config
+.gradle/
+**/build/
+**/local.properties
+*.apk

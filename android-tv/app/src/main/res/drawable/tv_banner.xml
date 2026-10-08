@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Dark TV Banner Background -->
+    <path
+        android:fillColor="#030610"
+        android:pathData="M0,0h320v180h-320z" />
+    
+    <!-- Accent Gradient Header Line -->
+    <path
+        android:fillColor="#f59e0b"
+        android:pathData="M0,0h320v4h-320z" />
+
+    <!-- Center Emblem Glow Circle -->
+    <path
+        android:fillColor="#151b38"
+        android:pathData="M160,90m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0" />
+
+    <!-- Trophy / Star Shape -->
+    <path
+        android:fillColor="#fbbf24"
+        android:pathData="M160,65 L164,77 L176,77 L166,85 L170,97 L160,89 L150,97 L154,85 L144,77 L156,77 Z" />
+
+    <!-- Bottom Accent Border -->
+    <path
+        android:fillColor="#06b6d4"
+        android:pathData="M110,125h100v3h-100z" />
+</vector>

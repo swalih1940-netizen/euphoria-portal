@@ -1,0 +1,92 @@
+<!-- Floating Mobile-Style Bottom Navigation Bar (Results & Gallery) -->
+<nav id="floating-bottom-nav" aria-label="Quick Navigation"
+    class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto transition-all duration-500 will-change-transform">
+    <div
+        class="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 rounded-full bg-[#080d19]/90 backdrop-blur-2xl border border-amber-500/30 shadow-[0_12px_45px_rgba(0,0,0,0.85),0_0_25px_rgba(245,158,11,0.22)] ring-1 ring-white/10 select-none">
+        
+        <!-- 1. Results Navigation Item -->
+        <a href="/result" id="bottom-nav-results"
+            class="bottom-nav-item group relative flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 active:scale-95 overflow-hidden text-slate-300 hover:text-white hover:bg-white/5">
+            <!-- Active Glow Background Pill -->
+            <span class="nav-active-pill absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 opacity-0 group-[.active]:opacity-100 transition-opacity duration-300 rounded-full shadow-lg shadow-amber-500/30 -z-10"></span>
+            
+            <!-- Icon -->
+            <span class="material-symbols-outlined text-lg sm:text-xl transition-all duration-300 group-hover:scale-110 group-[.active]:text-slate-950 group-[.active]:font-extrabold group-[.active]:scale-110 text-amber-400 group-hover:text-amber-300">
+                trophy
+            </span>
+            
+            <!-- Label -->
+            <span class="tracking-wide group-[.active]:text-slate-950 group-[.active]:font-extrabold transition-colors duration-200">
+                Results
+            </span>
+
+            <!-- Subtle Live Pulse indicator for Results -->
+            <span class="relative flex h-2 w-2 ml-0.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 group-[.active]:bg-slate-900 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400 group-[.active]:bg-slate-950"></span>
+            </span>
+        </a>
+
+        <!-- Divider -->
+        <div class="h-6 w-[1px] bg-slate-800/80 mx-0.5"></div>
+
+        <!-- 2. Gallery Navigation Item -->
+        <a href="/gallery" id="bottom-nav-gallery"
+            class="bottom-nav-item group relative flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 active:scale-95 overflow-hidden text-slate-300 hover:text-white hover:bg-white/5">
+            <!-- Active Glow Background Pill -->
+            <span class="nav-active-pill absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 opacity-0 group-[.active]:opacity-100 transition-opacity duration-300 rounded-full shadow-lg shadow-amber-500/30 -z-10"></span>
+            
+            <!-- Icon -->
+            <span class="material-symbols-outlined text-lg sm:text-xl transition-all duration-300 group-hover:scale-110 group-[.active]:text-slate-950 group-[.active]:font-extrabold group-[.active]:scale-110 text-cyan-400 group-hover:text-cyan-300">
+                photo_library
+            </span>
+            
+            <!-- Label -->
+            <span class="tracking-wide group-[.active]:text-slate-950 group-[.active]:font-extrabold transition-colors duration-200">
+                Gallery
+            </span>
+
+            <!-- Subtle Badge indicator for Gallery -->
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 group-[.active]:bg-slate-950 transition-colors ml-0.5"></span>
+        </a>
+
+    </div>
+</nav>
+
+<!-- Bottom Nav Active State & Scroll Hide/Show Script -->
+<script>
+    (function () {
+        const path = window.location.pathname.toLowerCase();
+        const resultsBtn = document.getElementById('bottom-nav-results');
+        const galleryBtn = document.getElementById('bottom-nav-gallery');
+        const navBar = document.getElementById('floating-bottom-nav');
+
+        if (!resultsBtn || !galleryBtn) return;
+
+        // Set active item based on current URL path
+        if (path.startsWith('/result')) {
+            resultsBtn.classList.add('active');
+            resultsBtn.classList.remove('text-slate-300');
+            resultsBtn.classList.add('text-slate-950');
+        } else if (path.startsWith('/gallery')) {
+            galleryBtn.classList.add('active');
+            galleryBtn.classList.remove('text-slate-300');
+            galleryBtn.classList.add('text-slate-950');
+        }
+
+        // Smooth reveal on load
+        if (navBar) {
+            navBar.style.transform = 'translate(-50%, 0)';
+            navBar.style.opacity = '1';
+        }
+
+        // Haptic feedback & click micro-interaction
+        [resultsBtn, galleryBtn].forEach(btn => {
+            btn.addEventListener('click', function () {
+                if (navigator.vibrate) {
+                    navigator.vibrate(15);
+                }
+            });
+        });
+    })();
+</script>

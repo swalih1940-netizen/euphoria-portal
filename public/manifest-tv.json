@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "/tv",
+  "name": "Euphoria '26 - Live TV Display",
+  "short_name": "Euphoria TV",
+  "description": "Live real-time event standings, stage announcements, and results display for Event Euphoria '26",
+  "start_url": "/tv",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "window-controls-overlay"
+  ],
+  "orientation": "landscape",
+  "dir": "ltr",
+  "lang": "en-US",
+  "background_color": "#030610",
+  "theme_color": "#030610",
+  "categories": [
+    "entertainment",
+    "events",
+    "sports"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/images/logo-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live TV Display",
+      "short_name": "Live TV",
+      "description": "Open full-screen Live TV event results & scoreboard",
+      "url": "/tv",
+      "icons": [
+        {
+          "src": "/images/logo-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

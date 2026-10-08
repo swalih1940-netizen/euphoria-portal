@@ -1,0 +1,61 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.euphoria.tv'
+    compileSdk 34
+    buildToolsVersion "34.0.0"
+
+    defaultConfig {
+        applicationId "com.euphoria.tv"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+}
+
+tasks.register('copyApkToLocal') {
+    doLast {
+        def srcApk = file("${layout.buildDirectory.get()}/outputs/apk/debug/app-debug.apk")
+        def destDir = file("${projectDir}/build/outputs/apk/debug")
+        if (srcApk.exists() && srcApk.canonicalPath != file("${destDir}/app-debug.apk").canonicalPath) {
+            destDir.mkdirs()
+            copy {
+                from srcApk
+                into destDir
+            }
+            println "Copied debug APK to ${destDir}/app-debug.apk"
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named('assembleDebug').configure {
+        finalizedBy('copyApkToLocal')
+    }
+}
