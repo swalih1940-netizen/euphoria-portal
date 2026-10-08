@@ -636,19 +636,29 @@ app.post('/api/admin/gallery/upload-batch', requireAdminAuth, (req, res) => {
     }
 });
 
-app.post('/api/admin/gallery/delete/:id', requireAdminAuth, (req, res) => {
+// Robust Admin Photo Delete Endpoints (Supports both POST & DELETE, with ID in param or body)
+const handleAdminPhotoDelete = (req, res) => {
     try {
-        const success = galleryService.deletePhoto(req.params.id);
+        const rawId = req.params.id || (req.body && req.body.id) || req.query.id;
+        if (!rawId) {
+            return res.status(400).json({ success: false, error: 'Photo ID or identifier is required.' });
+        }
+        const id = decodeURIComponent(String(rawId)).trim();
+        const success = galleryService.deletePhoto(id);
         if (success) {
-            res.json({ success: true });
+            return res.json({ success: true, message: 'Photo deleted successfully from gallery.', id });
         } else {
-            res.status(404).json({ success: false, error: 'Photo not found in gallery storage.' });
+            return res.status(404).json({ success: false, error: 'Photo not found in gallery records.' });
         }
     } catch (err) {
         console.error('[Admin Photo Delete Error]:', err);
-        res.status(500).json({ success: false, error: err.message });
+        return res.status(500).json({ success: false, error: 'Internal server error deleting photo: ' + err.message });
     }
-});
+};
+
+app.post(['/api/admin/gallery/delete/:id', '/api/admin/gallery/delete'], requireAdminAuth, handleAdminPhotoDelete);
+app.delete(['/api/admin/gallery/delete/:id', '/api/admin/gallery/:id', '/api/admin/gallery/delete'], requireAdminAuth, handleAdminPhotoDelete);
+
 
 // Photo Download Proxy Endpoint (forces 'Euphoria Photo.jpg' attachment & strips WebP)
 app.get('/api/gallery/download', (req, res) => {

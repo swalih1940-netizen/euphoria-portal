@@ -689,18 +689,27 @@
                             class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-sm">open_in_new</span>
                         </a>
-                        <button onclick="deleteGalleryPhoto('${photo.id}', '${escapeQuotes(photo.title)}')" title="Delete Photo"
-                            class="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40 transition-colors">
-                            <span class="material-symbols-outlined text-sm">delete</span>
+                        <button type="button" 
+                            class="btn-delete-photo p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40 transition-colors cursor-pointer"
+                            data-id="${photo.id}"
+                            data-title="${encodeURIComponent(photo.title || 'Euphoria Photo')}"
+                            title="Delete Photo">
+                            <span class="material-symbols-outlined text-sm pointer-events-none">delete</span>
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function escapeQuotes(str) {
-            return (str || '').replace(/'/g, "\\'");
-        }
+        // Event delegation for photo deletion
+        document.getElementById('admin-photos-container').addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.btn-delete-photo');
+            if (deleteBtn) {
+                const id = deleteBtn.getAttribute('data-id');
+                const title = decodeURIComponent(deleteBtn.getAttribute('data-title') || 'photo');
+                deleteGalleryPhoto(id, title);
+            }
+        });
 
         // Search in admin
         document.getElementById('admin-search-input').addEventListener('input', function () {
@@ -713,30 +722,61 @@
             renderPhotosList(filtered);
         });
 
-        // Delete photo
+        // Delete photo with immediate optimistic UI update
         async function deleteGalleryPhoto(id, title) {
-            if (!confirm(`Are you sure you want to delete "${title}" from the gallery?`)) {
+            if (!id) return;
+            const photoTitle = title || 'this photo';
+            if (!confirm(`Are you sure you want to delete "${photoTitle}" from the gallery?`)) {
                 return;
             }
 
+            // Save previous state for rollback if server request fails
+            const previousPhotos = [...allAdminPhotos];
+
+            // 1. Immediate UI update: remove item from memory and DOM immediately
+            allAdminPhotos = allAdminPhotos.filter(p => p.id !== id && p.imageUrl !== id);
+            const statTotal = document.getElementById('stat-total-photos');
+            if (statTotal) statTotal.innerText = allAdminPhotos.length;
+            renderPhotosList(allAdminPhotos);
+
             try {
-                const res = await fetch(`/api/admin/gallery/delete/${id}`, {
-                    method: 'POST'
+                const res = await fetch(`/api/admin/gallery/delete/${encodeURIComponent(id)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id })
                 });
-                const data = await res.json();
-                if (data.success) {
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.success) {
                     showAlert(`Photo deleted successfully.`, true);
-                    loadAdminPhotos();
                 } else {
-                    showAlert(data.error || 'Failed to delete photo.', false);
+                    // Rollback UI update on failure
+                    allAdminPhotos = previousPhotos;
+                    if (statTotal) statTotal.innerText = allAdminPhotos.length;
+                    renderPhotosList(allAdminPhotos);
+
+                    if (res.status === 401) {
+                        showAlert('Session expired. Redirecting to login...', false);
+                        setTimeout(() => window.location.href = '/admin/login', 1200);
+                    } else {
+                        showAlert(data.error || 'Failed to delete photo from storage.', false);
+                    }
                 }
             } catch (err) {
-                showAlert('Error: ' + err.message, false);
+                console.error('[Delete Photo Error]:', err);
+                // Rollback on network failure
+                allAdminPhotos = previousPhotos;
+                if (statTotal) statTotal.innerText = allAdminPhotos.length;
+                renderPhotosList(allAdminPhotos);
+                showAlert('Network error: ' + err.message, false);
             }
         }
 
-        // Initialize auth check
-        checkAdminAuth();
+        window.deleteGalleryPhoto = deleteGalleryPhoto;
     </script>
 </body>
 

@@ -251,31 +251,54 @@ function savePhotos(photosArray) {
 }
 
 /**
- * Delete a photo by ID and remove physical file if stored locally
+ * Delete a photo by ID or path and remove physical file if stored locally
  */
-function deletePhoto(id) {
+function deletePhoto(identifier) {
+    if (!identifier) return false;
     ensureDirs();
     const photos = readPhotos();
-    const index = photos.findIndex(p => p.id === id);
+    const cleanId = decodeURIComponent(String(identifier)).trim();
+
+    // Match by ID, imageUrl, or filename
+    const index = photos.findIndex(p => {
+        if (!p) return false;
+        if (p.id && String(p.id).trim() === cleanId) return true;
+        if (p.imageUrl && String(p.imageUrl).trim() === cleanId) return true;
+        if (p.imageUrl && path.basename(p.imageUrl) === path.basename(cleanId)) return true;
+        return false;
+    });
+
     if (index === -1) {
         return false;
     }
 
     const photo = photos[index];
 
-    // If locally stored in /uploads/gallery/, remove the physical file
-    if (photo.imageUrl && photo.imageUrl.startsWith('/uploads/gallery/')) {
-        const filename = path.basename(photo.imageUrl);
-        const filepath = path.join(UPLOADS_DIR, filename);
-        if (fs.existsSync(filepath)) {
+    // Attempt to remove physical file if stored locally without crashing
+    if (photo.imageUrl) {
+        let localPath = null;
+        if (photo.imageUrl.startsWith('/uploads/gallery/')) {
+            const filename = path.basename(photo.imageUrl);
+            localPath = path.join(UPLOADS_DIR, filename);
+        } else if (photo.imageUrl.startsWith('/uploads/')) {
+            const filename = path.basename(photo.imageUrl);
+            localPath = path.join(__dirname, '..', 'public', 'uploads', filename);
+        }
+
+        if (localPath) {
             try {
-                fs.unlinkSync(filepath);
+                if (fs.existsSync(localPath)) {
+                    fs.unlinkSync(localPath);
+                    console.log('[GalleryService] Successfully removed physical image file:', localPath);
+                }
             } catch (err) {
-                console.warn('[GalleryService] Failed to delete local image file:', err.message);
+                // Gracefully ignore permission or lock errors; data removal should still succeed
+                console.warn('[GalleryService] Note: Could not unlink local image file (permission or locked):', err.message);
             }
         }
     }
 
+    // Remove from in-memory and persistent storage
     photos.splice(index, 1);
     writePhotos(photos);
     return true;
