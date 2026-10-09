@@ -112,6 +112,17 @@
             font-display: swap;
         }
 
+        @font-face {
+            font-family: 'Nohemi-Medium';
+            src: url('/Font/Poster%20Font/Nohemi-Medium-BF6438cc581a509.otf') format('opentype'),
+                url('/Font/Poster Font/Nohemi-Medium-BF6438cc581a509.otf') format('opentype'),
+                url('/Font/Poster%20Font/Nohemi-Medium-BF6438cc5883899.ttf') format('truetype'),
+                url('/Font/Poster Font/Nohemi-Medium-BF6438cc5883899.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
@@ -426,6 +437,11 @@
                                     title="Poster Design 2 (Anchor Edition)">
                                     Poster 2
                                 </button>
+                                <button type="button" onclick="setCardPosterVariant('{{this.id}}', 3, this)" id="var-btn-3-{{this.id}}"
+                                    class="card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white"
+                                    title="Poster Design 3 (3rd Option Edition)">
+                                    Poster 3
+                                </button>
                             </div>
 
                             <!-- Download Poster Button (Outlined Yellow Stroke, Sharp Minimal Radius) -->
@@ -506,6 +522,10 @@
                     <button id="modal-var-2-btn" onclick="switchModalPosterVariant(2)"
                         class="px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white">
                         Poster 2
+                    </button>
+                    <button id="modal-var-3-btn" onclick="switchModalPosterVariant(3)"
+                        class="px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white">
+                        Poster 3
                     </button>
                 </div>
 
@@ -685,6 +705,118 @@
             <!-- Dynamic Multi-Winner Container for Poster 2 (used when winners >= 4) -->
             <div id="poster2-dynamic-container"
                 style="display: none; position: absolute; top: 45.2%; left: 22.5%; width: 620px; height: 850px; z-index: 10; flex-direction: column; justify-content: space-between;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden High-Res Poster Template 3: 3rd Option Model (2480px x 2953px) for html-to-image Export -->
+    <div id="poster-render-wrapper-3"
+        style="position: fixed; top: 0; left: -9999px; width: 2480px; height: 2953px; overflow: hidden; pointer-events: none; opacity: 0; z-index: -99999;">
+        <div id="poster-render-card-3"
+            style="width: 2480px; height: 2953px; position: relative; margin: 0; padding: 0; box-sizing: border-box; background: #070a12;">
+
+            <!-- Background Template Image (Variant 3: /images/Result-3-Option-Thamblate.jpg or -if-2-third.jpg) -->
+            <img src="/images/Result-3-Option-Thamblate.jpg" id="poster-3-bg-img"
+                style="position: absolute; top: 0; left: 0; width: 2480px; height: 2953px; object-fit: cover; z-index: 1;"
+                alt="Poster 3 Background" />
+
+            <!-- Result Number (Top Left Quadrant: Nohemi-Light) -->
+            <div id="poster3-res-num"
+                style="position: absolute; top: 550px; left: 512px; font-family: 'Nohemi-Light', 'Nohemi-Regular', sans-serif; font-size: 260px; font-weight: 300; color: #ffffff; line-height: 0.9; margin: 0; z-index: 10;">
+                01</div>
+
+            <!-- Competition Header Wrapper: Zone Subheading & Title -->
+            <div id="poster3-comp-header-wrapper"
+                style="position: absolute; top: 550px; left: 947px; width: 920px; max-width: 920px; z-index: 10;">
+                <!-- Zone Subheading (Nohemi-Medium) -->
+                <div id="poster3-comp-category"
+                    style="font-family: 'Nohemi-Medium', sans-serif; font-size: 44px; font-weight: 500; color: #ffffff; line-height: 1; margin: 0 0 16px 0;">
+                    Core Zone</div>
+                <!-- Main Competition Title (Nohemi-Medium) -->
+                <div id="poster3-comp-title"
+                    style="font-family: 'Nohemi-Medium', sans-serif; font-size: 98px; font-weight: 500; color: #FFC700; line-height: 1.08; letter-spacing: -0.015em; margin: 0; padding: 0; word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
+                    -</div>
+            </div>
+
+            <!-- Standard 3-Winner Rows for Poster 3 (used when winners <= 3) -->
+            <div id="poster3-standard-winners">
+                <!-- 1st Winner Row -->
+                <div id="poster3-winner-1" style="position: absolute; top: 1006px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-p1-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 88px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-t1-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 52px; font-weight: 500; color: #ffffff; margin-top: 8px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 2nd Winner Row -->
+                <div id="poster3-winner-2" style="position: absolute; top: 1230px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-p2-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 88px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-t2-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 52px; font-weight: 500; color: #ffffff; margin-top: 8px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 3rd Winner Row -->
+                <div id="poster3-winner-3" style="position: absolute; top: 1458px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-p3-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 88px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-t3-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 52px; font-weight: 500; color: #ffffff; margin-top: 8px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+            </div>
+
+            <!-- Two 3rd Places Rows (used when 4 winners with ties / two 3rd places) -->
+            <div id="poster3-twothird-winners" style="display: none;">
+                <!-- 1st Winner Row -->
+                <div id="poster3-tt-winner-1" style="position: absolute; top: 1006px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-tt-p1-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 82px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-tt-t1-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 2nd Winner Row -->
+                <div id="poster3-tt-winner-2" style="position: absolute; top: 1230px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-tt-p2-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 82px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-tt-t2-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 3rd Winner Row A -->
+                <div id="poster3-tt-winner-3" style="position: absolute; top: 1426px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-tt-p3-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 82px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-tt-t3-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+
+                <!-- 3rd Winner Row B -->
+                <div id="poster3-tt-winner-4" style="position: absolute; top: 1624px; left: 735px; right: 10%; z-index: 10;">
+                    <div id="poster3-tt-p4-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 82px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; letter-spacing: -0.01em;">
+                        -</div>
+                    <div id="poster3-tt-t4-name"
+                        style="font-family: 'Nohemi-Medium', sans-serif; font-size: 48px; font-weight: 500; color: #ffffff; margin-top: 6px; line-height: 1.1; letter-spacing: -0.01em;">
+                        -</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Multi-Winner Container for Poster 3 (used when winners >= 5) -->
+            <div id="poster3-dynamic-container"
+                style="display: none; position: absolute; top: 1000px; left: 512px; right: 10%; height: 750px; z-index: 10; flex-direction: column; justify-content: space-between;">
             </div>
         </div>
     </div>
@@ -902,6 +1034,8 @@
 
         let cachedPosterBgDataUrl = null;
         let cachedPoster2BgDataUrl = null;
+        let cachedPoster3BgDataUrl = null;
+        let cachedPoster3TwoThirdBgDataUrl = null;
         let cachedFontEmbedCss = null;
 
         // Track selected poster variant per card (default is 1)
@@ -909,21 +1043,20 @@
         let activeModalPoster = { compId: '', variant: 1, dataUrl: '', filename: '', compTitle: '' };
 
         function setCardPosterVariant(compId, variant, btnElement) {
-            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            const parsed = parseInt(variant, 10);
+            const v = (parsed === 2) ? 2 : (parsed === 3 ? 3 : 1);
             cardSelectedVariants[compId] = v;
 
             const btn1 = document.getElementById(`var-btn-1-${compId}`);
             const btn2 = document.getElementById(`var-btn-2-${compId}`);
+            const btn3 = document.getElementById(`var-btn-3-${compId}`);
 
-            if (btn1 && btn2) {
-                if (v === 1) {
-                    btn1.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
-                    btn2.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white';
-                } else {
-                    btn1.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white';
-                    btn2.className = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
-                }
-            }
+            const activeClass = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+            const inactiveClass = 'card-var-btn px-2 sm:px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white';
+
+            if (btn1) btn1.className = (v === 1) ? activeClass : inactiveClass;
+            if (btn2) btn2.className = (v === 2) ? activeClass : inactiveClass;
+            if (btn3) btn3.className = (v === 3) ? activeClass : inactiveClass;
         }
 
         function getCardPosterVariant(compId) {
@@ -931,7 +1064,8 @@
         }
 
         async function preparePosterAssets(variant = 1) {
-            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            const parsed = parseInt(variant, 10);
+            const v = (parsed === 2) ? 2 : (parsed === 3 ? 3 : 1);
 
             if (v === 1 && !cachedPosterBgDataUrl) {
                 try {
@@ -963,11 +1097,43 @@
                 }
             }
 
+            if (v === 3) {
+                if (!cachedPoster3BgDataUrl) {
+                    try {
+                        const res = await fetch('/images/Result-3-Option-Thamblate.jpg');
+                        const blob = await res.blob();
+                        cachedPoster3BgDataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch (e) {
+                        console.warn('[Poster Engine] Could not pre-load Result-3-Option-Thamblate.jpg:', e);
+                    }
+                }
+                if (!cachedPoster3TwoThirdBgDataUrl) {
+                    try {
+                        const res = await fetch('/images/Result-3-Option-Thamblate-if-2-third.jpg');
+                        const blob = await res.blob();
+                        cachedPoster3TwoThirdBgDataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch (e) {
+                        console.warn('[Poster Engine] Could not pre-load Result-3-Option-Thamblate-if-2-third.jpg:', e);
+                    }
+                }
+            }
+
             if (!cachedFontEmbedCss) {
                 try {
                     const fontUrls = [
                         { family: 'Nohemi-Light', weight: 300, format: 'opentype', url: '/Font/Poster Font/Nohemi-Light-BF6438cc583f70b.otf' },
                         { family: 'Nohemi-Regular', weight: 400, format: 'opentype', url: '/Font/Poster Font/Nohemi-Regular-BF6438cc58b98fc.otf' },
+                        { family: 'Nohemi-Medium', weight: 500, format: 'opentype', url: '/Font/Poster Font/Nohemi-Medium-BF6438cc581a509.otf' },
                         { family: 'Nohemi-SemiBold', weight: 600, format: 'truetype', url: '/Font/Poster Font/Nohemi-SemiBold-BF6438cc588a48a.ttf' }
                     ];
 
@@ -1064,7 +1230,8 @@
         }
 
         async function generateCompetitionPoster(compId, variant = 1) {
-            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            const parsed = parseInt(variant, 10);
+            const v = (parsed === 2) ? 2 : (parsed === 3 ? 3 : 1);
             const rawCompsData = document.getElementById('competitions-json-data')?.textContent;
             let compList = [];
             try {
@@ -1078,12 +1245,16 @@
                 throw new Error('Competition details not found for poster export.');
             }
 
-            const wrapperElem = v === 2
-                ? document.getElementById('poster-render-wrapper-2')
-                : (document.getElementById('poster-render-wrapper') || document.getElementById('poster-render-wrapper-1'));
-            const cardElem = v === 2
-                ? document.getElementById('poster-render-card-2')
-                : (document.getElementById('poster-render-card') || document.getElementById('poster-render-card-1'));
+            const wrapperElem = v === 3
+                ? document.getElementById('poster-render-wrapper-3')
+                : (v === 2
+                    ? document.getElementById('poster-render-wrapper-2')
+                    : (document.getElementById('poster-render-wrapper') || document.getElementById('poster-render-wrapper-1')));
+            const cardElem = v === 3
+                ? document.getElementById('poster-render-card-3')
+                : (v === 2
+                    ? document.getElementById('poster-render-card-2')
+                    : (document.getElementById('poster-render-card') || document.getElementById('poster-render-card-1')));
 
             try {
                 // Pre-load assets as Base64 Data URLs to avoid CORS and fetch failures
@@ -1254,7 +1425,7 @@
                             titleElem.style.lineHeight = '1.1';
                         }
                     }
-                } else {
+                } else if (v === 2) {
                     // Populate Variant 2 (Anchor Edition) DOM elements
                     const bgImgElem2 = document.getElementById('poster-2-bg-img') || cardElem.querySelector('img');
                     if (bgImgElem2 && cachedPoster2BgDataUrl) {
@@ -1386,6 +1557,153 @@
                             row3.style.display = 'none';
                         }
                     }
+                } else if (v === 3) {
+                    // Populate Variant 3 (3rd Option Model) DOM elements
+                    // Check if exactly 4 winners with two 3rd places (e.g. ranks 1, 2, 3, 3)
+                    const isTwoThirds = winnerCount === 4 && (winnersList.filter(w => w.rank === 3).length >= 2 || (winnersList[2] && winnersList[3] && winnersList[3].rank === 3));
+
+                    const bgImgElem3 = document.getElementById('poster-3-bg-img') || cardElem.querySelector('img');
+                    if (bgImgElem3) {
+                        if (isTwoThirds) {
+                            bgImgElem3.src = cachedPoster3TwoThirdBgDataUrl || '/images/Result-3-Option-Thamblate-if-2-third.jpg';
+                        } else {
+                            bgImgElem3.src = cachedPoster3BgDataUrl || '/images/Result-3-Option-Thamblate.jpg';
+                        }
+                    }
+
+                    // Result Number (Top Left Quadrant, Nohemi-Light font)
+                    const numElem3 = document.getElementById('poster3-res-num');
+                    if (numElem3) numElem3.innerText = resNum;
+
+                    // Zone Subheading (Title Case formatted, Nohemi-Medium font)
+                    let compCategory = comp.category || comp.categoryName || comp.catName || comp.stageCategory || 'General';
+                    if (typeof compCategory === 'object') {
+                        compCategory = compCategory.name || compCategory.title || compCategory.label || 'General';
+                    }
+                    compCategory = String(compCategory).trim();
+                    if (compCategory.toUpperCase() === 'PRIME') compCategory = 'Prime Zone';
+                    else if (compCategory.toUpperCase() === 'CORE') compCategory = 'Core Zone';
+                    else if (compCategory.toUpperCase() === 'ALPHA') compCategory = 'Alpha Zone';
+                    else if (compCategory.toUpperCase() === 'GENERAL') compCategory = 'General';
+                    else {
+                        // Title Case formatting
+                        compCategory = compCategory.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                    }
+
+                    const catElem3 = document.getElementById('poster3-comp-category');
+                    if (catElem3) catElem3.innerText = compCategory;
+
+                    // Competition Title (Nohemi-Medium font, #FFC700)
+                    const titleElem3 = document.getElementById('poster3-comp-title');
+                    if (titleElem3) {
+                        titleElem3.innerText = compTitle;
+                        if (compTitle.length > 28) {
+                            titleElem3.style.fontSize = '72px';
+                            titleElem3.style.lineHeight = '1.08';
+                        } else if (compTitle.length > 18) {
+                            titleElem3.style.fontSize = '84px';
+                            titleElem3.style.lineHeight = '1.08';
+                        } else {
+                            titleElem3.style.fontSize = '98px';
+                            titleElem3.style.lineHeight = '1.08';
+                        }
+                    }
+
+                    const stdWinners3 = document.getElementById('poster3-standard-winners');
+                    const twoThirdWinners3 = document.getElementById('poster3-twothird-winners');
+                    const dynWinners3 = document.getElementById('poster3-dynamic-container');
+
+                    if (winnerCount >= 5) {
+                        // Multi-winner dynamic layout for 5+ winners
+                        if (stdWinners3) stdWinners3.style.display = 'none';
+                        if (twoThirdWinners3) twoThirdWinners3.style.display = 'none';
+                        if (dynWinners3) {
+                            dynWinners3.style.display = 'flex';
+                            const N = winnerCount;
+                            const nameFontSize = Math.max(34, Math.floor(320 / N));
+                            const teamFontSize = Math.max(22, Math.floor(200 / N));
+                            dynWinners3.innerHTML = winnersList.map((w, idx) => {
+                                const rankBadge = w.rank === 1 ? '1st' : w.rank === 2 ? '2nd' : '3rd';
+                                return `
+                                <div style="display: flex; align-items: center; width: 100%; min-height: 0;">
+                                    <div style="width: 180px; min-width: 180px; font-family: 'Nohemi-Medium', sans-serif; font-size: ${nameFontSize}px; color: #ffffff; flex-shrink: 0;">
+                                        ${rankBadge}
+                                    </div>
+                                    <div style="flex: 1; min-width: 0; padding-left: 10px;">
+                                        <div style="font-family: 'Nohemi-Medium', sans-serif; font-size: ${nameFontSize}px; font-weight: 500; color: #ffffff; line-height: 1.05; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${escapePosterHtml(w.participant)}
+                                        </div>
+                                        <div style="font-family: 'Nohemi-Medium', sans-serif; font-size: ${teamFontSize}px; font-weight: 500; color: #ffffff; margin-top: 4px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${escapePosterHtml(w.team)}
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        }
+                    } else if (isTwoThirds) {
+                        // Exactly 4 winners with two 3rd places
+                        if (stdWinners3) stdWinners3.style.display = 'none';
+                        if (dynWinners3) dynWinners3.style.display = 'none';
+                        if (twoThirdWinners3) twoThirdWinners3.style.display = 'block';
+
+                        const w1 = winnersList[0];
+                        const w2 = winnersList[1];
+                        const w3 = winnersList[2];
+                        const w4 = winnersList[3];
+
+                        if (w1) {
+                            document.getElementById('poster3-tt-p1-name').innerText = w1.participant || '-';
+                            document.getElementById('poster3-tt-t1-name').innerText = w1.team || '-';
+                        }
+                        if (w2) {
+                            document.getElementById('poster3-tt-p2-name').innerText = w2.participant || '-';
+                            document.getElementById('poster3-tt-t2-name').innerText = w2.team || '-';
+                        }
+                        if (w3) {
+                            document.getElementById('poster3-tt-p3-name').innerText = w3.participant || '-';
+                            document.getElementById('poster3-tt-t3-name').innerText = w3.team || '-';
+                        }
+                        if (w4) {
+                            document.getElementById('poster3-tt-p4-name').innerText = w4.participant || '-';
+                            document.getElementById('poster3-tt-t4-name').innerText = w4.team || '-';
+                        }
+                    } else {
+                        // Standard <= 3 winners
+                        if (twoThirdWinners3) twoThirdWinners3.style.display = 'none';
+                        if (dynWinners3) dynWinners3.style.display = 'none';
+                        if (stdWinners3) stdWinners3.style.display = 'block';
+
+                        const w1 = winnersList[0];
+                        const w2 = winnersList[1];
+                        const w3 = winnersList[2];
+
+                        const row1 = document.getElementById('poster3-winner-1');
+                        if (w1) {
+                            row1.style.display = 'block';
+                            document.getElementById('poster3-p1-name').innerText = w1.participant || '-';
+                            document.getElementById('poster3-t1-name').innerText = w1.team || '-';
+                        } else {
+                            row1.style.display = 'none';
+                        }
+
+                        const row2 = document.getElementById('poster3-winner-2');
+                        if (w2) {
+                            row2.style.display = 'block';
+                            document.getElementById('poster3-p2-name').innerText = w2.participant || '-';
+                            document.getElementById('poster3-t2-name').innerText = w2.team || '-';
+                        } else {
+                            row2.style.display = 'none';
+                        }
+
+                        const row3 = document.getElementById('poster3-winner-3');
+                        if (w3) {
+                            row3.style.display = 'block';
+                            document.getElementById('poster3-p3-name').innerText = w3.participant || '-';
+                            document.getElementById('poster3-t3-name').innerText = w3.team || '-';
+                        } else {
+                            row3.style.display = 'none';
+                        }
+                    }
                 }
 
                 // Make poster wrapper visible to browser layout engine during capture
@@ -1450,7 +1768,7 @@
                 // Capture high-res PNG image
                 const dataUrl = await toPng(cardElem, options);
                 const cleanName = compTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-                const filename = `Result_#${resNum}_${cleanName}${v === 2 ? '_v2' : ''}.png`;
+                const filename = `Result_#${resNum}_${cleanName}${v === 2 ? '_v2' : (v === 3 ? '_v3' : '')}.png`;
 
                 return {
                     comp,
@@ -1478,29 +1796,28 @@
             }
 
             const title = compTitle || comp.title || comp.name || 'Competition';
-            const compId = comp.id || comp._id || '';
-            const shareUrl = compId ? `${window.location.origin}/result?id=${encodeURIComponent(compId)}` : `${window.location.origin}/result`;
+            const shareUrl = 'https://www.euphoria.sirajulirfan.com/';
 
             return `*EUPHORIA 2K26*\n${title} | Result #${num}\n\n🔗 ${shareUrl}`;
         }
 
         function openPosterPreviewModal(dataUrl, filename, compTitle, compId, variant = 1) {
-            activeModalPoster = { compId, variant, dataUrl, filename, compTitle };
+            const v = parseInt(variant, 10) || 1;
+            activeModalPoster = { compId, variant: v, dataUrl, filename, compTitle };
             const modal = document.getElementById('poster-preview-modal');
             const img = document.getElementById('preview-modal-img');
             const title = document.getElementById('preview-modal-title');
 
-            const modalBtn1 = document.getElementById('modal-var-1-btn');
-            const modalBtn2 = document.getElementById('modal-var-2-btn');
-            if (modalBtn1 && modalBtn2) {
-                if (variant === 2) {
-                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
-                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
-                } else {
-                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
-                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+            [1, 2, 3].forEach(num => {
+                const b = document.getElementById(`modal-var-${num}-btn`);
+                if (b) {
+                    if (num === v) {
+                        b.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                    } else {
+                        b.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                    }
                 }
-            }
+            });
 
             if (modal && img) {
                 img.src = dataUrl;
@@ -1512,20 +1829,20 @@
         }
 
         async function switchModalPosterVariant(variant) {
-            const v = parseInt(variant, 10) === 2 ? 2 : 1;
+            const parsed = parseInt(variant, 10);
+            const v = (parsed === 2) ? 2 : (parsed === 3 ? 3 : 1);
             if (activeModalPoster.variant === v && activeModalPoster.dataUrl) return;
 
-            const modalBtn1 = document.getElementById('modal-var-1-btn');
-            const modalBtn2 = document.getElementById('modal-var-2-btn');
-            if (modalBtn1 && modalBtn2) {
-                if (v === 1) {
-                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
-                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
-                } else {
-                    modalBtn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
-                    modalBtn2.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+            [1, 2, 3].forEach(num => {
+                const b = document.getElementById(`modal-var-${num}-btn`);
+                if (b) {
+                    if (num === v) {
+                        b.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+                    } else {
+                        b.className = 'px-2.5 py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+                    }
                 }
-            }
+            });
 
             if (!activeModalPoster.compId) return;
 

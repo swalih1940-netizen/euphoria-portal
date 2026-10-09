@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Base Configuration
-const SUBDOMAIN_URL = (process.env.SUBDOMAIN_URL || 'https://euphoria.sirajulirfan.com').replace(/\/+$/, '');
+const SUBDOMAIN_URL = (process.env.SUBDOMAIN_URL || 'https://www.euphoria.sirajulirfan.com').replace(/\/+$/, '');
 const MAIN_SITE_URL = (process.env.MAIN_SITE_URL || 'https://sirajulirfan.com').replace(/\/+$/, '');
 const FESTIVAL_NAME = process.env.FESTIVAL_NAME || "Event Euphoria '26";
 const FESTIVAL_DATE_RAW = process.env.FESTIVAL_DATE || '2026-10-10T06:00:00+05:30';
