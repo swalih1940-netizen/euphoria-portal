@@ -58,7 +58,7 @@ const FALLBACK_HOUSES = [
         rank: 2,
         points: 0,
         progress: 0,
-        captain: 'Muhammed Jabir vk',
+        captain: 'Muhammed Jabir',
         badge: 'Runner Up',
         badgeClass: 'bg-slate-800 text-emerald-400 border border-emerald-500/30',
         barGradient: 'from-emerald-500 to-emerald-300'
@@ -460,7 +460,7 @@ async function fetchTeamPoints(existingCompetitions = null, forceFresh = false) 
             rank: rank,
             points: item.points,
             progress: progress,
-            captain: item.name === 'Team fanora' ? 'Muhammed Afeef' : (item.name === 'Team zahora' ? 'Muhammed Jabir vk' : ''),
+            captain: item.name === 'Team fanora' ? 'Muhammed Afeef' : (item.name === 'Team zahora' ? 'Muhammed Jabir' : ''),
             badge: rank === 1 ? 'Current Lead' : (rank === 2 ? 'Runner Up' : ''),
             badgeClass: rank === 1 ? 'bg-amber-400 text-slate-950' : (rank === 2 ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-300'),
             barGradient: rank === 1 ? 'from-amber-500 to-amber-300' : (rank === 2 ? 'from-emerald-500 to-emerald-300' : 'from-cyan-500 to-cyan-300')
