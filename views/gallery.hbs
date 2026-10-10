@@ -221,9 +221,10 @@
                         <div class="skeleton-shimmer absolute inset-0 z-0"></div>
                         
                         <!-- Image -->
-                        <img src="{{this.imageUrl}}" alt="Event Euphoria Festival Photo" loading="lazy"
-                            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 opacity-0 transition-opacity duration-500"
-                            onload="this.classList.remove('opacity-0'); if(this.previousElementSibling) this.previousElementSibling.style.display='none';" />
+                        <img src="{{this.imageUrl}}" alt="{{this.title}}" loading="lazy"
+                            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 transition-opacity duration-300"
+                            onload="if(this.previousElementSibling && this.previousElementSibling.classList.contains('skeleton-shimmer')) this.previousElementSibling.style.display='none';"
+                            onerror="if(this.previousElementSibling && this.previousElementSibling.classList.contains('skeleton-shimmer')) this.previousElementSibling.style.display='none';" />
 
                         <!-- Floating Quick Action Overlay on Hover -->
                         <div class="absolute inset-0 z-20 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-2 sm:p-3 pointer-events-none">
@@ -493,11 +494,12 @@
         }
 
         // Dynamic Gallery State & Live Grid Rendering
-        let allGalleryPhotos = [];
+        let allGalleryPhotos = Array.isArray({{{json photos}}}) ? {{{json photos}}} : [];
         let activeFilter = 'ALL';
 
         function renderGalleryCardHtml(photo) {
-            const category = photo.category || 'Stage';
+            if (!photo || !photo.imageUrl) return '';
+            const category = photo.category || 'Stage & Performance';
             const title = photo.title || 'Event Euphoria Photo';
             const imgUrl = photo.imageUrl;
             return `
@@ -510,8 +512,9 @@
                     <div class="skeleton-shimmer absolute inset-0 z-0"></div>
                     
                     <img src="${imgUrl}" alt="${title}" loading="lazy"
-                        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 opacity-0 transition-opacity duration-500"
-                        onload="this.classList.remove('opacity-0'); if(this.previousElementSibling) this.previousElementSibling.style.display='none';" />
+                        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 transition-opacity duration-300"
+                        onload="if(this.previousElementSibling && this.previousElementSibling.classList.contains('skeleton-shimmer')) this.previousElementSibling.style.display='none';"
+                        onerror="if(this.previousElementSibling && this.previousElementSibling.classList.contains('skeleton-shimmer')) this.previousElementSibling.style.display='none';" />
 
                     <div class="absolute inset-0 z-20 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-2 sm:p-3 pointer-events-none">
                         <span class="inline-flex items-center gap-1 text-[10px] sm:text-xs font-bold text-amber-400 bg-slate-950/80 px-2 py-1 rounded-lg border border-amber-500/30 backdrop-blur-sm">
@@ -566,6 +569,15 @@
                 grid.innerHTML = filtered.map(renderGalleryCardHtml).join('');
             }
 
+            // Immediately clear shimmer skeleton for cached/complete images
+            grid.querySelectorAll('img').forEach(img => {
+                if (img.complete && img.naturalWidth > 0) {
+                    if (img.previousElementSibling && img.previousElementSibling.classList.contains('skeleton-shimmer')) {
+                        img.previousElementSibling.style.display = 'none';
+                    }
+                }
+            });
+
             // Re-bind Lightbox click listeners to cards
             document.querySelectorAll('.gallery-card').forEach((card) => {
                 card.addEventListener('click', function () {
@@ -587,11 +599,16 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.success && Array.isArray(data.photos)) {
+                        console.log(`[Gallery Live Sync] Successfully retrieved ${data.photos.length} photos.`);
                         renderGalleryGrid(data.photos);
+                    } else {
+                        console.warn('[Gallery Live Sync] Unexpected data structure:', data);
                     }
+                } else {
+                    console.error('[Gallery Live Sync] Failed to fetch gallery photos. HTTP Status:', res.status);
                 }
             } catch (err) {
-                console.warn('[Gallery] Background live sync error:', err);
+                console.warn('[Gallery Live Sync] Background sync network error:', err.message);
             }
         }
 

@@ -257,7 +257,7 @@ const renderGalleryPage = (req, res) => {
 app.get('/gallery', renderGalleryPage);
 
 // 5. Gallery Public JSON API
-app.get('/api/gallery', (req, res) => {
+app.get(['/api/gallery', '/api/gallery/list', '/api/photos'], (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
@@ -266,7 +266,8 @@ app.get('/api/gallery', (req, res) => {
         const photos = category ? galleryService.getPhotosByCategory(category) : galleryService.getAllPhotos();
         res.json({ success: true, count: photos.length, photos });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error('[Gallery API Error]:', err.message);
+        res.status(500).json({ success: false, error: err.message, photos: [] });
     }
 });
 
@@ -606,7 +607,7 @@ app.get(['/admin', '/admin/gallery', '/admin/photos'], requireAdminAuth, (req, r
 });
 
 // Protected Admin API Endpoints
-app.get(['/api/admin/gallery/list', '/api/gallery/list'], requireAdminAuth, (req, res) => {
+app.get(['/api/admin/gallery/list', '/api/admin/photos/list'], requireAdminAuth, (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
@@ -614,56 +615,126 @@ app.get(['/api/admin/gallery/list', '/api/gallery/list'], requireAdminAuth, (req
         const photos = galleryService.getAllPhotos();
         res.json({ success: true, count: photos.length, photos });
     } catch (err) {
-        console.error('[Admin Gallery List Error]:', err);
+        console.error('[Admin Gallery List Error]:', err.message);
         res.status(500).json({ success: false, error: err.message, photos: [] });
     }
 });
 
-app.post('/api/admin/gallery/upload', requireAdminAuth, (req, res) => {
+const uploadRoutes = [
+    '/api/admin/gallery/upload',
+    '/api/gallery/upload',
+    '/api/upload',
+    '/api/admin/upload'
+];
+
+app.post(uploadRoutes, requireAdminAuth, (req, res) => {
     try {
-        const { title, caption, category, house, imageData, imageUrl, originalSize, compressedSize, originalFilename } = req.body;
-        if (!imageData && !imageUrl) {
-            return res.status(400).json({ success: false, error: 'No image data or image URL provided.' });
-        }
-        const photo = galleryService.savePhoto({
+        const {
             title,
             caption,
             category,
             house,
             imageData,
+            image,
+            photo: photoData,
+            file,
             imageUrl,
+            url,
             originalSize,
+            size,
             compressedSize,
-            originalFilename
+            originalFilename,
+            filename,
+            name
+        } = req.body || {};
+
+        const effectiveImageData = imageData || image || photoData || file;
+        const effectiveImageUrl = imageUrl || url;
+        const effectiveFilename = originalFilename || filename || name;
+        const effectiveTitle = title || effectiveFilename;
+        const effectiveCategory = category || 'Stage & Performance';
+        const effectiveHouse = house || 'General';
+        const effectiveSize = originalSize || size;
+
+        console.log(`[Photo Upload API] Received upload request: File="${effectiveFilename || 'unnamed'}", Category="${effectiveCategory}", House="${effectiveHouse}", hasImageData=${Boolean(effectiveImageData)}, hasImageUrl=${Boolean(effectiveImageUrl)}`);
+
+        if (!effectiveImageData && !effectiveImageUrl) {
+            console.warn('[Photo Upload API] Upload rejected: Missing image data and image URL in request body.');
+            return res.status(400).json({ success: false, error: 'No image data or image URL provided.' });
+        }
+
+        const photo = galleryService.savePhoto({
+            title: effectiveTitle,
+            caption,
+            category: effectiveCategory,
+            house: effectiveHouse,
+            imageData: effectiveImageData,
+            imageUrl: effectiveImageUrl,
+            originalSize: effectiveSize,
+            compressedSize,
+            originalFilename: effectiveFilename
         });
+
+        console.log(`[Photo Upload API] Successfully saved photo ID: "${photo.id}", Title: "${photo.title}", Path: "${photo.imageUrl}"`);
         res.json({ success: true, photo });
     } catch (err) {
-        console.error('[Admin Photo Upload Error]:', err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error('[Photo Upload API Error]:', err.message, err.stack);
+        res.status(500).json({ success: false, error: 'Photo upload failed: ' + err.message });
     }
 });
 
-app.post('/api/admin/gallery/upload-batch', requireAdminAuth, (req, res) => {
+const uploadBatchRoutes = [
+    '/api/admin/gallery/upload-batch',
+    '/api/gallery/upload-batch',
+    '/api/upload-batch',
+    '/api/admin/upload-batch'
+];
+
+app.post(uploadBatchRoutes, requireAdminAuth, (req, res) => {
     try {
-        const { photos: incomingPhotos, category, house } = req.body;
+        const { photos: incomingPhotos, category, house } = req.body || {};
         if (!Array.isArray(incomingPhotos) || incomingPhotos.length === 0) {
+            console.warn('[Batch Photo Upload API] Rejected: No photos array provided.');
             return res.status(400).json({ success: false, error: 'No photos provided for bulk upload.' });
         }
-        const savedPhotos = incomingPhotos.map(item => {
-            return galleryService.savePhoto({
-                title: item.title,
-                originalFilename: item.originalFilename || item.name,
-                category: category || item.category || 'Stage & Performance',
-                house: house || item.house || 'General',
-                imageData: item.imageData,
-                originalSize: item.originalSize,
-                compressedSize: item.compressedSize
-            });
+
+        console.log(`[Batch Photo Upload API] Processing batch of ${incomingPhotos.length} photos...`);
+        const savedPhotos = [];
+        const errors = [];
+
+        incomingPhotos.forEach((item, idx) => {
+            try {
+                const saved = galleryService.savePhoto({
+                    title: item.title,
+                    originalFilename: item.originalFilename || item.filename || item.name,
+                    category: category || item.category || 'Stage & Performance',
+                    house: house || item.house || 'General',
+                    imageData: item.imageData || item.image || item.file,
+                    imageUrl: item.imageUrl || item.url,
+                    originalSize: item.originalSize || item.size,
+                    compressedSize: item.compressedSize
+                });
+                savedPhotos.push(saved);
+            } catch (itemErr) {
+                console.error(`[Batch Photo Upload API] Failed item ${idx} (${item.originalFilename || item.name || 'unnamed'}):`, itemErr.message);
+                errors.push({ filename: item.originalFilename || item.name, error: itemErr.message });
+            }
         });
-        res.json({ success: true, count: savedPhotos.length, photos: savedPhotos });
+
+        if (savedPhotos.length === 0 && errors.length > 0) {
+            return res.status(500).json({ success: false, error: 'All photos in batch failed to upload.', errors });
+        }
+
+        console.log(`[Batch Photo Upload API] Successfully uploaded ${savedPhotos.length} of ${incomingPhotos.length} photos.`);
+        res.json({
+            success: true,
+            count: savedPhotos.length,
+            photos: savedPhotos,
+            errors: errors.length > 0 ? errors : undefined
+        });
     } catch (err) {
-        console.error('[Admin Batch Photo Upload Error]:', err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error('[Batch Photo Upload API Error]:', err.message);
+        res.status(500).json({ success: false, error: 'Batch upload failed: ' + err.message });
     }
 });
 

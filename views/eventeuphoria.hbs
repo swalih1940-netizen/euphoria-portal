@@ -1294,8 +1294,12 @@
                             }
                             bindHomeCardListeners();
                         }
+                    } else {
+                        console.error('[Home Gallery] Failed to fetch live photos. HTTP status:', res.status);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.warn('[Home Gallery] Live sync error:', e.message);
+                }
             }
 
             fetchHomeLivePhotos();

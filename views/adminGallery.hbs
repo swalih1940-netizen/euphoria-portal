@@ -573,11 +573,22 @@
 
                 try {
                     const compressed = await compressImageFile(file, 1920, 0.84);
+                    const token = localStorage.getItem('euphoria_admin_token');
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    };
+                    if (token) {
+                        headers['x-admin-token'] = token;
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    console.log(`[Upload Initiated] Uploading file ${i + 1}/${total}: "${file.name}" (Original: ${formatBytes(file.size)}, Compressed: ${formatBytes(compressed.byteLength)})`);
+
                     const response = await fetch('/api/admin/gallery/upload', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers,
+                        credentials: 'same-origin',
                         body: JSON.stringify({
                             originalFilename: file.name,
                             category,
@@ -588,15 +599,23 @@
                         })
                     });
 
-                    const resData = await response.json();
-                    if (resData.success) {
+                    let resData = null;
+                    try {
+                        resData = await response.json();
+                    } catch (jsonErr) {
+                        resData = { success: false, error: `Invalid response format from server (Status ${response.status})` };
+                    }
+
+                    if (response.ok && resData && resData.success) {
+                        console.log(`[Upload Success] "${file.name}" saved successfully as "${resData.photo?.title}" (URL: ${resData.photo?.imageUrl})`);
                         successCount++;
                     } else {
-                        console.error(`Failed to upload ${file.name}:`, resData.error);
+                        const errMsg = (resData && resData.error) ? resData.error : `HTTP ${response.status}: ${response.statusText}`;
+                        console.error(`[Upload Failed] Could not upload "${file.name}":`, errMsg);
                         failCount++;
                     }
                 } catch (err) {
-                    console.error(`Error uploading ${file.name}:`, err);
+                    console.error(`[Upload Network/Client Error] Failure uploading "${file.name}":`, err.message || err);
                     failCount++;
                 }
 
@@ -606,12 +625,12 @@
             }
 
             if (successCount > 0) {
-                showAlert(`Successfully uploaded ${successCount} photo${successCount > 1 ? 's' : ''}! Original file names retained.`, true);
+                showAlert(`Successfully uploaded ${successCount} photo${successCount > 1 ? 's' : ''}! Details saved to database.`, true);
                 clearSelectedFiles();
                 loadAdminPhotos();
             }
             if (failCount > 0) {
-                showAlert(`Failed to upload ${failCount} photo(s). Please try again.`, false);
+                showAlert(`Failed to upload ${failCount} photo(s). Please inspect browser console logs for details.`, false);
             }
 
             submitBtn.disabled = false;

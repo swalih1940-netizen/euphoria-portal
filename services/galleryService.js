@@ -3,7 +3,9 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'gallery.json');
-const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads', 'gallery');
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
+const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
 
 // In-memory cache to guarantee zero downtime in serverless/read-only environments
 let inMemoryPhotos = null;
@@ -15,14 +17,17 @@ function ensureDirs() {
             fs.mkdirSync(DATA_DIR, { recursive: true });
         }
     } catch (e) {
-        // Read-only filesystem or serverless execution; suppress
+        console.warn('[GalleryService] Notice creating data directory:', e.message);
     }
     try {
         if (!fs.existsSync(UPLOADS_DIR)) {
             fs.mkdirSync(UPLOADS_DIR, { recursive: true });
         }
+        if (!fs.existsSync(GALLERY_UPLOADS_DIR)) {
+            fs.mkdirSync(GALLERY_UPLOADS_DIR, { recursive: true });
+        }
     } catch (e) {
-        // Read-only filesystem or serverless execution; suppress
+        console.warn('[GalleryService] Notice creating uploads directory:', e.message);
     }
 }
 
@@ -65,7 +70,7 @@ function writePhotos(photos) {
     ensureDirs();
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
-        console.log(`[GalleryService] Successfully updated ${DATA_FILE} (${inMemoryPhotos.length} photos remaining)`);
+        console.log(`[GalleryService] Successfully updated ${DATA_FILE} (${inMemoryPhotos.length} photos stored)`);
         return true;
     } catch (e) {
         console.error('[GalleryService] Notice: writing data file (persisted in-memory):', e.message);
@@ -93,56 +98,95 @@ function getPhotosByCategory(category) {
 }
 
 /**
- * Save new photo with image compression / storage handling
+ * Save new photo with image compression / storage handling in public/uploads/
  */
 function savePhoto({ title, caption, category, house, imageUrl, imageData, originalSize, compressedSize, originalFilename }) {
     ensureDirs();
     const photos = readPhotos();
-    let finalImageUrl = imageUrl;
+    let finalImageUrl = (imageUrl && typeof imageUrl === 'string') ? imageUrl.trim() : null;
 
     // Retain clean original file name (strip extension if present for title)
     let cleanBaseName = '';
-    if (originalFilename) {
+    if (originalFilename && typeof originalFilename === 'string') {
         cleanBaseName = path.basename(originalFilename).replace(/\.[^/.]+$/, '').trim();
-    } else if (title) {
+    } else if (title && typeof title === 'string') {
         cleanBaseName = title.trim();
     }
-    const safeBaseName = (cleanBaseName || 'Euphoria_Photo').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'Euphoria_Photo';
+    const safeBaseName = (cleanBaseName || 'Euphoria_Photo')
+        .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '_') || 'Euphoria_Photo';
 
-    // Handle base64 image data if provided (saved to public/uploads/gallery/)
-    if (imageData && imageData.startsWith('data:image')) {
-        const matches = imageData.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-            const rawExt = matches[1].toLowerCase();
-            const ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
-            const buffer = Buffer.from(matches[2], 'base64');
-            
-            let filename = `${safeBaseName}.${ext}`;
-            try {
-                if (fs.existsSync(path.join(UPLOADS_DIR, filename))) {
-                    filename = `${safeBaseName}_${Date.now()}.${ext}`;
+    // Handle base64 image data if provided (saved to public/uploads/)
+    if (imageData && typeof imageData === 'string') {
+        try {
+            let base64Payload = imageData.trim();
+            let ext = 'jpg';
+
+            if (base64Payload.startsWith('data:image/')) {
+                const commaIndex = base64Payload.indexOf(',');
+                if (commaIndex !== -1) {
+                    const mimeHeader = base64Payload.slice(0, commaIndex);
+                    base64Payload = base64Payload.slice(commaIndex + 1);
+                    const mimeMatch = mimeHeader.match(/data:image\/([a-zA-Z0-9+]+)/);
+                    if (mimeMatch && mimeMatch[1]) {
+                        const rawExt = mimeMatch[1].toLowerCase();
+                        ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
+                    }
                 }
-                const filepath = path.join(UPLOADS_DIR, filename);
-                fs.writeFileSync(filepath, buffer);
-                finalImageUrl = `/uploads/gallery/${filename}`;
-            } catch (diskErr) {
-                console.warn('[GalleryService] Local upload write failed (serverless fallback to data URI):', diskErr.message);
+            } else if (originalFilename && path.extname(originalFilename)) {
+                const origExt = path.extname(originalFilename).replace('.', '').toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(origExt)) {
+                    ext = origExt === 'jpeg' ? 'jpg' : origExt;
+                }
+            }
+
+            // Remove all whitespace/newlines from base64 string
+            base64Payload = base64Payload.replace(/\s+/g, '');
+            const buffer = Buffer.from(base64Payload, 'base64');
+
+            if (!buffer || buffer.length === 0) {
+                throw new Error('Image data is invalid or produced empty buffer');
+            }
+
+            let filename = `${safeBaseName}.${ext}`;
+            if (fs.existsSync(path.join(UPLOADS_DIR, filename))) {
+                filename = `${safeBaseName}_${Date.now()}.${ext}`;
+            }
+            const filepath = path.join(UPLOADS_DIR, filename);
+            fs.writeFileSync(filepath, buffer);
+
+            if (!fs.existsSync(filepath)) {
+                throw new Error(`File was written but could not be verified on disk at ${filepath}`);
+            }
+
+            finalImageUrl = `/uploads/${filename}`;
+            console.log(`[GalleryService] Image successfully saved to disk: ${filepath} (${buffer.length} bytes, URL: ${finalImageUrl})`);
+        } catch (diskErr) {
+            console.error('[GalleryService] Local upload write failed:', diskErr.message);
+            // In serverless read-only fallback, use data URI if write fails
+            if (!finalImageUrl) {
                 finalImageUrl = imageData;
             }
         }
     }
 
     if (!finalImageUrl) {
-        throw new Error('No valid image URL or image data provided');
+        console.error('[GalleryService] savePhoto failed: No valid image URL or image data provided.');
+        throw new Error('No valid image URL or image data provided for photo upload.');
     }
+
+    const determinedTitle = (title && typeof title === 'string' && title.trim())
+        ? title.trim()
+        : (cleanBaseName || originalFilename || 'Euphoria Photo');
 
     const newPhoto = {
         id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-        title: originalFilename || cleanBaseName || title || 'Euphoria Photo',
+        title: determinedTitle,
         originalFilename: originalFilename || '',
         caption: (caption || '').trim(),
-        category: category || 'Stage & Performance',
-        house: house || 'General',
+        category: (category && category.trim()) ? category.trim() : 'Stage & Performance',
+        house: (house && house.trim()) ? house.trim() : 'General',
         imageUrl: finalImageUrl,
         size: originalSize || 'Optimized',
         compressedSize: compressedSize || 'Optimized',
@@ -150,7 +194,13 @@ function savePhoto({ title, caption, category, house, imageUrl, imageData, origi
     };
 
     photos.unshift(newPhoto);
-    writePhotos(photos);
+    const writeOk = writePhotos(photos);
+    if (!writeOk) {
+        console.error(`[GalleryService] Failed to persist new photo record to ${DATA_FILE}`);
+        throw new Error('Failed to update gallery records in database file.');
+    }
+
+    console.log(`[GalleryService] Successfully stored photo record: ID=${newPhoto.id}, Title="${newPhoto.title}", Category="${newPhoto.category}", URL="${newPhoto.imageUrl}". Total photos: ${photos.length}`);
     return newPhoto;
 }
 
@@ -233,10 +283,12 @@ function deletePhoto(identifier) {
         const relPath = imgUrlClean.startsWith('/') ? imgUrlClean.slice(1) : imgUrlClean;
         candidatePaths.push(path.resolve(publicDir, relPath));
 
-        // 2. Direct inside uploads/gallery/
+        // 2. Direct inside uploads/ or uploads/gallery/
         const fileName = path.basename(imgUrlClean);
         candidatePaths.push(path.resolve(UPLOADS_DIR, fileName));
+        candidatePaths.push(path.resolve(GALLERY_UPLOADS_DIR, fileName));
         candidatePaths.push(path.resolve(publicDir, 'uploads', fileName));
+        candidatePaths.push(path.resolve(publicDir, 'uploads', 'gallery', fileName));
         candidatePaths.push(path.resolve(publicDir, 'images', fileName));
 
         // Deduplicate paths
