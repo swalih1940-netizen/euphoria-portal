@@ -120,8 +120,8 @@ public class MainActivity extends Activity {
         settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        // Performance & Cache
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // Performance & Cache: Always fetch fresh real-time scoreboard & results
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         webView.setHorizontalScrollBarEnabled(false);

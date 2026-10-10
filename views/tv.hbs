@@ -602,7 +602,7 @@
                     Total Championship Score
                 </p>
                 <div class="text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem] xl:text-[9rem] font-mono font-black text-amber-400 tracking-tight drop-shadow-[0_20px_45px_rgba(245,158,11,0.35)] leading-none flex items-baseline justify-center gap-2 sm:gap-3">
-                    <span id="pts-count-fanora">0</span>
+                    <span id="pts-count-fanora">{{#each houses}}{{#if (eq name 'Team fanora')}}{{points}}{{/if}}{{/each}}</span>
                     <span class="text-xl sm:text-2xl lg:text-4xl font-extrabold text-amber-300 font-sans tracking-normal">PTS</span>
                 </div>
                 <div id="fanora-margin-pill" class="mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-xs sm:text-sm font-mono font-bold text-amber-300">
@@ -717,7 +717,7 @@
                     Total Championship Score
                 </p>
                 <div class="text-6xl sm:text-7xl md:text-8xl lg:text-[7.5rem] xl:text-[9rem] font-mono font-black text-emerald-400 tracking-tight drop-shadow-[0_20px_45px_rgba(16,185,129,0.35)] leading-none flex items-baseline justify-center gap-2 sm:gap-3">
-                    <span id="pts-count-zahora">0</span>
+                    <span id="pts-count-zahora">{{#each houses}}{{#if (eq name 'Team zahora')}}{{points}}{{/if}}{{/each}}</span>
                     <span class="text-xl sm:text-2xl lg:text-4xl font-extrabold text-emerald-300 font-sans tracking-normal">PTS</span>
                 </div>
                 <div id="zahora-margin-pill" class="mt-2 sm:mt-3 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs sm:text-sm font-mono font-bold text-emerald-300">
@@ -1632,7 +1632,7 @@
         // 11. Automated Real-Time Poller (Runs every 3 seconds)
         async function pollLiveData() {
             try {
-                const res = await fetch('/api/tv/live-data');
+                const res = await fetch('/api/tv/live-data?_t=' + Date.now(), { cache: 'no-store' });
                 const data = await res.json();
 
                 if (data.success) {

@@ -273,11 +273,12 @@ app.get(['/api/gallery', '/api/gallery/list', '/api/photos'], (req, res) => {
 
 // 6. Live TV Broadcast Display & Real-Time Stream (/tv)
 app.get(['/tv', '/tv/', '/live-tv', '/display'], async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
-        const [houses, competitions] = await Promise.all([
-            festflowService.fetchTeamPoints().catch(() => festflowService.FALLBACK_HOUSES),
-            festflowService.fetchCompetitions().catch(() => festflowService.FALLBACK_COMPETITIONS)
-        ]);
+        const competitions = await festflowService.fetchCompetitions(true).catch(() => festflowService.FALLBACK_COMPETITIONS);
+        const houses = await festflowService.fetchTeamPoints(competitions, true).catch(() => festflowService.FALLBACK_HOUSES);
         const enrichedCompetitions = (competitions || []).map(comp => {
             let rawZone = comp.zone || comp.zoneName || comp.zone_name || comp.category || comp.categoryName || comp.stageCategory || 'Alpha Zone';
             if (typeof rawZone === 'object' && rawZone !== null) {
@@ -374,11 +375,12 @@ app.post('/api/tv/broadcast', (req, res) => {
 });
 
 app.get('/api/tv/live-data', async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
-        const [houses, competitions] = await Promise.all([
-            festflowService.fetchTeamPoints(null, true).catch(() => festflowService.FALLBACK_HOUSES),
-            festflowService.fetchCompetitions(true).catch(() => festflowService.FALLBACK_COMPETITIONS)
-        ]);
+        const competitions = await festflowService.fetchCompetitions(true).catch(() => festflowService.FALLBACK_COMPETITIONS);
+        const houses = await festflowService.fetchTeamPoints(competitions, true).catch(() => festflowService.FALLBACK_HOUSES);
 
         // Clean broadcasts older than 3 minutes
         const cutoff = Date.now() - (3 * 60 * 1000);

@@ -25,13 +25,15 @@ function getRequestTimeoutMs() {
     return parseInt(process.env.FESTFLOW_TIMEOUT_MS, 10) || 10000;
 }
 
-// In-Memory Short-Lived Cache (30s TTL) for Serverless Optimization & Error Resilience
-const CACHE_TTL_MS = 30 * 1000;
+// In-Memory Short-Lived Cache (10s TTL, 2s for forceFresh) for Real-Time Synchronization & Error Resilience
+const CACHE_TTL_MS = 10 * 1000;
+const FRESH_CACHE_TTL_MS = 2 * 1000;
 const cacheStore = {
     competitions: null,
     competitionsTime: 0,
     teamPoints: null,
-    teamPointsTime: 0
+    teamPointsTime: 0,
+    compResultsCache: {}
 };
 
 // Custom HTTPS Agent: keepAlive: false is essential for Serverless/Vercel
@@ -365,7 +367,7 @@ async function fetchTeamPoints(existingCompetitions = null, forceFresh = false) 
 
     // Check memory cache first (if not forcing fresh or if recent)
     const now = Date.now();
-    const ttl = forceFresh ? 3000 : CACHE_TTL_MS;
+    const ttl = forceFresh ? FRESH_CACHE_TTL_MS : CACHE_TTL_MS;
     if (!existingCompetitions && cacheStore.teamPoints && (now - cacheStore.teamPointsTime < ttl)) {
         return cacheStore.teamPoints;
     }
@@ -374,7 +376,7 @@ async function fetchTeamPoints(existingCompetitions = null, forceFresh = false) 
 
     try {
         console.log(`[FestFlow API Axios Request] GET ${endpoint}`);
-        const response = await fetchWithAxios(endpoint, {}, 2);
+        const response = await fetchWithAxios(endpoint, {}, 2, 4000);
 
         if (response && response.status === 200) {
             const rawData = response.data;
@@ -410,7 +412,7 @@ async function fetchTeamPoints(existingCompetitions = null, forceFresh = false) 
     let comps = existingCompetitions;
     if (!Array.isArray(comps)) {
         try {
-            comps = await fetchCompetitions();
+            comps = await fetchCompetitions(forceFresh);
         } catch (e) {
             comps = [];
         }
@@ -419,15 +421,18 @@ async function fetchTeamPoints(existingCompetitions = null, forceFresh = false) 
     let compScoresMap = {};
     if (Array.isArray(comps)) {
         comps.forEach(comp => {
-            if (Array.isArray(comp.winners)) {
-                comp.winners.forEach(w => {
-                    const tName = extractTeamName(w);
-                    const pts = Number(w.points !== undefined && w.points !== null && w.points !== '-' ? w.points : (w.point !== undefined && w.point !== null && w.point !== '-' ? w.point : (w.mark !== undefined && w.mark !== null && w.mark !== '-' ? w.mark : (w.score || 0)))) || 0;
-                    if (tName && tName !== '-') {
-                        compScoresMap[tName] = (compScoresMap[tName] || 0) + pts;
-                    }
-                });
-            }
+            // Include all participants who scored points in the championship calculation
+            const winnersList = Array.isArray(comp.allWinners) && comp.allWinners.length > 0
+                ? comp.allWinners
+                : (Array.isArray(comp.winners) ? comp.winners : (Array.isArray(comp.results) ? comp.results : []));
+
+            winnersList.forEach(w => {
+                const tName = extractTeamName(w);
+                const pts = Number(w.points !== undefined && w.points !== null && w.points !== '-' ? w.points : (w.point !== undefined && w.point !== null && w.point !== '-' ? w.point : (w.mark !== undefined && w.mark !== null && w.mark !== '-' ? w.mark : (w.score || 0)))) || 0;
+                if (tName && tName !== '-') {
+                    compScoresMap[tName] = (compScoresMap[tName] || 0) + pts;
+                }
+            });
         });
     }
 
@@ -483,14 +488,14 @@ async function fetchCompetitions(forceFresh = false) {
 
     // Check memory cache first
     const now = Date.now();
-    const ttl = forceFresh ? 3000 : CACHE_TTL_MS;
+    const ttl = forceFresh ? FRESH_CACHE_TTL_MS : CACHE_TTL_MS;
     if (cacheStore.competitions && (now - cacheStore.competitionsTime < ttl)) {
         return cacheStore.competitions;
     }
 
     try {
         console.log(`[FestFlow API Axios Request] GET ${endpoint}`);
-        const response = await fetchWithAxios(endpoint, {}, 2);
+        const response = await fetchWithAxios(endpoint, {}, 2, 6000);
 
         if (response && response.status === 200) {
             const rawData = response.data;
@@ -519,7 +524,7 @@ async function fetchCompetitions(forceFresh = false) {
                         try {
                             const subUrl = `${baseUrl}/competitions/${compId}/results`;
                             console.log(`[FestFlow API Axios Sub-Request] GET ${subUrl}`);
-                            const subResponse = await fetchWithAxios(subUrl, {}, 2, 4000);
+                            const subResponse = await fetchWithAxios(subUrl, {}, 2, 8000);
                             if (subResponse && subResponse.status === 200) {
                                 const subData = subResponse.data;
                                 console.log(`[FESTFLOW RAW RESULTS API RESPONSE for ${compId}]:\n`, typeof subData === 'string' ? subData : JSON.stringify(subData, null, 2));
@@ -531,9 +536,13 @@ async function fetchCompetitions(forceFresh = false) {
                                 }
                                 if (extracted && extracted.length > 0) {
                                     rawWinners = extracted;
+                                    cacheStore.compResultsCache[compId] = extracted;
                                 }
                             }
                         } catch (subErr) {
+                            if (cacheStore.compResultsCache && cacheStore.compResultsCache[compId]) {
+                                rawWinners = cacheStore.compResultsCache[compId];
+                            }
                             console.warn(`[FestFlow API Sub-Fetch Warning for ${compId}]: ${subErr.message}`);
                         }
                     }
@@ -554,6 +563,80 @@ async function fetchCompetitions(forceFresh = false) {
                         itemCode = itemCode.padStart(2, '0');
                     }
 
+                    const allMappedWinners = rawWinners.map((w, wIdx) => {
+                        const rankVal = w.rank !== undefined ? w.rank : (w.position !== undefined ? w.position : (w.place || w.prize || (wIdx + 1)));
+
+                        let normalizedRank = null;
+                        if (rankVal === 1 || String(rankVal).trim() === '1') normalizedRank = 1;
+                        else if (rankVal === 2 || String(rankVal).trim() === '2') normalizedRank = 2;
+                        else if (rankVal === 3 || String(rankVal).trim() === '3') normalizedRank = 3;
+                        else {
+                            const rLower = String(rankVal || '').toLowerCase().trim();
+                            if (rLower.includes('1st') || rLower === 'first') normalizedRank = 1;
+                            else if (rLower.includes('2nd') || rLower === 'second') normalizedRank = 2;
+                            else if (rLower.includes('3rd') || rLower === 'third') normalizedRank = 3;
+                            else {
+                                const num = parseInt(rankVal, 10);
+                                if (!isNaN(num)) normalizedRank = num;
+                            }
+                        }
+
+                        let prizeVal = w.prize;
+                        if (!prizeVal) {
+                            if (normalizedRank === 1) prizeVal = '1st';
+                            else if (normalizedRank === 2) prizeVal = '2nd';
+                            else if (normalizedRank === 3) prizeVal = '3rd';
+                            else prizeVal = `${normalizedRank || rankVal}th`;
+                        }
+
+                        const chestNoVal = w.chestNo || w.chest_no || w.chestNumber || w.code || w.chest || w.candidateCode || w.candidateNo || '-';
+                        const pName = w.participantName || w.participant || w.name || w.candidateName || w.studentName || w.student_name || w.candidate || 'Participant';
+                        const rawTeamName = extractTeamName(w);
+                        let displayTeam = rawTeamName;
+                        if (displayTeam && displayTeam !== '-' && !displayTeam.toLowerCase().includes('team') && !displayTeam.toLowerCase().includes('house') && !displayTeam.toLowerCase().includes('district') && !displayTeam.toLowerCase().includes('zone')) {
+                            displayTeam = `Team ${displayTeam}`;
+                        }
+
+                        let gradeVal = w.grade || w.gradeName;
+                        if (!gradeVal || gradeVal === '-' || gradeVal === 'none' || gradeVal === 'null' || gradeVal === 'undefined') {
+                            gradeVal = '';
+                        }
+
+                        const pointsVal = (w.point !== undefined && w.point !== null) ? w.point : ((w.points !== undefined && w.points !== null) ? w.points : ((w.mark !== undefined && w.mark !== null) ? w.mark : ((w.score !== undefined && w.score !== null) ? w.score : '-')));
+
+                        const rStr = String(prizeVal || rankVal || '').toLowerCase().trim();
+                        const isFirst = normalizedRank === 1 || rStr.includes('1st') || rStr === '1' || rStr.includes('first');
+                        const isSecond = normalizedRank === 2 || rStr.includes('2nd') || rStr === '2' || rStr.includes('second');
+                        const isThird = normalizedRank === 3 || rStr.includes('3rd') || rStr === '3' || rStr.includes('third');
+
+                        const effectiveRank = isFirst ? 1 : (isSecond ? 2 : (isThird ? 3 : (normalizedRank !== null ? normalizedRank : rankVal)));
+                        const effectivePrize = isFirst ? '1st' : (isSecond ? '2nd' : (isThird ? '3rd' : prizeVal));
+
+                        return {
+                            ...w,
+                            prize: effectivePrize,
+                            rank: effectiveRank,
+                            isFirst: isFirst,
+                            isSecond: isSecond,
+                            isThird: isThird,
+                            chestNo: chestNoVal,
+                            participant: pName,
+                            name: pName,
+                            team: displayTeam,
+                            rawTeamName: rawTeamName,
+                            teamName: displayTeam,
+                            district: displayTeam,
+                            location: '',
+                            grade: gradeVal,
+                            points: pointsVal
+                        };
+                    });
+
+                    // Top 3 positions for poster card display
+                    const topThreeOnly = allMappedWinners
+                        .filter(w => w.isFirst || w.isSecond || w.isThird)
+                        .sort((a, b) => (Number(a.rank) || 99) - (Number(b.rank) || 99));
+
                     return {
                         ...comp,
                         id: compId || `c_${idx + 1}`,
@@ -566,78 +649,8 @@ async function fetchCompetitions(forceFresh = false) {
                         zoneName: normalizedZone,
                         stage: comp.stage || comp.venue || comp.location || comp.type || 'Main Stage',
                         status: comp.status || 'Published',
-                        winners: rawWinners
-                            .map((w, wIdx) => {
-                                const rankVal = w.rank !== undefined ? w.rank : (w.position !== undefined ? w.position : (w.place || w.prize || (wIdx + 1)));
-
-                                let normalizedRank = null;
-                                if (rankVal === 1 || String(rankVal).trim() === '1') normalizedRank = 1;
-                                else if (rankVal === 2 || String(rankVal).trim() === '2') normalizedRank = 2;
-                                else if (rankVal === 3 || String(rankVal).trim() === '3') normalizedRank = 3;
-                                else {
-                                    const rLower = String(rankVal || '').toLowerCase().trim();
-                                    if (rLower.includes('1st') || rLower === 'first') normalizedRank = 1;
-                                    else if (rLower.includes('2nd') || rLower === 'second') normalizedRank = 2;
-                                    else if (rLower.includes('3rd') || rLower === 'third') normalizedRank = 3;
-                                    else {
-                                        const num = parseInt(rankVal, 10);
-                                        if (!isNaN(num)) normalizedRank = num;
-                                    }
-                                }
-
-                                let prizeVal = w.prize;
-                                if (!prizeVal) {
-                                    if (normalizedRank === 1) prizeVal = '1st';
-                                    else if (normalizedRank === 2) prizeVal = '2nd';
-                                    else if (normalizedRank === 3) prizeVal = '3rd';
-                                    else prizeVal = `${normalizedRank || rankVal}th`;
-                                }
-
-                                const chestNoVal = w.chestNo || w.chest_no || w.chestNumber || w.code || w.chest || w.candidateCode || w.candidateNo || '-';
-                                const pName = w.participantName || w.participant || w.name || w.candidateName || w.studentName || w.student_name || w.candidate || 'Participant';
-                                const rawTeamName = extractTeamName(w);
-                                let displayTeam = rawTeamName;
-                                if (displayTeam && displayTeam !== '-' && !displayTeam.toLowerCase().includes('team') && !displayTeam.toLowerCase().includes('house') && !displayTeam.toLowerCase().includes('district') && !displayTeam.toLowerCase().includes('zone')) {
-                                    displayTeam = `Team ${displayTeam}`;
-                                }
-
-                                let gradeVal = w.grade || w.gradeName;
-                                if (!gradeVal || gradeVal === '-' || gradeVal === 'none' || gradeVal === 'null' || gradeVal === 'undefined') {
-                                    gradeVal = '';
-                                }
-
-                                const pointsVal = (w.point !== undefined && w.point !== null) ? w.point : ((w.points !== undefined && w.points !== null) ? w.points : ((w.mark !== undefined && w.mark !== null) ? w.mark : ((w.score !== undefined && w.score !== null) ? w.score : '-')));
-
-                                const rStr = String(prizeVal || rankVal || '').toLowerCase().trim();
-                                const isFirst = normalizedRank === 1 || rStr.includes('1st') || rStr === '1' || rStr.includes('first');
-                                const isSecond = normalizedRank === 2 || rStr.includes('2nd') || rStr === '2' || rStr.includes('second');
-                                const isThird = normalizedRank === 3 || rStr.includes('3rd') || rStr === '3' || rStr.includes('third');
-
-                                const effectiveRank = isFirst ? 1 : (isSecond ? 2 : (isThird ? 3 : (normalizedRank !== null ? normalizedRank : rankVal)));
-                                const effectivePrize = isFirst ? '1st' : (isSecond ? '2nd' : (isThird ? '3rd' : prizeVal));
-
-                                return {
-                                    ...w,
-                                    prize: effectivePrize,
-                                    rank: effectiveRank,
-                                    isFirst: isFirst,
-                                    isSecond: isSecond,
-                                    isThird: isThird,
-                                    chestNo: chestNoVal,
-                                    participant: pName,
-                                    name: pName,
-                                    team: displayTeam,
-                                    rawTeamName: rawTeamName,
-                                    teamName: displayTeam,
-                                    district: displayTeam,
-                                    location: '',
-                                    grade: gradeVal,
-                                    points: pointsVal
-                                };
-                            })
-                            // Strictly filter results to top 3 position winners (First, Second, Third place only)
-                            .filter(w => w.isFirst || w.isSecond || w.isThird)
-                            .sort((a, b) => (Number(a.rank) || 99) - (Number(b.rank) || 99))
+                        allWinners: allMappedWinners,
+                        winners: topThreeOnly
                     };
                 }));
 
