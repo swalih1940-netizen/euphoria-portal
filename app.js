@@ -59,25 +59,6 @@ if (isCloudinaryConfigured) {
     console.warn('[Cloudinary Config] Notice: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET not set. Local fallback storage enabled.');
 }
 
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
-const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
-
-function ensureUploadDirectories() {
-    try {
-        if (!fs.existsSync(UPLOADS_DIR)) {
-            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-        }
-        if (!fs.existsSync(GALLERY_UPLOADS_DIR)) {
-            fs.mkdirSync(GALLERY_UPLOADS_DIR, { recursive: true });
-        }
-        fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
-        console.log(`[Multer Config] Verified destination directory "${UPLOADS_DIR}" exists with write permissions.`);
-    } catch (err) {
-        // Handled gracefully in serverless/Cloudinary mode
-    }
-}
-ensureUploadDirectories();
-
 let multerStorage;
 
 if (isCloudinaryConfigured) {
@@ -100,34 +81,9 @@ if (isCloudinaryConfigured) {
     });
     console.log('[Multer Config] Active storage engine: multer-storage-cloudinary (Direct Cloudinary uploads).');
 } else {
-    multerStorage = multer.diskStorage({
-        destination: function (req, file, cb) {
-            const dest = process.env.VERCEL ? '/tmp' : UPLOADS_DIR;
-            try {
-                if (!fs.existsSync(dest)) {
-                    fs.mkdirSync(dest, { recursive: true });
-                }
-                cb(null, dest);
-            } catch (dirErr) {
-                cb(null, '/tmp');
-            }
-        },
-        filename: function (req, file, cb) {
-            try {
-                const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-                const rawBase = path.basename(file.originalname, ext);
-                const safeBase = rawBase
-                    .replace(/[^a-zA-Z0-9_\-\s]/g, '')
-                    .trim()
-                    .replace(/\s+/g, '_') || 'photo';
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                cb(null, `${safeBase}_${uniqueSuffix}${ext}`);
-            } catch (nameErr) {
-                cb(nameErr);
-            }
-        }
-    });
-    console.log('[Multer Config] Active storage engine: local disk fallback.');
+    // In-memory storage for serverless read-only environments (zero public/uploads disk dependency)
+    multerStorage = multer.memoryStorage();
+    console.log('[Multer Config] Active storage engine: in-memory storage (serverless read-only safe, zero disk writes).');
 }
 
 const multerFileFilter = (req, file, cb) => {
@@ -243,29 +199,47 @@ const orFn = function (...args) {
 };
 hbs.registerHelper('or', orFn);
 
-function resolveMulterFileWebUrl(file) {
+async function resolveMulterFileWebUrl(file) {
     if (!file) return '';
+    // 1. Direct Cloudinary secure_url from multer-storage-cloudinary
     if (file.secure_url && typeof file.secure_url === 'string') {
         return file.secure_url.replace(/^http:\/\//i, 'https://');
     }
+    // 2. Direct Cloudinary or HTTPS URL from file.path / file.url
     if (file.url && typeof file.url === 'string' && (file.url.startsWith('http://') || file.url.startsWith('https://'))) {
         return file.url.replace(/^http:\/\//i, 'https://');
     }
     if (file.path && typeof file.path === 'string' && (file.path.startsWith('http://') || file.path.startsWith('https://'))) {
         return file.path.replace(/^http:\/\//i, 'https://');
     }
-    if (file.filename) {
-        return `/uploads/${file.filename}`;
-    }
-    if (file.path && typeof file.path === 'string') {
-        const clean = file.path.replace(/\\/g, '/');
-        const uploadsIdx = clean.indexOf('/uploads/');
-        if (uploadsIdx !== -1) {
-            return clean.substring(uploadsIdx);
+    // 3. In-memory buffer from multer.memoryStorage: upload directly to Cloudinary or use in-memory data URI
+    if (file.buffer && Buffer.isBuffer(file.buffer)) {
+        if (isCloudinaryConfigured) {
+            try {
+                const base64Data = `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`;
+                const cldRes = await cloudinary.uploader.upload(base64Data, {
+                    folder: 'euphoria_festival_gallery',
+                    transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+                });
+                return (cldRes.secure_url || cldRes.url).replace(/^http:\/\//i, 'https://');
+            } catch (err) {
+                console.error('[Multer Cloudinary Upload Error]:', err.message);
+                return `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`;
+            }
         }
-        return '/uploads/' + clean.split('/').pop();
+        return `data:${file.mimetype || 'image/jpeg'};base64,${file.buffer.toString('base64')}`;
     }
-    return '';
+    // 4. Data URIs
+    if (typeof file.path === 'string' && file.path.startsWith('data:image/')) {
+        return file.path;
+    }
+    // 5. Cloudinary public_id
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || (cloudinary.config && cloudinary.config().cloud_name);
+    if (cloudName && file.filename && !file.filename.includes('/')) {
+        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${file.filename}`;
+    }
+    // Fallback: static bundled festival asset (never /uploads/...)
+    return '/images/euphoria_trophy.jpg';
 }
 
 const photoUrlFn = function (photo) {
@@ -278,11 +252,17 @@ const photoUrlFn = function (photo) {
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
         return raw.replace(/^http:\/\//i, 'https://');
     }
-    if (raw.startsWith('data:image/') || raw.startsWith('/')) return raw;
-    const clean = raw.replace(/\\/g, '/');
-    const uploadsIdx = clean.indexOf('/uploads/');
-    if (uploadsIdx !== -1) return clean.substring(uploadsIdx);
-    return '/uploads/' + clean.split('/').pop();
+    if (raw.startsWith('data:image/')) return raw;
+    if (raw.startsWith('/images/') || raw.startsWith('/Font/')) return raw;
+    // Replace any legacy /uploads/ paths to prevent 404s on Vercel
+    if (raw.startsWith('/uploads/') || raw.includes('/uploads/')) {
+        return '/images/euphoria_trophy.jpg';
+    }
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || (cloudinary.config && cloudinary.config().cloud_name);
+    if (cloudName && !raw.includes('/')) {
+        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${raw}`;
+    }
+    return raw;
 };
 hbs.registerHelper('photoUrl', photoUrlFn);
 
@@ -820,10 +800,10 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
     try {
         console.log(`[Photo Upload API] [${req.method}] ${req.path} - Processing upload request...`);
 
-        // Case 1: File uploaded via Multer multipart/form-data (Cloudinary or local fallback)
+        // Case 1: File uploaded via Multer multipart/form-data (Cloudinary or in-memory fallback)
         if (req.file) {
             const uploadedFile = req.file;
-            const fileUrl = resolveMulterFileWebUrl(uploadedFile);
+            const fileUrl = await resolveMulterFileWebUrl(uploadedFile);
             const sizeStr = uploadedFile.size ? ((uploadedFile.size / 1024).toFixed(1) + ' KB') : 'Optimized';
 
             const rawTitle = req.body?.title;
@@ -837,7 +817,7 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
 
             console.log(`[Photo Upload API] Handling Multer file: Original="${uploadedFile.originalname}", Stored URL="${fileUrl}", Size=${uploadedFile.size || 0} bytes, Category="${category}", House="${house}"`);
 
-            const photo = galleryService.savePhoto({
+            const photo = await galleryService.savePhoto({
                 title: cleanTitle,
                 caption,
                 category,
@@ -862,10 +842,11 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
         // Case 2: Multiple files uploaded via Multer in a single upload route request
         if (req.files && req.files.length > 0) {
             console.log(`[Photo Upload API] Handling ${req.files.length} Multer multipart files...`);
-            const savedPhotos = req.files.map(f => {
-                const fileUrl = resolveMulterFileWebUrl(f);
+            const savedPhotos = [];
+            for (const f of req.files) {
+                const fileUrl = await resolveMulterFileWebUrl(f);
                 const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
-                return galleryService.savePhoto({
+                const saved = await galleryService.savePhoto({
                     title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),
                     caption: req.body?.caption || '',
                     category: req.body?.category || 'Stage & Performance',
@@ -875,7 +856,8 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
                     compressedSize: sizeStr,
                     originalFilename: f.originalname
                 });
-            });
+                savedPhotos.push(saved);
+            }
 
             console.log(`[Photo Upload API] Successfully saved ${savedPhotos.length} photos via Multer.`);
             return res.json({
@@ -943,7 +925,7 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
             });
         }
 
-        const photo = galleryService.savePhoto({
+        const photo = await galleryService.savePhoto({
             title: effectiveTitle,
             caption,
             category: effectiveCategory,
@@ -989,11 +971,12 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req
         // 1. Files uploaded via Multer multipart
         if (req.files && req.files.length > 0) {
             console.log(`[Batch Photo Upload API] Processing ${req.files.length} multipart files...`);
-            req.files.forEach((f, idx) => {
+            for (let idx = 0; idx < req.files.length; idx++) {
+                const f = req.files[idx];
                 try {
-                    const fileUrl = resolveMulterFileWebUrl(f);
+                    const fileUrl = await resolveMulterFileWebUrl(f);
                     const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
-                    const saved = galleryService.savePhoto({
+                    const saved = await galleryService.savePhoto({
                         title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),
                         caption: req.body?.caption || '',
                         category: req.body?.category || 'Stage & Performance',
@@ -1008,7 +991,7 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req
                     console.error(`[Batch Photo Upload API] Failed file ${idx} (${f.originalname}):`, itemErr.message);
                     errors.push({ filename: f.originalname, error: itemErr.message });
                 }
-            });
+            }
         }
         // 2. Incoming JSON array of photos
         else if (Array.isArray(req.body?.photos) && req.body.photos.length > 0) {
@@ -1032,7 +1015,7 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req
                         }
                     }
 
-                    const saved = galleryService.savePhoto({
+                    const saved = await galleryService.savePhoto({
                         title: item.title,
                         originalFilename: item.originalFilename || item.filename || item.name,
                         category: req.body?.category || item.category || 'Stage & Performance',

@@ -522,11 +522,13 @@
             if (raw.startsWith('http://') || raw.startsWith('https://')) {
                 return raw.replace(/^http:\/\//i, 'https://');
             }
-            if (raw.startsWith('data:image/') || raw.startsWith('/')) return raw;
-            const clean = raw.replace(/\\/g, '/');
-            const uploadsIdx = clean.indexOf('/uploads/');
-            if (uploadsIdx !== -1) return clean.substring(uploadsIdx);
-            return '/uploads/' + clean.split('/').pop();
+            if (raw.startsWith('data:image/')) return raw;
+            if (raw.startsWith('/images/') || raw.startsWith('/Font/')) return raw;
+            // Prevent 404s on Vercel by avoiding legacy /uploads/ paths
+            if (raw.startsWith('/uploads/') || raw.includes('/uploads/')) {
+                return '/images/euphoria_trophy.jpg';
+            }
+            return raw;
         }
 
         function renderGalleryCardHtml(photo) {

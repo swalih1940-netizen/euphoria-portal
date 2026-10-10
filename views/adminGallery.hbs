@@ -769,10 +769,12 @@
                 let imgUrl = raw;
                 if (raw.startsWith('http://') || raw.startsWith('https://')) {
                     imgUrl = raw.replace(/^http:\/\//i, 'https://');
-                } else if (raw && !raw.startsWith('data:image/') && !raw.startsWith('/')) {
-                    const clean = raw.replace(/\\/g, '/');
-                    const uploadsIdx = clean.indexOf('/uploads/');
-                    imgUrl = uploadsIdx !== -1 ? clean.substring(uploadsIdx) : '/uploads/' + clean.split('/').pop();
+                } else if (raw.startsWith('data:image/') || raw.startsWith('/images/') || raw.startsWith('/Font/')) {
+                    imgUrl = raw;
+                } else if (raw.startsWith('/uploads/') || raw.includes('/uploads/')) {
+                    imgUrl = '/images/euphoria_trophy.jpg';
+                } else if (!raw) {
+                    imgUrl = '/images/euphoria_trophy.jpg';
                 }
                 const title = photo.title || 'Euphoria Photo';
                 return `

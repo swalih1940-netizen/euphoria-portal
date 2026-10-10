@@ -1,17 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'gallery.json');
 const TMP_DATA_FILE = path.join('/tmp', 'gallery.json');
-const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
-const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
 
 // In-memory cache to guarantee zero downtime in serverless/read-only environments
 let inMemoryPhotos = null;
 
-// Ensure storage directories exist safely without throwing errors
+// Ensure storage directories exist safely without throwing errors (serverless /tmp or data directory)
 function ensureDirs() {
     try {
         if (!fs.existsSync(DATA_DIR)) {
@@ -20,42 +18,34 @@ function ensureDirs() {
     } catch (e) {
         // Expected on read-only serverless filesystems (e.g. Vercel)
     }
-    try {
-        if (!fs.existsSync(UPLOADS_DIR)) {
-            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-        }
-        if (!fs.existsSync(GALLERY_UPLOADS_DIR)) {
-            fs.mkdirSync(GALLERY_UPLOADS_DIR, { recursive: true });
-        }
-        fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
-        console.log('[GalleryService] Uploads directory public/uploads verified with write permissions.');
-    } catch (e) {
-        // Handled gracefully in serverless/Cloudinary mode
-    }
 }
 
 // Initial curated festival photos from existing assets
 const INITIAL_PHOTOS = [];
 
-// Convert any URL or local disk path into a browser-accessible web URL
+// Convert any URL or asset reference into a valid secure public URL (never a local /uploads/ path)
 function normalizePhotoUrl(raw) {
     if (!raw || typeof raw !== 'string') return '';
     const trimmed = raw.trim();
     if (!trimmed) return '';
+    // Upgrade http to https (Cloudinary secure)
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
         return trimmed.replace(/^http:\/\//i, 'https://');
     }
+    // Allow data URIs
     if (trimmed.startsWith('data:image/')) return trimmed;
-    if (trimmed.startsWith('/')) return trimmed;
-    const clean = trimmed.replace(/\\/g, '/');
-    const uploadsIdx = clean.indexOf('/uploads/');
-    if (uploadsIdx !== -1) {
-        return clean.substring(uploadsIdx);
+    // Allow static bundled assets from public/ like /images/
+    if (trimmed.startsWith('/images/') || trimmed.startsWith('/Font/')) return trimmed;
+    // Prevent 404 on Vercel for legacy /uploads/ paths
+    if (trimmed.startsWith('/uploads/') || trimmed.includes('/uploads/')) {
+        return '/images/euphoria_trophy.jpg';
     }
-    if (clean.includes(':') || clean.includes('/')) {
-        return '/uploads/' + clean.split('/').pop();
+    // If it's a Cloudinary public ID, construct the full Cloudinary HTTPS URL
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME || (cloudinary.config && cloudinary.config().cloud_name);
+    if (cloudName && !trimmed.includes('/')) {
+        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${trimmed}`;
     }
-    return '/uploads/' + trimmed;
+    return trimmed;
 }
 
 // Normalize photo objects so imageUrl, url, secure_url, and filePath are always present
@@ -159,9 +149,9 @@ function getPhotosByCategory(category) {
 }
 
 /**
- * Save new photo with image compression / storage handling in public/uploads/
+ * Save new photo with direct Cloudinary storage (zero local public/uploads disk dependency)
  */
-function savePhoto({ title, caption, category, house, imageUrl, url, secure_url, filePath, path: pPath, imageData, originalSize, compressedSize, originalFilename }) {
+async function savePhoto({ title, caption, category, house, imageUrl, url, secure_url, filePath, path: pPath, imageData, originalSize, compressedSize, originalFilename }) {
     ensureDirs();
     const photos = readPhotos();
     const rawUrl = imageUrl || secure_url || url || filePath || pPath || null;
@@ -179,54 +169,20 @@ function savePhoto({ title, caption, category, house, imageUrl, url, secure_url,
         .trim()
         .replace(/\s+/g, '_') || 'Euphoria_Photo';
 
-    // Handle base64 image data if provided and no direct imageUrl exists (saved to public/uploads/)
+    // Handle base64 image data: upload directly to Cloudinary (never save to local disk)
     if (!finalImageUrl && imageData && typeof imageData === 'string') {
         try {
-            let base64Payload = imageData.trim();
-            let ext = 'jpg';
-
-            if (base64Payload.startsWith('data:image/')) {
-                const commaIndex = base64Payload.indexOf(',');
-                if (commaIndex !== -1) {
-                    const mimeHeader = base64Payload.slice(0, commaIndex);
-                    base64Payload = base64Payload.slice(commaIndex + 1);
-                    const mimeMatch = mimeHeader.match(/data:image\/([a-zA-Z0-9+]+)/);
-                    if (mimeMatch && mimeMatch[1]) {
-                        const rawExt = mimeMatch[1].toLowerCase();
-                        ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
-                    }
-                }
-            } else if (originalFilename && path.extname(originalFilename)) {
-                const origExt = path.extname(originalFilename).replace('.', '').toLowerCase();
-                if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(origExt)) {
-                    ext = origExt === 'jpeg' ? 'jpg' : origExt;
-                }
-            }
-
-            // Remove all whitespace/newlines from base64 string
-            base64Payload = base64Payload.replace(/\s+/g, '');
-            const buffer = Buffer.from(base64Payload, 'base64');
-
-            if (!buffer || buffer.length === 0) {
-                throw new Error('Image data is invalid or produced empty buffer');
-            }
-
-            let filename = `${safeBaseName}.${ext}`;
-            if (fs.existsSync(path.join(UPLOADS_DIR, filename))) {
-                filename = `${safeBaseName}_${Date.now()}.${ext}`;
-            }
-            const filepath = path.join(UPLOADS_DIR, filename);
-            fs.writeFileSync(filepath, buffer);
-
-            if (!fs.existsSync(filepath)) {
-                throw new Error(`File was written but could not be verified on disk at ${filepath}`);
-            }
-
-            finalImageUrl = `/uploads/${filename}`;
-            console.log(`[GalleryService] Image successfully saved to disk: ${filepath} (${buffer.length} bytes, URL: ${finalImageUrl})`);
-        } catch (diskErr) {
-            console.error('[GalleryService] Local upload write failed:', diskErr.message);
-            // In serverless read-only fallback, use data URI if write fails
+            console.log('[GalleryService] Uploading base64 image directly to Cloudinary...');
+            const cldRes = await cloudinary.uploader.upload(imageData, {
+                folder: 'euphoria_festival_gallery',
+                public_id: `${safeBaseName}_${Date.now()}_${Math.round(Math.random() * 1e6)}`,
+                transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+            });
+            finalImageUrl = cldRes.secure_url || cldRes.url;
+            console.log(`[GalleryService] Cloudinary direct upload success: "${finalImageUrl}"`);
+        } catch (cldErr) {
+            console.warn('[GalleryService] Cloudinary direct upload notice:', cldErr.message);
+            // Serverless fallback: keep data URI in memory/JSON (never write to disk)
             if (!finalImageUrl) {
                 finalImageUrl = imageData;
             }
@@ -237,6 +193,9 @@ function savePhoto({ title, caption, category, house, imageUrl, url, secure_url,
         console.error('[GalleryService] savePhoto failed: No valid image URL or image data provided.');
         throw new Error('No valid image URL or image data provided for photo upload.');
     }
+
+    // Ensure finalImageUrl is normalized (upgrades http to https, strips legacy /uploads/ relative paths)
+    finalImageUrl = normalizePhotoUrl(finalImageUrl);
 
     const determinedTitle = (title && typeof title === 'string' && title.trim())
         ? title.trim()
@@ -272,13 +231,17 @@ function savePhoto({ title, caption, category, house, imageUrl, url, secure_url,
 /**
  * Save multiple photos at once
  */
-function savePhotos(photosArray) {
+async function savePhotos(photosArray) {
     if (!Array.isArray(photosArray) || photosArray.length === 0) return [];
-    return photosArray.map(p => savePhoto(p));
+    const results = [];
+    for (const p of photosArray) {
+        results.push(await savePhoto(p));
+    }
+    return results;
 }
 
 /**
- * Delete a photo by ID, imageUrl, originalFilename or title, and permanently remove physical file from storage
+ * Delete a photo by ID, imageUrl, originalFilename or title (cleans Cloudinary asset, zero disk access)
  */
 function deletePhoto(identifier) {
     if (!identifier) {
@@ -324,71 +287,10 @@ function deletePhoto(identifier) {
     const photo = photos[index];
     console.log(`[GalleryService] Found target photo: ID=${photo.id}, Image=${photo.imageUrl}`);
 
-    // Attempt to remove physical file if stored on server disk
+    // Delete asset directly from Cloudinary if hosted on Cloudinary
     let fileDeleted = false;
-    let deletedFilePath = null;
-    let fileError = null;
-
-    if (photo.imageUrl) {
-        const publicDir = path.resolve(__dirname, '..', 'public');
-        const candidatePaths = [];
-
-        let imgUrlClean = String(photo.imageUrl).split('?')[0].split('#')[0].trim();
-        if (imgUrlClean.startsWith('http://') || imgUrlClean.startsWith('https://')) {
-            try {
-                imgUrlClean = new URL(imgUrlClean).pathname;
-            } catch (e) {}
-        }
-        try {
-            imgUrlClean = decodeURIComponent(imgUrlClean);
-        } catch (e) {}
-        imgUrlClean = imgUrlClean.replace(/\\/g, '/');
-
-        // 1. Direct path relative to public/
-        const relPath = imgUrlClean.startsWith('/') ? imgUrlClean.slice(1) : imgUrlClean;
-        candidatePaths.push(path.resolve(publicDir, relPath));
-
-        // 2. Direct inside uploads/ or uploads/gallery/
-        const fileName = path.basename(imgUrlClean);
-        candidatePaths.push(path.resolve(UPLOADS_DIR, fileName));
-        candidatePaths.push(path.resolve(GALLERY_UPLOADS_DIR, fileName));
-        candidatePaths.push(path.resolve(publicDir, 'uploads', fileName));
-        candidatePaths.push(path.resolve(publicDir, 'uploads', 'gallery', fileName));
-        candidatePaths.push(path.resolve(publicDir, 'images', fileName));
-
-        // Deduplicate paths
-        const uniquePaths = Array.from(new Set(candidatePaths));
-
-        for (const targetPath of uniquePaths) {
-            // Guard against directory traversal outside public directory
-            if (!targetPath.startsWith(publicDir)) continue;
-
-            try {
-                if (fs.existsSync(targetPath)) {
-                    const stat = fs.statSync(targetPath);
-                    if (stat.isFile()) {
-                        fs.unlinkSync(targetPath);
-                        fileDeleted = true;
-                        deletedFilePath = targetPath;
-                        console.log(`[GalleryService] Permanently deleted physical image file: ${targetPath}`);
-                        break;
-                    }
-                }
-            } catch (err) {
-                fileError = err.message;
-                console.error(`[GalleryService] Failed to unlink file ${targetPath}:`, err.message);
-            }
-        }
-
-        if (!fileDeleted && !deletedFilePath) {
-            console.log(`[GalleryService] Note: No physical file found on disk for "${photo.imageUrl}" (may be external or already deleted).`);
-        }
-    }
-
-    // Attempt to delete asset from Cloudinary if hosted on Cloudinary
     if (photo.imageUrl && photo.imageUrl.includes('cloudinary.com')) {
         try {
-            const cloudinary = require('cloudinary').v2;
             const cleanUrl = String(photo.imageUrl).split('?')[0].split('#')[0];
             const match = cleanUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
             if (match && match[1]) {
@@ -423,8 +325,6 @@ function deletePhoto(identifier) {
         id: photo.id,
         photo,
         fileDeleted,
-        deletedFilePath,
-        fileError,
         remainingCount: photos.length
     };
 }
@@ -436,6 +336,7 @@ module.exports = {
     savePhotos,
     deletePhoto,
     normalizePhoto,
+    normalizePhotoUrl,
     INITIAL_PHOTOS
 };
 
