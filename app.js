@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const hbs = require('hbs');
 const crypto = require('crypto');
+const multer = require('multer');
 require('dotenv').config();
 
 const festflowService = require('./services/festflowService');
@@ -30,6 +31,100 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // Body Parsers with generous limit for compressed photo payloads
 app.use(express.json({ limit: '35mb' }));
 app.use(express.urlencoded({ extended: true, limit: '35mb' }));
+
+// Multer Storage Configuration for multipart/form-data File Uploads
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
+
+function ensureUploadDirectories() {
+    try {
+        if (!fs.existsSync(UPLOADS_DIR)) {
+            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(GALLERY_UPLOADS_DIR)) {
+            fs.mkdirSync(GALLERY_UPLOADS_DIR, { recursive: true });
+        }
+        fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
+        console.log(`[Multer Config] Verified destination directory "${UPLOADS_DIR}" exists with write permissions.`);
+    } catch (err) {
+        console.error(`[Multer Config Error] Could not verify or set write permissions on "${UPLOADS_DIR}":`, err.message);
+    }
+}
+ensureUploadDirectories();
+
+const multerStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        try {
+            if (!fs.existsSync(UPLOADS_DIR)) {
+                fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+            }
+            cb(null, UPLOADS_DIR);
+        } catch (dirErr) {
+            console.error('[Multer Storage Error] Destination directory creation failed:', dirErr.message);
+            cb(dirErr);
+        }
+    },
+    filename: function (req, file, cb) {
+        try {
+            const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+            const rawBase = path.basename(file.originalname, ext);
+            const safeBase = rawBase
+                .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+                .trim()
+                .replace(/\s+/g, '_') || 'photo';
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            const finalFilename = `${safeBase}_${uniqueSuffix}${ext}`;
+            cb(null, finalFilename);
+        } catch (nameErr) {
+            console.error('[Multer Storage Error] Filename generation failed:', nameErr.message);
+            cb(nameErr);
+        }
+    }
+});
+
+const multerFileFilter = (req, file, cb) => {
+    const isImageMime = file.mimetype && file.mimetype.startsWith('image/');
+    const isImageExt = /\.(jpe?g|png|webp|gif|svg|bmp|ico)$/i.test(file.originalname);
+    if (isImageMime || isImageExt) {
+        cb(null, true);
+    } else {
+        const errorMsg = `Invalid file format (${file.mimetype || 'unknown'}). Only images (JPG, PNG, WebP, GIF, SVG) are allowed.`;
+        console.warn(`[Multer Filter] Rejected file: "${file.originalname}" - ${errorMsg}`);
+        cb(new Error(errorMsg));
+    }
+};
+
+const upload = multer({
+    storage: multerStorage,
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB per file limit
+    },
+    fileFilter: multerFileFilter
+});
+
+const multerUploadMiddleware = (req, res, next) => {
+    const contentType = req.headers['content-type'] || '';
+    if (!contentType.includes('multipart/form-data')) {
+        return next();
+    }
+
+    upload.any()(req, res, (err) => {
+        if (err) {
+            console.error('[Multer Upload Middleware Error]:', err.message);
+            const status = (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') ? 413 : 400;
+            return res.status(status).json({
+                success: false,
+                error: err.message || 'File upload failed'
+            });
+        }
+        if (req.files && req.files.length > 0 && !req.file) {
+            req.file = req.files[0];
+        }
+        console.log(`[Multer Upload Middleware] Parsed multipart request: ${req.files ? req.files.length : 0} file(s) received.`);
+        next();
+    });
+};
+
 
 // Helper Functions for IST Date Formatting
 function formatISTDisplay(date) {
@@ -629,8 +724,80 @@ const uploadRoutes = [
     '/api/admin/upload'
 ];
 
-app.post(uploadRoutes, requireAdminAuth, (req, res) => {
+app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
     try {
+        console.log(`[Photo Upload API] [${req.method}] ${req.path} - Processing upload request...`);
+
+        // Case 1: File uploaded via Multer multipart/form-data
+        if (req.file) {
+            const uploadedFile = req.file;
+            const fileUrl = `/uploads/${uploadedFile.filename}`;
+            const sizeStr = (uploadedFile.size / 1024).toFixed(1) + ' KB';
+
+            const rawTitle = req.body?.title;
+            const cleanTitle = (rawTitle && rawTitle.trim())
+                ? rawTitle.trim()
+                : path.basename(uploadedFile.originalname, path.extname(uploadedFile.originalname));
+
+            const category = req.body?.category || 'Stage & Performance';
+            const house = req.body?.house || 'General';
+            const caption = req.body?.caption || '';
+
+            console.log(`[Photo Upload API] Handling Multer file: Original="${uploadedFile.originalname}", Stored="${uploadedFile.filename}", Size=${uploadedFile.size} bytes (${sizeStr}), URL="${fileUrl}", Category="${category}", House="${house}"`);
+
+            const photo = galleryService.savePhoto({
+                title: cleanTitle,
+                caption,
+                category,
+                house,
+                imageUrl: fileUrl,
+                originalSize: req.body?.originalSize || sizeStr,
+                compressedSize: req.body?.compressedSize || sizeStr,
+                originalFilename: uploadedFile.originalname
+            });
+
+            console.log(`[Photo Upload API] Successfully created photo record: ID="${photo.id}", Title="${photo.title}", FilePath="${photo.imageUrl}"`);
+            return res.json({
+                success: true,
+                message: 'Photo uploaded successfully',
+                filePath: photo.imageUrl,
+                url: photo.imageUrl,
+                imageUrl: photo.imageUrl,
+                photo: photo
+            });
+        }
+
+        // Case 2: Multiple files uploaded via Multer in a single upload route request
+        if (req.files && req.files.length > 0) {
+            console.log(`[Photo Upload API] Handling ${req.files.length} Multer multipart files...`);
+            const savedPhotos = req.files.map(f => {
+                const fileUrl = `/uploads/${f.filename}`;
+                const sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+                return galleryService.savePhoto({
+                    title: path.basename(f.originalname, path.extname(f.originalname)),
+                    caption: req.body?.caption || '',
+                    category: req.body?.category || 'Stage & Performance',
+                    house: req.body?.house || 'General',
+                    imageUrl: fileUrl,
+                    originalSize: sizeStr,
+                    compressedSize: sizeStr,
+                    originalFilename: f.originalname
+                });
+            });
+
+            console.log(`[Photo Upload API] Successfully saved ${savedPhotos.length} photos via Multer.`);
+            return res.json({
+                success: true,
+                message: `${savedPhotos.length} photo(s) uploaded successfully`,
+                filePath: savedPhotos[0].imageUrl,
+                url: savedPhotos[0].imageUrl,
+                imageUrl: savedPhotos[0].imageUrl,
+                photo: savedPhotos[0],
+                photos: savedPhotos
+            });
+        }
+
+        // Case 3: JSON payload with base64 imageData or external imageUrl
         const {
             title,
             caption,
@@ -658,11 +825,14 @@ app.post(uploadRoutes, requireAdminAuth, (req, res) => {
         const effectiveHouse = house || 'General';
         const effectiveSize = originalSize || size;
 
-        console.log(`[Photo Upload API] Received upload request: File="${effectiveFilename || 'unnamed'}", Category="${effectiveCategory}", House="${effectiveHouse}", hasImageData=${Boolean(effectiveImageData)}, hasImageUrl=${Boolean(effectiveImageUrl)}`);
+        console.log(`[Photo Upload API] Processing JSON body: Filename="${effectiveFilename || 'unnamed'}", Category="${effectiveCategory}", House="${effectiveHouse}", hasImageData=${Boolean(effectiveImageData)}, hasImageUrl=${Boolean(effectiveImageUrl)}`);
 
         if (!effectiveImageData && !effectiveImageUrl) {
-            console.warn('[Photo Upload API] Upload rejected: Missing image data and image URL in request body.');
-            return res.status(400).json({ success: false, error: 'No image data or image URL provided.' });
+            console.warn('[Photo Upload API] Upload rejected: Missing file, image data, or image URL in request body.');
+            return res.status(400).json({
+                success: false,
+                error: 'No file or image data provided for photo upload.'
+            });
         }
 
         const photo = galleryService.savePhoto({
@@ -677,11 +847,21 @@ app.post(uploadRoutes, requireAdminAuth, (req, res) => {
             originalFilename: effectiveFilename
         });
 
-        console.log(`[Photo Upload API] Successfully saved photo ID: "${photo.id}", Title: "${photo.title}", Path: "${photo.imageUrl}"`);
-        res.json({ success: true, photo });
+        console.log(`[Photo Upload API] Successfully saved photo ID: "${photo.id}", Title: "${photo.title}", FilePath: "${photo.imageUrl}"`);
+        return res.json({
+            success: true,
+            message: 'Photo uploaded successfully',
+            filePath: photo.imageUrl,
+            url: photo.imageUrl,
+            imageUrl: photo.imageUrl,
+            photo: photo
+        });
     } catch (err) {
         console.error('[Photo Upload API Error]:', err.message, err.stack);
-        res.status(500).json({ success: false, error: 'Photo upload failed: ' + err.message });
+        return res.status(500).json({
+            success: false,
+            error: 'Photo upload failed: ' + err.message
+        });
     }
 });
 
@@ -692,45 +872,75 @@ const uploadBatchRoutes = [
     '/api/admin/upload-batch'
 ];
 
-app.post(uploadBatchRoutes, requireAdminAuth, (req, res) => {
+app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
     try {
-        const { photos: incomingPhotos, category, house } = req.body || {};
-        if (!Array.isArray(incomingPhotos) || incomingPhotos.length === 0) {
-            console.warn('[Batch Photo Upload API] Rejected: No photos array provided.');
-            return res.status(400).json({ success: false, error: 'No photos provided for bulk upload.' });
-        }
-
-        console.log(`[Batch Photo Upload API] Processing batch of ${incomingPhotos.length} photos...`);
+        console.log(`[Batch Photo Upload API] [${req.method}] ${req.path} - Processing batch upload...`);
         const savedPhotos = [];
         const errors = [];
 
-        incomingPhotos.forEach((item, idx) => {
-            try {
-                const saved = galleryService.savePhoto({
-                    title: item.title,
-                    originalFilename: item.originalFilename || item.filename || item.name,
-                    category: category || item.category || 'Stage & Performance',
-                    house: house || item.house || 'General',
-                    imageData: item.imageData || item.image || item.file,
-                    imageUrl: item.imageUrl || item.url,
-                    originalSize: item.originalSize || item.size,
-                    compressedSize: item.compressedSize
-                });
-                savedPhotos.push(saved);
-            } catch (itemErr) {
-                console.error(`[Batch Photo Upload API] Failed item ${idx} (${item.originalFilename || item.name || 'unnamed'}):`, itemErr.message);
-                errors.push({ filename: item.originalFilename || item.name, error: itemErr.message });
-            }
-        });
+        // 1. Files uploaded via Multer multipart
+        if (req.files && req.files.length > 0) {
+            console.log(`[Batch Photo Upload API] Processing ${req.files.length} multipart files...`);
+            req.files.forEach((f, idx) => {
+                try {
+                    const fileUrl = `/uploads/${f.filename}`;
+                    const sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+                    const saved = galleryService.savePhoto({
+                        title: path.basename(f.originalname, path.extname(f.originalname)),
+                        caption: req.body?.caption || '',
+                        category: req.body?.category || 'Stage & Performance',
+                        house: req.body?.house || 'General',
+                        imageUrl: fileUrl,
+                        originalSize: sizeStr,
+                        compressedSize: sizeStr,
+                        originalFilename: f.originalname
+                    });
+                    savedPhotos.push(saved);
+                } catch (itemErr) {
+                    console.error(`[Batch Photo Upload API] Failed file ${idx} (${f.originalname}):`, itemErr.message);
+                    errors.push({ filename: f.originalname, error: itemErr.message });
+                }
+            });
+        }
+        // 2. Incoming JSON array of photos
+        else if (Array.isArray(req.body?.photos) && req.body.photos.length > 0) {
+            const incomingPhotos = req.body.photos;
+            console.log(`[Batch Photo Upload API] Processing JSON batch of ${incomingPhotos.length} photos...`);
+            incomingPhotos.forEach((item, idx) => {
+                try {
+                    const saved = galleryService.savePhoto({
+                        title: item.title,
+                        originalFilename: item.originalFilename || item.filename || item.name,
+                        category: req.body?.category || item.category || 'Stage & Performance',
+                        house: req.body?.house || item.house || 'General',
+                        imageData: item.imageData || item.image || item.file,
+                        imageUrl: item.imageUrl || item.url,
+                        originalSize: item.originalSize || item.size,
+                        compressedSize: item.compressedSize
+                    });
+                    savedPhotos.push(saved);
+                } catch (itemErr) {
+                    console.error(`[Batch Photo Upload API] Failed item ${idx} (${item.originalFilename || item.name || 'unnamed'}):`, itemErr.message);
+                    errors.push({ filename: item.originalFilename || item.name, error: itemErr.message });
+                }
+            });
+        } else {
+            console.warn('[Batch Photo Upload API] Rejected: No files or photos array provided.');
+            return res.status(400).json({ success: false, error: 'No photos provided for bulk upload.' });
+        }
 
         if (savedPhotos.length === 0 && errors.length > 0) {
             return res.status(500).json({ success: false, error: 'All photos in batch failed to upload.', errors });
         }
 
-        console.log(`[Batch Photo Upload API] Successfully uploaded ${savedPhotos.length} of ${incomingPhotos.length} photos.`);
-        res.json({
+        console.log(`[Batch Photo Upload API] Batch upload finished: ${savedPhotos.length} succeeded, ${errors.length} failed.`);
+        return res.json({
             success: true,
             count: savedPhotos.length,
+            filePath: savedPhotos[0]?.imageUrl,
+            url: savedPhotos[0]?.imageUrl,
+            imageUrl: savedPhotos[0]?.imageUrl,
+            photo: savedPhotos[0],
             photos: savedPhotos,
             errors: errors.length > 0 ? errors : undefined
         });

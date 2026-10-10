@@ -26,8 +26,10 @@ function ensureDirs() {
         if (!fs.existsSync(GALLERY_UPLOADS_DIR)) {
             fs.mkdirSync(GALLERY_UPLOADS_DIR, { recursive: true });
         }
+        fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
+        console.log('[GalleryService] Uploads directory public/uploads verified with write permissions.');
     } catch (e) {
-        console.warn('[GalleryService] Notice creating uploads directory:', e.message);
+        console.warn('[GalleryService] Notice checking uploads directory permissions:', e.message);
     }
 }
 
@@ -117,8 +119,8 @@ function savePhoto({ title, caption, category, house, imageUrl, imageData, origi
         .trim()
         .replace(/\s+/g, '_') || 'Euphoria_Photo';
 
-    // Handle base64 image data if provided (saved to public/uploads/)
-    if (imageData && typeof imageData === 'string') {
+    // Handle base64 image data if provided and no direct imageUrl exists (saved to public/uploads/)
+    if (!finalImageUrl && imageData && typeof imageData === 'string') {
         try {
             let base64Payload = imageData.trim();
             let ext = 'jpg';

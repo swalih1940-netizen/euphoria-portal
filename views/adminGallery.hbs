@@ -494,11 +494,13 @@
             }).join('');
         }
 
-        function compressImageFile(file, maxDimension = 1920, quality = 0.84) {
+        function compressImageToBlob(file, maxDimension = 1920, quality = 0.84) {
             return new Promise((resolve) => {
+                if (!file || !file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+                    return resolve(file);
+                }
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    const rawDataUrl = e.target.result;
                     const img = new Image();
                     img.onload = function () {
                         try {
@@ -523,53 +525,38 @@
                             ctx.imageSmoothingQuality = 'high';
                             ctx.drawImage(img, 0, 0, width, height);
 
-                            // Output as standard JPEG (or PNG if original file was PNG)
                             const isPng = file.type === 'image/png' || /\.png$/i.test(file.name);
-                            let dataUrl = canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', isPng ? 0.92 : quality);
-                            const byteLength = Math.round((dataUrl.length - 22) * 3 / 4);
-
-                            resolve({
-                                dataUrl,
-                                byteLength,
-                                width,
-                                height
-                            });
+                            const mime = isPng ? 'image/png' : 'image/jpeg';
+                            canvas.toBlob((blob) => {
+                                if (blob && blob.size > 0 && blob.size < file.size) {
+                                    const compressedFile = new File([blob], file.name, { type: mime });
+                                    console.log(`[Compression Engine] "${file.name}" compressed: ${formatBytes(file.size)} -> ${formatBytes(compressedFile.size)}`);
+                                    resolve(compressedFile);
+                                } else {
+                                    resolve(file);
+                                }
+                            }, mime, isPng ? 0.92 : quality);
                         } catch (canvasErr) {
-                            console.warn('[Compression Fallback] Canvas processing warning:', canvasErr);
-                            resolve({
-                                dataUrl: rawDataUrl,
-                                byteLength: file.size,
-                                width: img.width || 0,
-                                height: img.height || 0
-                            });
+                            console.warn('[Compression Fallback] Canvas processing warning, using original file:', canvasErr);
+                            resolve(file);
                         }
                     };
                     img.onerror = function (imgErr) {
-                        console.warn('[Compression Fallback] Image decode warning, using direct file payload:', imgErr);
-                        resolve({
-                            dataUrl: rawDataUrl,
-                            byteLength: file.size,
-                            width: 0,
-                            height: 0
-                        });
+                        console.warn('[Compression Fallback] Image decode failed, using original file:', imgErr);
+                        resolve(file);
                     };
-                    img.src = rawDataUrl;
+                    img.src = e.target.result;
                 };
                 reader.onerror = function (readErr) {
-                    console.error('[Compression] FileReader failed:', readErr);
-                    resolve({
-                        dataUrl: null,
-                        byteLength: 0,
-                        width: 0,
-                        height: 0
-                    });
+                    console.warn('[Compression Fallback] FileReader failed, using original file:', readErr);
+                    resolve(file);
                 };
                 reader.readAsDataURL(file);
             });
         }
 
         // ==============================================
-        // SUBMIT & BULK UPLOAD HANDLING
+        // SUBMIT & BULK UPLOAD HANDLING (Multipart / FormData)
         // ==============================================
         const form = document.getElementById('photo-upload-form');
         const submitBtn = document.getElementById('submit-upload-btn');
@@ -597,6 +584,8 @@
             let successCount = 0;
             let failCount = 0;
 
+            console.log(`[Upload Queue Started] Processing ${total} photo(s) for upload... Category="${category}", House="${house}"`);
+
             for (let i = 0; i < total; i++) {
                 const file = selectedFilesQueue[i];
                 const pctStart = Math.round((i / total) * 100);
@@ -606,10 +595,19 @@
                 btnText.innerText = `Uploading ${i + 1} of ${total}...`;
 
                 try {
-                    const compressed = await compressImageFile(file, 1920, 0.84);
+                    const uploadFile = await compressImageToBlob(file, 1920, 0.84);
+
+                    const formData = new FormData();
+                    formData.append('photo', uploadFile, file.name);
+                    formData.append('title', file.name.replace(/\.[^/.]+$/, '').trim());
+                    formData.append('originalFilename', file.name);
+                    formData.append('category', category);
+                    formData.append('house', house);
+                    formData.append('originalSize', formatBytes(file.size));
+                    formData.append('compressedSize', formatBytes(uploadFile.size));
+
                     const token = localStorage.getItem('euphoria_admin_token');
                     const headers = {
-                        'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     };
                     if (token) {
@@ -617,35 +615,41 @@
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
-                    console.log(`[Upload Initiated] Uploading file ${i + 1}/${total}: "${file.name}" (Original: ${formatBytes(file.size)}, Compressed: ${formatBytes(compressed.byteLength)})`);
+                    console.log(`[Upload Initiated] (${i + 1}/${total}) File: "${file.name}" (Original: ${formatBytes(file.size)}, Upload: ${formatBytes(uploadFile.size)}) to /api/admin/gallery/upload`);
 
-                    const response = await fetch('/api/admin/gallery/upload', {
+                    let response = await fetch('/api/admin/gallery/upload', {
                         method: 'POST',
                         headers,
                         credentials: 'same-origin',
-                        body: JSON.stringify({
-                            originalFilename: file.name,
-                            category,
-                            house,
-                            imageData: compressed.dataUrl,
-                            originalSize: formatBytes(file.size),
-                            compressedSize: formatBytes(compressed.byteLength)
-                        })
+                        body: formData
                     });
+
+                    // Automatic fallback to /api/gallery/upload if 404
+                    if (!response.ok && response.status === 404) {
+                        console.warn(`[Upload Fallback] /api/admin/gallery/upload returned 404. Retrying with /api/gallery/upload...`);
+                        response = await fetch('/api/gallery/upload', {
+                            method: 'POST',
+                            headers,
+                            credentials: 'same-origin',
+                            body: formData
+                        });
+                    }
 
                     let resData = null;
                     try {
                         resData = await response.json();
                     } catch (jsonErr) {
-                        resData = { success: false, error: `Invalid response format from server (Status ${response.status})` };
+                        console.error(`[Upload JSON Parse Error] Failed to parse response for "${file.name}" (HTTP ${response.status}):`, jsonErr);
+                        resData = { success: false, error: `Invalid server response (Status ${response.status}: ${response.statusText})` };
                     }
 
                     if (response.ok && resData && resData.success) {
-                        console.log(`[Upload Success] "${file.name}" saved successfully as "${resData.photo?.title}" (URL: ${resData.photo?.imageUrl})`);
+                        const savedPath = resData.filePath || resData.photo?.imageUrl || resData.url;
+                        console.log(`[Upload Success] "${file.name}" uploaded successfully -> File path: "${savedPath}"`, resData);
                         successCount++;
                     } else {
                         const errMsg = (resData && resData.error) ? resData.error : `HTTP ${response.status}: ${response.statusText}`;
-                        console.error(`[Upload Failed] Could not upload "${file.name}":`, errMsg);
+                        console.error(`[Upload Server Error] Could not upload "${file.name}":`, errMsg, { status: response.status, data: resData });
                         failCount++;
                     }
                 } catch (err) {
