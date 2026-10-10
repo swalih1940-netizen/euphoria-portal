@@ -765,7 +765,15 @@
             }
 
             container.innerHTML = photos.map(photo => {
-                const imgUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+                let raw = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+                let imgUrl = raw;
+                if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                    imgUrl = raw.replace(/^http:\/\//i, 'https://');
+                } else if (raw && !raw.startsWith('data:image/') && !raw.startsWith('/')) {
+                    const clean = raw.replace(/\\/g, '/');
+                    const uploadsIdx = clean.indexOf('/uploads/');
+                    imgUrl = uploadsIdx !== -1 ? clean.substring(uploadsIdx) : '/uploads/' + clean.split('/').pop();
+                }
                 const title = photo.title || 'Euphoria Photo';
                 return `
                 <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group" data-item-id="${photo.id || ''}">

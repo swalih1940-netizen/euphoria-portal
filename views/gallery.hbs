@@ -213,7 +213,7 @@
                 <div class="gallery-card group relative bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden cursor-pointer shadow-lg sm:shadow-xl hover:border-amber-500/50 transition-all duration-300"
                     data-id="{{this.id}}"
                     data-category="{{this.category}}"
-                    data-src="{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}">
+                    data-src="{{photoUrl this}}">
                     
                     <!-- Aspect Ratio Wrapper with Skeleton -->
                     <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden">
@@ -221,7 +221,7 @@
                         <div class="skeleton-shimmer absolute inset-0 z-0"></div>
                         
                         <!-- Image -->
-                        <img src="{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}" 
+                        <img src="{{photoUrl this}}" 
                             alt="{{#if this.title}}{{this.title}}{{else}}Festival Photo{{/if}}" 
                             loading="lazy"
                             class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 relative z-10 transition-opacity duration-300"
@@ -242,11 +242,11 @@
                                 <span>Preview</span>
                             </span>
                             <div class="flex items-center gap-1.5 pointer-events-auto">
-                                <button type="button" onclick="event.stopPropagation(); downloadPhoto('{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}', '{{this.title}}')" title="Download Photo"
+                                <button type="button" onclick="event.stopPropagation(); downloadPhoto('{{photoUrl this}}', '{{this.title}}')" title="Download Photo"
                                     class="p-1.5 sm:p-2 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold active:scale-95 transition-all shadow-md">
                                     <span class="material-symbols-outlined text-xs sm:text-sm">download</span>
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); sharePhoto('{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}')" title="Share Photo"
+                                <button type="button" onclick="event.stopPropagation(); sharePhoto('{{photoUrl this}}')" title="Share Photo"
                                     class="p-1.5 sm:p-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold active:scale-95 transition-all shadow-md">
                                     <span class="material-symbols-outlined text-xs sm:text-sm">share</span>
                                 </button>
@@ -514,8 +514,19 @@
 
         function resolvePhotoUrl(photo) {
             if (!photo) return '';
-            if (typeof photo === 'string') return photo.trim();
-            return (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+            let raw = '';
+            if (typeof photo === 'string') raw = photo.trim();
+            else raw = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+
+            if (!raw) return '';
+            if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                return raw.replace(/^http:\/\//i, 'https://');
+            }
+            if (raw.startsWith('data:image/') || raw.startsWith('/')) return raw;
+            const clean = raw.replace(/\\/g, '/');
+            const uploadsIdx = clean.indexOf('/uploads/');
+            if (uploadsIdx !== -1) return clean.substring(uploadsIdx);
+            return '/uploads/' + clean.split('/').pop();
         }
 
         function renderGalleryCardHtml(photo) {

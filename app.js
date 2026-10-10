@@ -243,10 +243,46 @@ const orFn = function (...args) {
 };
 hbs.registerHelper('or', orFn);
 
+function resolveMulterFileWebUrl(file) {
+    if (!file) return '';
+    if (file.secure_url && typeof file.secure_url === 'string') {
+        return file.secure_url.replace(/^http:\/\//i, 'https://');
+    }
+    if (file.url && typeof file.url === 'string' && (file.url.startsWith('http://') || file.url.startsWith('https://'))) {
+        return file.url.replace(/^http:\/\//i, 'https://');
+    }
+    if (file.path && typeof file.path === 'string' && (file.path.startsWith('http://') || file.path.startsWith('https://'))) {
+        return file.path.replace(/^http:\/\//i, 'https://');
+    }
+    if (file.filename) {
+        return `/uploads/${file.filename}`;
+    }
+    if (file.path && typeof file.path === 'string') {
+        const clean = file.path.replace(/\\/g, '/');
+        const uploadsIdx = clean.indexOf('/uploads/');
+        if (uploadsIdx !== -1) {
+            return clean.substring(uploadsIdx);
+        }
+        return '/uploads/' + clean.split('/').pop();
+    }
+    return '';
+}
+
 const photoUrlFn = function (photo) {
     if (!photo) return '';
-    if (typeof photo === 'string') return photo.trim();
-    return (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    let raw = '';
+    if (typeof photo === 'string') raw = photo.trim();
+    else raw = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+
+    if (!raw) return '';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        return raw.replace(/^http:\/\//i, 'https://');
+    }
+    if (raw.startsWith('data:image/') || raw.startsWith('/')) return raw;
+    const clean = raw.replace(/\\/g, '/');
+    const uploadsIdx = clean.indexOf('/uploads/');
+    if (uploadsIdx !== -1) return clean.substring(uploadsIdx);
+    return '/uploads/' + clean.split('/').pop();
 };
 hbs.registerHelper('photoUrl', photoUrlFn);
 
@@ -787,8 +823,7 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
         // Case 1: File uploaded via Multer multipart/form-data (Cloudinary or local fallback)
         if (req.file) {
             const uploadedFile = req.file;
-            // When using multer-storage-cloudinary, uploadedFile.path contains the secure Cloudinary HTTPS URL
-            const fileUrl = uploadedFile.path || uploadedFile.secure_url || uploadedFile.url || `/uploads/${uploadedFile.filename}`;
+            const fileUrl = resolveMulterFileWebUrl(uploadedFile);
             const sizeStr = uploadedFile.size ? ((uploadedFile.size / 1024).toFixed(1) + ' KB') : 'Optimized';
 
             const rawTitle = req.body?.title;
@@ -828,7 +863,7 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res
         if (req.files && req.files.length > 0) {
             console.log(`[Photo Upload API] Handling ${req.files.length} Multer multipart files...`);
             const savedPhotos = req.files.map(f => {
-                const fileUrl = f.path || f.secure_url || f.url || `/uploads/${f.filename}`;
+                const fileUrl = resolveMulterFileWebUrl(f);
                 const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
                 return galleryService.savePhoto({
                     title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),
@@ -956,7 +991,7 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req
             console.log(`[Batch Photo Upload API] Processing ${req.files.length} multipart files...`);
             req.files.forEach((f, idx) => {
                 try {
-                    const fileUrl = f.path || f.secure_url || f.url || `/uploads/${f.filename}`;
+                    const fileUrl = resolveMulterFileWebUrl(f);
                     const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
                     const saved = galleryService.savePhoto({
                         title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),

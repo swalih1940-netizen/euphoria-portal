@@ -37,10 +37,32 @@ function ensureDirs() {
 // Initial curated festival photos from existing assets
 const INITIAL_PHOTOS = [];
 
+// Convert any URL or local disk path into a browser-accessible web URL
+function normalizePhotoUrl(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed.replace(/^http:\/\//i, 'https://');
+    }
+    if (trimmed.startsWith('data:image/')) return trimmed;
+    if (trimmed.startsWith('/')) return trimmed;
+    const clean = trimmed.replace(/\\/g, '/');
+    const uploadsIdx = clean.indexOf('/uploads/');
+    if (uploadsIdx !== -1) {
+        return clean.substring(uploadsIdx);
+    }
+    if (clean.includes(':') || clean.includes('/')) {
+        return '/uploads/' + clean.split('/').pop();
+    }
+    return '/uploads/' + trimmed;
+}
+
 // Normalize photo objects so imageUrl, url, secure_url, and filePath are always present
 function normalizePhoto(photo) {
     if (!photo || typeof photo !== 'object') return photo;
-    const resolvedUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    const rawUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    const resolvedUrl = normalizePhotoUrl(rawUrl);
     return {
         ...photo,
         imageUrl: resolvedUrl,
@@ -143,7 +165,7 @@ function savePhoto({ title, caption, category, house, imageUrl, url, secure_url,
     ensureDirs();
     const photos = readPhotos();
     const rawUrl = imageUrl || secure_url || url || filePath || pPath || null;
-    let finalImageUrl = (rawUrl && typeof rawUrl === 'string') ? rawUrl.trim() : null;
+    let finalImageUrl = (rawUrl && typeof rawUrl === 'string') ? normalizePhotoUrl(rawUrl) : null;
 
     // Retain clean original file name (strip extension if present for title)
     let cleanBaseName = '';
