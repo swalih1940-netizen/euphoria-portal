@@ -243,6 +243,13 @@ const orFn = function (...args) {
 };
 hbs.registerHelper('or', orFn);
 
+const photoUrlFn = function (photo) {
+    if (!photo) return '';
+    if (typeof photo === 'string') return photo.trim();
+    return (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+};
+hbs.registerHelper('photoUrl', photoUrlFn);
+
 if (hbs.handlebars) {
     hbs.handlebars.registerHelper('json', function (context) {
         const jsonStr = JSON.stringify(context !== undefined ? context : []);
@@ -251,6 +258,7 @@ if (hbs.handlebars) {
     hbs.handlebars.registerHelper('padTwo', padTwoFn);
     hbs.handlebars.registerHelper('eq', function (a, b) { return a === b; });
     hbs.handlebars.registerHelper('or', orFn);
+    hbs.handlebars.registerHelper('photoUrl', photoUrlFn);
 }
 
 // Global Context Middleware

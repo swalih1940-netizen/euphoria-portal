@@ -764,15 +764,18 @@
                 return;
             }
 
-            container.innerHTML = photos.map(photo => `
-                <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group" data-item-id="${photo.id}">
+            container.innerHTML = photos.map(photo => {
+                const imgUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+                const title = photo.title || 'Euphoria Photo';
+                return `
+                <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group" data-item-id="${photo.id || ''}">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
-                            <img src="${photo.imageUrl}" alt="${photo.title}" class="w-full h-full object-cover" />
+                            <img src="${imgUrl}" alt="${title}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='/images/logo-192.png';" />
                         </div>
                         <div class="truncate">
                             <h4 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
-                                ${photo.title}
+                                ${title}
                             </h4>
                             <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
                                 <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 font-semibold text-[10px]">
@@ -787,20 +790,20 @@
 
                     <!-- Action buttons -->
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <a href="${photo.imageUrl}" target="_blank" title="View Full Photo"
+                        <a href="${imgUrl}" target="_blank" title="View Full Photo"
                             class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
                             <span class="material-symbols-outlined text-sm">open_in_new</span>
                         </a>
                         <button type="button" 
                             class="btn-delete-photo p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40 transition-colors cursor-pointer"
-                            data-id="${photo.id}"
-                            data-title="${encodeURIComponent(photo.title || 'Euphoria Photo')}"
+                            data-id="${photo.id || ''}"
+                            data-title="${encodeURIComponent(title)}"
                             title="Delete Photo">
                             <span class="material-symbols-outlined text-sm pointer-events-none">delete</span>
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         // Apply Search Filtering while maintaining list integrity

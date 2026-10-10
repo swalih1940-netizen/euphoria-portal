@@ -37,10 +37,23 @@ function ensureDirs() {
 // Initial curated festival photos from existing assets
 const INITIAL_PHOTOS = [];
 
+// Normalize photo objects so imageUrl, url, secure_url, and filePath are always present
+function normalizePhoto(photo) {
+    if (!photo || typeof photo !== 'object') return photo;
+    const resolvedUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    return {
+        ...photo,
+        imageUrl: resolvedUrl,
+        url: resolvedUrl,
+        secure_url: resolvedUrl,
+        filePath: resolvedUrl
+    };
+}
+
 // Read photos from storage file (guaranteeing persistent state without resurrecting deleted demo photos)
 function readPhotos() {
     if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos)) {
-        return inMemoryPhotos;
+        return inMemoryPhotos.map(normalizePhoto);
     }
 
     ensureDirs();
@@ -51,7 +64,7 @@ function readPhotos() {
             const raw = fs.readFileSync(DATA_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-                inMemoryPhotos = parsed;
+                inMemoryPhotos = parsed.map(normalizePhoto);
                 return inMemoryPhotos;
             }
         }
@@ -65,7 +78,7 @@ function readPhotos() {
             const raw = fs.readFileSync(TMP_DATA_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-                inMemoryPhotos = parsed;
+                inMemoryPhotos = parsed.map(normalizePhoto);
                 return inMemoryPhotos;
             }
         }
@@ -73,13 +86,13 @@ function readPhotos() {
         // Ignore /tmp read error
     }
 
-    inMemoryPhotos = [...INITIAL_PHOTOS];
+    inMemoryPhotos = INITIAL_PHOTOS.map(normalizePhoto);
     return inMemoryPhotos;
 }
 
 // Write photos to storage file (resilient against read-only serverless filesystems on Vercel)
 function writePhotos(photos) {
-    inMemoryPhotos = Array.isArray(photos) ? [...photos] : [];
+    inMemoryPhotos = Array.isArray(photos) ? photos.map(normalizePhoto) : [];
     ensureDirs();
     let wroteDisk = false;
 
@@ -109,7 +122,7 @@ function writePhotos(photos) {
  */
 function getAllPhotos() {
     const photos = readPhotos();
-    return [...photos].sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+    return [...photos].map(normalizePhoto).sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
 }
 
 /**
@@ -126,10 +139,11 @@ function getPhotosByCategory(category) {
 /**
  * Save new photo with image compression / storage handling in public/uploads/
  */
-function savePhoto({ title, caption, category, house, imageUrl, imageData, originalSize, compressedSize, originalFilename }) {
+function savePhoto({ title, caption, category, house, imageUrl, url, secure_url, filePath, path: pPath, imageData, originalSize, compressedSize, originalFilename }) {
     ensureDirs();
     const photos = readPhotos();
-    let finalImageUrl = (imageUrl && typeof imageUrl === 'string') ? imageUrl.trim() : null;
+    const rawUrl = imageUrl || secure_url || url || filePath || pPath || null;
+    let finalImageUrl = (rawUrl && typeof rawUrl === 'string') ? rawUrl.trim() : null;
 
     // Retain clean original file name (strip extension if present for title)
     let cleanBaseName = '';
@@ -214,6 +228,9 @@ function savePhoto({ title, caption, category, house, imageUrl, imageData, origi
         category: (category && category.trim()) ? category.trim() : 'Stage & Performance',
         house: (house && house.trim()) ? house.trim() : 'General',
         imageUrl: finalImageUrl,
+        url: finalImageUrl,
+        secure_url: finalImageUrl,
+        filePath: finalImageUrl,
         size: originalSize || 'Optimized',
         compressedSize: compressedSize || 'Optimized',
         uploadedAt: new Date().toISOString()
@@ -396,6 +413,7 @@ module.exports = {
     savePhoto,
     savePhotos,
     deletePhoto,
+    normalizePhoto,
     INITIAL_PHOTOS
 };
 

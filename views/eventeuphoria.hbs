@@ -838,17 +838,20 @@
             <div id="home-gallery-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {{#if photos}}
                     {{#each photos}}
-                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
-                        data-src="{{this.imageUrl}}">
+                    <div class="home-gallery-card group relative rounded-2xl overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
+                        data-src="{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}">
                         <div class="aspect-[4/3] w-full overflow-hidden bg-slate-950 relative">
-                            <img src="{{this.imageUrl}}" alt="Event Euphoria Festival Photo" loading="lazy"
-                                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                            <img src="{{#if this.imageUrl}}{{this.imageUrl}}{{else if this.secure_url}}{{this.secure_url}}{{else if this.url}}{{this.url}}{{else}}{{this.filePath}}{{/if}}" 
+                                alt="{{#if this.title}}{{this.title}}{{else}}Event Euphoria Festival Photo{{/if}}" 
+                                loading="lazy"
+                                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                onerror="this.onerror=null; this.src='/images/euphoria_trophy.jpg';" />
                         </div>
                     </div>
                     {{/each}}
                 {{else}}
                     <!-- Default Curated Preview Cards -->
-                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all shadow-xl cursor-pointer"
+                    <div class="home-gallery-card group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all shadow-xl cursor-pointer"
                         data-src="/images/euphoria_trophy.jpg">
                         <div class="aspect-[4/3] w-full overflow-hidden relative">
                             <img src="/images/euphoria_trophy.jpg" alt="Festival Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
