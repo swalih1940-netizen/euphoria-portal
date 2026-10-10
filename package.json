@@ -23,7 +23,10 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "hbs": "^4.2.0",
+    "mongodb": "^7.7.0",
+    "mongoose": "^9.11.1",
     "multer": "^2.4.0",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "pg": "^8.23.1"
   }
 }

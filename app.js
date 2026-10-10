@@ -59,6 +59,11 @@ if (isCloudinaryConfigured) {
     console.warn('[Cloudinary Config] Notice: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET not set. Local fallback storage enabled.');
 }
 
+// Initialize persistent database connection (MongoDB Atlas / PostgreSQL)
+galleryService.initDb().catch(dbErr => {
+    console.warn('[Gallery Service DB Notice]:', dbErr.message);
+});
+
 let multerStorage;
 
 if (isCloudinaryConfigured) {
@@ -308,7 +313,8 @@ app.get('/', async (req, res) => {
     try {
         const competitions = await festflowService.fetchCompetitions();
         const houses = await festflowService.fetchTeamPoints(competitions);
-        const photos = galleryService.getAllPhotos().slice(0, 8);
+        const allPhotos = await galleryService.getAllPhotos();
+        const photos = allPhotos.slice(0, 8);
 
         res.render('eventeuphoria', {
             title: `EVENT EUPHORIA '26 | Annual Fest | SIRAJUL IRFAN`,
@@ -319,11 +325,15 @@ app.get('/', async (req, res) => {
         });
     } catch (err) {
         console.error('[Euphoria Portal] Error rendering festival home:', err);
+        let fallbackPhotos = [];
+        try {
+            fallbackPhotos = (await galleryService.getAllPhotos()).slice(0, 8);
+        } catch (photoErr) {}
         res.render('eventeuphoria', {
             title: `EVENT EUPHORIA '26 | Annual Fest | SIRAJUL IRFAN`,
             houses: festflowService.FALLBACK_HOUSES,
             competitions: [],
-            photos: galleryService.getAllPhotos().slice(0, 8),
+            photos: fallbackPhotos,
             isLandingPage: true
         });
     }
@@ -398,12 +408,12 @@ app.get(['/eventeuphoria', '/eventeuphoria/*'], (req, res) => {
 });
 
 // 4. Dedicated Festival Gallery Controller & Route
-const renderGalleryPage = (req, res) => {
+const renderGalleryPage = async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
-        const photos = galleryService.getAllPhotos();
+        const photos = await galleryService.getAllPhotos();
         res.render('gallery', {
             title: `FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN`,
             photos: photos,
@@ -424,13 +434,13 @@ const renderGalleryPage = (req, res) => {
 app.get('/gallery', renderGalleryPage);
 
 // 5. Gallery Public JSON API
-app.get(['/api/gallery', '/api/gallery/list', '/api/photos'], (req, res) => {
+app.get(['/api/gallery', '/api/gallery/list', '/api/photos'], async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
         const category = req.query.category;
-        const photos = category ? galleryService.getPhotosByCategory(category) : galleryService.getAllPhotos();
+        const photos = category ? await galleryService.getPhotosByCategory(category) : await galleryService.getAllPhotos();
         res.json({ success: true, count: photos.length, photos });
     } catch (err) {
         console.error('[Gallery API Error]:', err.message);
@@ -752,12 +762,12 @@ app.all('/admin/logout', (req, res) => {
 });
 
 // 7d. Admin Dashboard: Festival Photo Upload & Management
-app.get(['/admin', '/admin/gallery', '/admin/photos'], requireAdminAuth, (req, res) => {
+app.get(['/admin', '/admin/gallery', '/admin/photos'], requireAdminAuth, async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
-        const photos = galleryService.getAllPhotos();
+        const photos = await galleryService.getAllPhotos();
         res.render('adminGallery', {
             title: `ADMIN PANEL | Festival Photo Manager | Event Euphoria '26`,
             photos: photos || [],
@@ -776,12 +786,12 @@ app.get(['/admin', '/admin/gallery', '/admin/photos'], requireAdminAuth, (req, r
 });
 
 // Protected Admin API Endpoints
-app.get(['/api/admin/gallery/list', '/api/admin/photos/list'], requireAdminAuth, (req, res) => {
+app.get(['/api/admin/gallery/list', '/api/admin/photos/list'], requireAdminAuth, async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
-        const photos = galleryService.getAllPhotos();
+        const photos = await galleryService.getAllPhotos();
         res.json({ success: true, count: photos.length, photos });
     } catch (err) {
         console.error('[Admin Gallery List Error]:', err.message);
@@ -1058,7 +1068,7 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req
 });
 
 // Robust Gallery Photo Delete Controller (Supports both POST & DELETE, with ID in param, query, or body)
-const handleAdminPhotoDelete = (req, res) => {
+const handleAdminPhotoDelete = async (req, res) => {
     try {
         const rawId = req.params.id || req.params[0] || (req.body && (req.body.id || req.body.imageUrl)) || (req.query && (req.query.id || req.query.imageUrl));
         if (!rawId) {
@@ -1074,7 +1084,7 @@ const handleAdminPhotoDelete = (req, res) => {
         }
 
         console.log(`[Gallery Delete API] [${req.method}] ${req.path} -> Deleting photo: "${id}"`);
-        const result = galleryService.deletePhoto(id);
+        const result = await galleryService.deletePhoto(id);
 
         if (result && result.success) {
             console.log(`[Gallery Delete API] Successfully deleted photo "${id}". File deleted: ${result.fileDeleted ? result.deletedFilePath : 'none/external'}. Remaining photos: ${result.remainingCount}`);
