@@ -3,6 +3,7 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'gallery.json');
+const TMP_DATA_FILE = path.join('/tmp', 'gallery.json');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
 const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
@@ -17,7 +18,7 @@ function ensureDirs() {
             fs.mkdirSync(DATA_DIR, { recursive: true });
         }
     } catch (e) {
-        console.warn('[GalleryService] Notice creating data directory:', e.message);
+        // Expected on read-only serverless filesystems (e.g. Vercel)
     }
     try {
         if (!fs.existsSync(UPLOADS_DIR)) {
@@ -29,7 +30,7 @@ function ensureDirs() {
         fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
         console.log('[GalleryService] Uploads directory public/uploads verified with write permissions.');
     } catch (e) {
-        console.warn('[GalleryService] Notice checking uploads directory permissions:', e.message);
+        // Handled gracefully in serverless/Cloudinary mode
     }
 }
 
@@ -38,7 +39,13 @@ const INITIAL_PHOTOS = [];
 
 // Read photos from storage file (guaranteeing persistent state without resurrecting deleted demo photos)
 function readPhotos() {
+    if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos)) {
+        return inMemoryPhotos;
+    }
+
     ensureDirs();
+
+    // 1. Try reading from primary data/gallery.json
     try {
         if (fs.existsSync(DATA_FILE)) {
             const raw = fs.readFileSync(DATA_FILE, 'utf-8');
@@ -49,35 +56,52 @@ function readPhotos() {
             }
         }
     } catch (e) {
-        console.warn('[GalleryService] Notice: reading data file:', e.message);
+        console.warn('[GalleryService] Notice reading primary data file:', e.message);
     }
 
-    if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos)) {
-        return inMemoryPhotos;
-    }
-
-    // Only if file has never been created at all on a completely fresh initialization
-    inMemoryPhotos = [...INITIAL_PHOTOS];
+    // 2. Try reading from serverless /tmp/gallery.json cache
     try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
+        if (fs.existsSync(TMP_DATA_FILE)) {
+            const raw = fs.readFileSync(TMP_DATA_FILE, 'utf-8');
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                inMemoryPhotos = parsed;
+                return inMemoryPhotos;
+            }
+        }
     } catch (e) {
-        // Read-only filesystem / serverless, memory fallback is set
+        // Ignore /tmp read error
     }
+
+    inMemoryPhotos = [...INITIAL_PHOTOS];
     return inMemoryPhotos;
 }
 
-// Write photos to storage file
+// Write photos to storage file (resilient against read-only serverless filesystems on Vercel)
 function writePhotos(photos) {
     inMemoryPhotos = Array.isArray(photos) ? [...photos] : [];
     ensureDirs();
+    let wroteDisk = false;
+
+    // 1. Primary storage file (local environment)
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
         console.log(`[GalleryService] Successfully updated ${DATA_FILE} (${inMemoryPhotos.length} photos stored)`);
-        return true;
+        wroteDisk = true;
     } catch (e) {
-        console.error('[GalleryService] Notice: writing data file (persisted in-memory):', e.message);
-        return false;
+        console.warn('[GalleryService] Serverless notice: Primary disk write skipped:', e.message);
     }
+
+    // 2. Serverless /tmp cache fallback
+    try {
+        fs.writeFileSync(TMP_DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
+        wroteDisk = true;
+    } catch (e) {
+        // Ignore /tmp write error
+    }
+
+    // Always succeed because in-memory state is maintained for the life of the instance/process
+    return true;
 }
 
 /**
@@ -319,6 +343,29 @@ function deletePhoto(identifier) {
 
         if (!fileDeleted && !deletedFilePath) {
             console.log(`[GalleryService] Note: No physical file found on disk for "${photo.imageUrl}" (may be external or already deleted).`);
+        }
+    }
+
+    // Attempt to delete asset from Cloudinary if hosted on Cloudinary
+    if (photo.imageUrl && photo.imageUrl.includes('cloudinary.com')) {
+        try {
+            const cloudinary = require('cloudinary').v2;
+            const cleanUrl = String(photo.imageUrl).split('?')[0].split('#')[0];
+            const match = cleanUrl.match(/\/upload\/(?:v\d+\/)?([^\.]+)/);
+            if (match && match[1]) {
+                const publicId = decodeURIComponent(match[1]);
+                console.log(`[GalleryService] Deleting photo asset from Cloudinary: "${publicId}"`);
+                cloudinary.uploader.destroy(publicId, (err, res) => {
+                    if (err) {
+                        console.warn('[GalleryService] Cloudinary delete notice:', err.message);
+                    } else {
+                        console.log('[GalleryService] Cloudinary delete result:', res);
+                    }
+                });
+                fileDeleted = true;
+            }
+        } catch (cldErr) {
+            console.warn('[GalleryService] Cloudinary deletion error:', cldErr.message);
         }
     }
 

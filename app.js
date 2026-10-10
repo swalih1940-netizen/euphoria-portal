@@ -4,6 +4,8 @@ const fs = require('fs');
 const hbs = require('hbs');
 const crypto = require('crypto');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
 
 const festflowService = require('./services/festflowService');
@@ -32,7 +34,31 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use(express.json({ limit: '35mb' }));
 app.use(express.urlencoded({ extended: true, limit: '35mb' }));
 
-// Multer Storage Configuration for multipart/form-data File Uploads
+// ==============================================
+// CLOUDINARY & MULTER CONFIGURATION
+// ==============================================
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+const isCloudinaryConfigured = Boolean(
+    CLOUDINARY_CLOUD_NAME &&
+    CLOUDINARY_API_KEY &&
+    CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+    cloudinary.config({
+        cloud_name: CLOUDINARY_CLOUD_NAME,
+        api_key: CLOUDINARY_API_KEY,
+        api_secret: CLOUDINARY_API_SECRET,
+        secure: true
+    });
+    console.log(`[Cloudinary Config] Successfully configured Cloudinary for cloud_name: "${CLOUDINARY_CLOUD_NAME}"`);
+} else {
+    console.warn('[Cloudinary Config] Notice: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET not set. Local fallback storage enabled.');
+}
+
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 const GALLERY_UPLOADS_DIR = path.join(UPLOADS_DIR, 'gallery');
 
@@ -47,40 +73,62 @@ function ensureUploadDirectories() {
         fs.accessSync(UPLOADS_DIR, fs.constants.W_OK);
         console.log(`[Multer Config] Verified destination directory "${UPLOADS_DIR}" exists with write permissions.`);
     } catch (err) {
-        console.error(`[Multer Config Error] Could not verify or set write permissions on "${UPLOADS_DIR}":`, err.message);
+        // Handled gracefully in serverless/Cloudinary mode
     }
 }
 ensureUploadDirectories();
 
-const multerStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        try {
-            if (!fs.existsSync(UPLOADS_DIR)) {
-                fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+let multerStorage;
+
+if (isCloudinaryConfigured) {
+    multerStorage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'euphoria_festival_gallery',
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'],
+            transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+            public_id: (req, file) => {
+                const ext = path.extname(file.originalname).toLowerCase();
+                const rawBase = path.basename(file.originalname, ext);
+                const safeBase = rawBase
+                    .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '_') || 'photo';
+                return `${safeBase}_${Date.now()}_${Math.round(Math.random() * 1e6)}`;
             }
-            cb(null, UPLOADS_DIR);
-        } catch (dirErr) {
-            console.error('[Multer Storage Error] Destination directory creation failed:', dirErr.message);
-            cb(dirErr);
         }
-    },
-    filename: function (req, file, cb) {
-        try {
-            const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-            const rawBase = path.basename(file.originalname, ext);
-            const safeBase = rawBase
-                .replace(/[^a-zA-Z0-9_\-\s]/g, '')
-                .trim()
-                .replace(/\s+/g, '_') || 'photo';
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-            const finalFilename = `${safeBase}_${uniqueSuffix}${ext}`;
-            cb(null, finalFilename);
-        } catch (nameErr) {
-            console.error('[Multer Storage Error] Filename generation failed:', nameErr.message);
-            cb(nameErr);
+    });
+    console.log('[Multer Config] Active storage engine: multer-storage-cloudinary (Direct Cloudinary uploads).');
+} else {
+    multerStorage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            const dest = process.env.VERCEL ? '/tmp' : UPLOADS_DIR;
+            try {
+                if (!fs.existsSync(dest)) {
+                    fs.mkdirSync(dest, { recursive: true });
+                }
+                cb(null, dest);
+            } catch (dirErr) {
+                cb(null, '/tmp');
+            }
+        },
+        filename: function (req, file, cb) {
+            try {
+                const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+                const rawBase = path.basename(file.originalname, ext);
+                const safeBase = rawBase
+                    .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '_') || 'photo';
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                cb(null, `${safeBase}_${uniqueSuffix}${ext}`);
+            } catch (nameErr) {
+                cb(nameErr);
+            }
         }
-    }
-});
+    });
+    console.log('[Multer Config] Active storage engine: local disk fallback.');
+}
 
 const multerFileFilter = (req, file, cb) => {
     const isImageMime = file.mimetype && file.mimetype.startsWith('image/');
@@ -724,26 +772,27 @@ const uploadRoutes = [
     '/api/admin/upload'
 ];
 
-app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
+app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res) => {
     try {
         console.log(`[Photo Upload API] [${req.method}] ${req.path} - Processing upload request...`);
 
-        // Case 1: File uploaded via Multer multipart/form-data
+        // Case 1: File uploaded via Multer multipart/form-data (Cloudinary or local fallback)
         if (req.file) {
             const uploadedFile = req.file;
-            const fileUrl = `/uploads/${uploadedFile.filename}`;
-            const sizeStr = (uploadedFile.size / 1024).toFixed(1) + ' KB';
+            // When using multer-storage-cloudinary, uploadedFile.path contains the secure Cloudinary HTTPS URL
+            const fileUrl = uploadedFile.path || uploadedFile.secure_url || uploadedFile.url || `/uploads/${uploadedFile.filename}`;
+            const sizeStr = uploadedFile.size ? ((uploadedFile.size / 1024).toFixed(1) + ' KB') : 'Optimized';
 
             const rawTitle = req.body?.title;
             const cleanTitle = (rawTitle && rawTitle.trim())
                 ? rawTitle.trim()
-                : path.basename(uploadedFile.originalname, path.extname(uploadedFile.originalname));
+                : path.basename(uploadedFile.originalname || 'Euphoria Photo', path.extname(uploadedFile.originalname || ''));
 
             const category = req.body?.category || 'Stage & Performance';
             const house = req.body?.house || 'General';
             const caption = req.body?.caption || '';
 
-            console.log(`[Photo Upload API] Handling Multer file: Original="${uploadedFile.originalname}", Stored="${uploadedFile.filename}", Size=${uploadedFile.size} bytes (${sizeStr}), URL="${fileUrl}", Category="${category}", House="${house}"`);
+            console.log(`[Photo Upload API] Handling Multer file: Original="${uploadedFile.originalname}", Stored URL="${fileUrl}", Size=${uploadedFile.size || 0} bytes, Category="${category}", House="${house}"`);
 
             const photo = galleryService.savePhoto({
                 title: cleanTitle,
@@ -771,10 +820,10 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
         if (req.files && req.files.length > 0) {
             console.log(`[Photo Upload API] Handling ${req.files.length} Multer multipart files...`);
             const savedPhotos = req.files.map(f => {
-                const fileUrl = `/uploads/${f.filename}`;
-                const sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+                const fileUrl = f.path || f.secure_url || f.url || `/uploads/${f.filename}`;
+                const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
                 return galleryService.savePhoto({
-                    title: path.basename(f.originalname, path.extname(f.originalname)),
+                    title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),
                     caption: req.body?.caption || '',
                     category: req.body?.category || 'Stage & Performance',
                     house: req.body?.house || 'General',
@@ -817,8 +866,8 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
             name
         } = req.body || {};
 
-        const effectiveImageData = imageData || image || photoData || file;
-        const effectiveImageUrl = imageUrl || url;
+        let effectiveImageData = imageData || image || photoData || file;
+        let effectiveImageUrl = imageUrl || url;
         const effectiveFilename = originalFilename || filename || name;
         const effectiveTitle = title || effectiveFilename;
         const effectiveCategory = category || 'Stage & Performance';
@@ -826,6 +875,22 @@ app.post(uploadRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
         const effectiveSize = originalSize || size;
 
         console.log(`[Photo Upload API] Processing JSON body: Filename="${effectiveFilename || 'unnamed'}", Category="${effectiveCategory}", House="${effectiveHouse}", hasImageData=${Boolean(effectiveImageData)}, hasImageUrl=${Boolean(effectiveImageUrl)}`);
+
+        // If Cloudinary is configured, upload base64 payload directly to Cloudinary
+        if (isCloudinaryConfigured && effectiveImageData && typeof effectiveImageData === 'string') {
+            try {
+                console.log('[Photo Upload API] Uploading base64 payload directly to Cloudinary...');
+                const cldRes = await cloudinary.uploader.upload(effectiveImageData, {
+                    folder: 'euphoria_festival_gallery',
+                    transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+                });
+                effectiveImageUrl = cldRes.secure_url || cldRes.url;
+                effectiveImageData = null;
+                console.log(`[Photo Upload API] Cloudinary base64 upload success: "${effectiveImageUrl}"`);
+            } catch (cldErr) {
+                console.error('[Photo Upload API] Cloudinary base64 upload warning:', cldErr.message);
+            }
+        }
 
         if (!effectiveImageData && !effectiveImageUrl) {
             console.warn('[Photo Upload API] Upload rejected: Missing file, image data, or image URL in request body.');
@@ -872,7 +937,7 @@ const uploadBatchRoutes = [
     '/api/admin/upload-batch'
 ];
 
-app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, (req, res) => {
+app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, async (req, res) => {
     try {
         console.log(`[Batch Photo Upload API] [${req.method}] ${req.path} - Processing batch upload...`);
         const savedPhotos = [];
@@ -883,10 +948,10 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, (req, res)
             console.log(`[Batch Photo Upload API] Processing ${req.files.length} multipart files...`);
             req.files.forEach((f, idx) => {
                 try {
-                    const fileUrl = `/uploads/${f.filename}`;
-                    const sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+                    const fileUrl = f.path || f.secure_url || f.url || `/uploads/${f.filename}`;
+                    const sizeStr = f.size ? ((f.size / 1024).toFixed(1) + ' KB') : 'Optimized';
                     const saved = galleryService.savePhoto({
-                        title: path.basename(f.originalname, path.extname(f.originalname)),
+                        title: path.basename(f.originalname || 'Photo', path.extname(f.originalname || '')),
                         caption: req.body?.caption || '',
                         category: req.body?.category || 'Stage & Performance',
                         house: req.body?.house || 'General',
@@ -906,15 +971,31 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, (req, res)
         else if (Array.isArray(req.body?.photos) && req.body.photos.length > 0) {
             const incomingPhotos = req.body.photos;
             console.log(`[Batch Photo Upload API] Processing JSON batch of ${incomingPhotos.length} photos...`);
-            incomingPhotos.forEach((item, idx) => {
+            for (let idx = 0; idx < incomingPhotos.length; idx++) {
+                const item = incomingPhotos[idx];
                 try {
+                    let itemUrl = item.imageUrl || item.url;
+                    let itemData = item.imageData || item.image || item.file;
+                    if (isCloudinaryConfigured && itemData && typeof itemData === 'string') {
+                        try {
+                            const cldRes = await cloudinary.uploader.upload(itemData, {
+                                folder: 'euphoria_festival_gallery',
+                                transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+                            });
+                            itemUrl = cldRes.secure_url || cldRes.url;
+                            itemData = null;
+                        } catch (cldErr) {
+                            console.warn('[Batch Photo Upload API] Cloudinary upload notice for item ' + idx + ':', cldErr.message);
+                        }
+                    }
+
                     const saved = galleryService.savePhoto({
                         title: item.title,
                         originalFilename: item.originalFilename || item.filename || item.name,
                         category: req.body?.category || item.category || 'Stage & Performance',
                         house: req.body?.house || item.house || 'General',
-                        imageData: item.imageData || item.image || item.file,
-                        imageUrl: item.imageUrl || item.url,
+                        imageData: itemData,
+                        imageUrl: itemUrl,
                         originalSize: item.originalSize || item.size,
                         compressedSize: item.compressedSize
                     });
@@ -923,7 +1004,7 @@ app.post(uploadBatchRoutes, multerUploadMiddleware, requireAdminAuth, (req, res)
                     console.error(`[Batch Photo Upload API] Failed item ${idx} (${item.originalFilename || item.name || 'unnamed'}):`, itemErr.message);
                     errors.push({ filename: item.originalFilename || item.name, error: itemErr.message });
                 }
-            });
+            }
         } else {
             console.warn('[Batch Photo Upload API] Rejected: No files or photos array provided.');
             return res.status(400).json({ success: false, error: 'No photos provided for bulk upload.' });
