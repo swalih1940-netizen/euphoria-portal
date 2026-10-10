@@ -324,6 +324,181 @@
         .tv-poster-zone-badge.zone-default .tv-poster-zone-text {
             color: #f8fafc;
         }
+
+        /* Custom Festival Heading Font from Main Homepage */
+        @font-face {
+            font-family: 'TraditionalCivilization';
+            src: url('/Font/Traditional%20Civilization%20Demo.ttf') format('truetype'),
+                url('/Font/Traditional Civilization Demo.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        .font-custom-heading {
+            font-family: 'TraditionalCivilization', 'Outfit', 'Inter', sans-serif;
+        }
+
+        /* Hero Heading Euphoria Custom Font & Organic Floating Letter Animation (Exact Main Homepage Effect) */
+        @keyframes floatBounceA {
+            0%, 100% {
+                transform: translate3d(0, 0px, 0) rotate(0deg);
+            }
+            50% {
+                transform: translate3d(0, -9px, 0) rotate(-1.5deg);
+            }
+        }
+
+        @keyframes floatBounceB {
+            0%, 100% {
+                transform: translate3d(0, 0px, 0) rotate(0deg);
+            }
+            45% {
+                transform: translate3d(0, -12px, 0) rotate(2deg);
+            }
+        }
+
+        @keyframes floatBounceC {
+            0%, 100% {
+                transform: translate3d(0, 0px, 0) rotate(0deg);
+            }
+            55% {
+                transform: translate3d(0, -7px, 0) rotate(-1deg);
+            }
+        }
+
+        .hero-heading-euphoria {
+            font-family: 'TraditionalCivilization', 'Outfit', 'Inter', sans-serif;
+            color: #ffffff;
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            font-size: clamp(1.65rem, 3.2vw, 2.75rem);
+            line-height: 1.1;
+            box-sizing: border-box;
+            text-shadow: none;
+            filter: none;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .hero-heading-euphoria .letter {
+            display: inline-block;
+            color: #ffffff;
+            -webkit-text-fill-color: #ffffff;
+            text-shadow: none;
+            transition: color 0.3s ease-in-out, -webkit-text-fill-color 0.3s ease-in-out, transform 0.3s ease;
+            cursor: pointer;
+            will-change: transform;
+        }
+
+        /* Organic Floating & Bouncing Delays, Durations & Animations from Main Page */
+        .hero-heading-euphoria .letter-1 {
+            animation: floatBounceA 3.2s ease-in-out infinite 0s;
+        }
+
+        .hero-heading-euphoria .letter-2 {
+            animation: floatBounceB 2.8s ease-in-out infinite 0.3s;
+        }
+
+        .hero-heading-euphoria .letter-3 {
+            animation: floatBounceC 3.5s ease-in-out infinite 0.7s;
+        }
+
+        .hero-heading-euphoria .letter-4 {
+            animation: floatBounceA 3.0s ease-in-out infinite 0.2s;
+        }
+
+        .hero-heading-euphoria .letter-5 {
+            animation: floatBounceB 3.4s ease-in-out infinite 0.5s;
+        }
+
+        .hero-heading-euphoria .letter-6 {
+            animation: floatBounceC 2.7s ease-in-out infinite 0.1s;
+        }
+
+        .hero-heading-euphoria .letter-7 {
+            animation: floatBounceA 3.3s ease-in-out infinite 0.6s;
+        }
+
+        .hero-heading-euphoria .letter-8 {
+            animation: floatBounceB 2.9s ease-in-out infinite 0.4s;
+        }
+
+        /* Targeted Letter Hover & Ambient Accents */
+        .hero-heading-euphoria .letter-1:hover {
+            color: #06b6d4;
+            -webkit-text-fill-color: #06b6d4;
+        }
+
+        .hero-heading-euphoria .letter-2:hover {
+            color: #8b5cf6;
+            -webkit-text-fill-color: #8b5cf6;
+        }
+
+        .hero-heading-euphoria .letter-3:hover {
+            color: #ec4899;
+            -webkit-text-fill-color: #ec4899;
+        }
+
+        .hero-heading-euphoria .letter-4:hover {
+            color: #f43f5e;
+            -webkit-text-fill-color: #f43f5e;
+        }
+
+        .hero-heading-euphoria .letter-5:hover {
+            color: #f59e0b;
+            -webkit-text-fill-color: #f59e0b;
+        }
+
+        .hero-heading-euphoria .letter-6:hover {
+            color: #10b981;
+            -webkit-text-fill-color: #10b981;
+        }
+
+        .hero-heading-euphoria .letter-7:hover {
+            color: #38bdf8;
+            -webkit-text-fill-color: #38bdf8;
+        }
+
+        .hero-heading-euphoria .letter-8:hover {
+            color: #a855f7;
+            -webkit-text-fill-color: #a855f7;
+        }
+
+        /* TV Card Bottom Container & Ambient Glow */
+        .tv-card-bottom-banner {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Subtle team card ambient letter auras */
+        .tv-fanora-bottom .letter {
+            text-shadow: 0 0 24px rgba(245, 158, 11, 0.35);
+        }
+
+        .tv-zahora-bottom .letter {
+            text-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+        }
+
+        /* 9:16 Portrait / Vertical TV Support */
+        @media (orientation: portrait), (max-aspect-ratio: 1/1) {
+            .hero-heading-euphoria {
+                font-size: clamp(1.35rem, 3.8vw, 2.25rem);
+            }
+            .tv-card-bottom-banner {
+                padding: 0.2rem 0.25rem;
+            }
+        }
     </style>
 </head>
 
@@ -435,19 +610,14 @@
                 </div>
             </div>
 
-            <!-- Bottom Footer: Team Name, Team Manager & Star Rating Display -->
-            <div class="relative z-10 pt-3 sm:pt-4 border-t border-amber-500/20 flex items-center justify-between shrink-0">
-                <div>
-                    <span class="text-base sm:text-lg lg:text-2xl font-black text-white tracking-wide block">Team Fanora</span>
-                    <div class="text-[11px] sm:text-xs lg:text-sm font-mono text-amber-300 font-semibold tracking-wide flex items-center gap-1 mt-0.5">
-                        <span class="text-amber-400/70 font-bold uppercase text-[10px] sm:text-xs">Team Manager:</span>
-                        <span class="text-amber-200 font-extrabold">Muhammed Afeef</span>
-                    </div>
-                </div>
-                <div class="text-right flex flex-col items-end">
-                    <span class="text-[10px] sm:text-xs font-mono uppercase text-amber-400/80 tracking-wider block font-bold mb-0.5 sm:mb-1">Championship Stars</span>
-                    <div id="stars-footer-fanora" class="flex items-center gap-1 sm:gap-1.5 text-amber-300">
-                        <!-- Populated dynamically via JS -->
+            <!-- Bottom Footer: Animated Euphoria Text Component (Main Homepage Text Animation) -->
+            <div class="relative z-10 pt-2.5 sm:pt-3.5 border-t border-amber-500/20 flex flex-col items-center justify-center shrink-0 w-full tv-fanora-bottom overflow-hidden">
+                <div class="tv-card-bottom-banner">
+                    <div class="hero-heading-euphoria font-custom-heading tracking-wide select-none drop-shadow-lg cursor-pointer">
+                        <span class="letter letter-1">E</span><span class="letter letter-2">u</span><span
+                            class="letter letter-3">p</span><span class="letter letter-4">h</span><span
+                            class="letter letter-5">o</span><span class="letter letter-6">r</span><span
+                            class="letter letter-7">i</span><span class="letter letter-8">a</span>
                     </div>
                 </div>
             </div>
@@ -555,19 +725,14 @@
                 </div>
             </div>
 
-            <!-- Bottom Footer: Team Name, Team Manager & Star Rating Display -->
-            <div class="relative z-10 pt-3 sm:pt-4 border-t border-emerald-500/20 flex items-center justify-between shrink-0">
-                <div>
-                    <span class="text-base sm:text-lg lg:text-2xl font-black text-white tracking-wide block">Team Zahora</span>
-                    <div class="text-[11px] sm:text-xs lg:text-sm font-mono text-emerald-300 font-semibold tracking-wide flex items-center gap-1 mt-0.5">
-                        <span class="text-emerald-400/70 font-bold uppercase text-[10px] sm:text-xs">Team Manager:</span>
-                        <span class="text-emerald-200 font-extrabold">Muhammed Jabir</span>
-                    </div>
-                </div>
-                <div class="text-right flex flex-col items-end">
-                    <span class="text-[10px] sm:text-xs font-mono uppercase text-emerald-400/80 tracking-wider block font-bold mb-0.5 sm:mb-1">Championship Stars</span>
-                    <div id="stars-footer-zahora" class="flex items-center gap-1 sm:gap-1.5 text-emerald-300">
-                        <!-- Populated dynamically via JS -->
+            <!-- Bottom Footer: Animated Euphoria Text Component (Main Homepage Text Animation) -->
+            <div class="relative z-10 pt-2.5 sm:pt-3.5 border-t border-emerald-500/20 flex flex-col items-center justify-center shrink-0 w-full tv-zahora-bottom overflow-hidden">
+                <div class="tv-card-bottom-banner">
+                    <div class="hero-heading-euphoria font-custom-heading tracking-wide select-none drop-shadow-lg cursor-pointer">
+                        <span class="letter letter-1">E</span><span class="letter letter-2">u</span><span
+                            class="letter letter-3">p</span><span class="letter letter-4">h</span><span
+                            class="letter letter-5">o</span><span class="letter letter-6">r</span><span
+                            class="letter letter-7">i</span><span class="letter letter-8">a</span>
                     </div>
                 </div>
             </div>
@@ -843,8 +1008,6 @@
             const badgeZahora = document.getElementById('badge-rank-zahora');
             const badgeStarsFanora = document.getElementById('badge-stars-fanora');
             const badgeStarsZahora = document.getElementById('badge-stars-zahora');
-            const footerStarsFanora = document.getElementById('stars-footer-fanora');
-            const footerStarsZahora = document.getElementById('stars-footer-zahora');
             const fanoraPill = document.getElementById('fanora-margin-pill');
             const zahoraPill = document.getElementById('zahora-margin-pill');
 
@@ -864,9 +1027,6 @@
                 // Display 3 stars for 1st place, 2 stars for 2nd team
                 if (badgeStarsFanora) badgeStarsFanora.innerHTML = renderStarsHtml(3, 'text-slate-950', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
                 if (badgeStarsZahora) badgeStarsZahora.innerHTML = renderStarsHtml(2, 'text-emerald-400', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
-
-                if (footerStarsFanora) footerStarsFanora.innerHTML = renderStarsHtml(3, 'text-amber-300', 'w-5 h-5 sm:w-6 sm:h-6');
-                if (footerStarsZahora) footerStarsZahora.innerHTML = renderStarsHtml(2, 'text-emerald-400', 'w-5 h-5 sm:w-6 sm:h-6');
 
                 if (fanoraPill) {
                     fanoraPill.innerText = diff > 0 ? `Leading by +${diff} PTS` : 'Championship Leader';
@@ -900,9 +1060,6 @@
                 // Display 3 stars for 1st place, 2 stars for 2nd team
                 if (badgeStarsZahora) badgeStarsZahora.innerHTML = renderStarsHtml(3, 'text-slate-950', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
                 if (badgeStarsFanora) badgeStarsFanora.innerHTML = renderStarsHtml(2, 'text-amber-400', 'w-3.5 h-3.5 sm:w-4 sm:h-4');
-
-                if (footerStarsZahora) footerStarsZahora.innerHTML = renderStarsHtml(3, 'text-emerald-300', 'w-5 h-5 sm:w-6 sm:h-6');
-                if (footerStarsFanora) footerStarsFanora.innerHTML = renderStarsHtml(2, 'text-amber-400', 'w-5 h-5 sm:w-6 sm:h-6');
 
                 if (zahoraPill) {
                     zahoraPill.innerText = `Leading by +${diff} PTS`;
