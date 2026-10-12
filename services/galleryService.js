@@ -56,27 +56,53 @@ async function getMongoConnection() {
     }
 }
 
-// Mongoose Photo Schema
+// Mongoose Photo Schema (Flexible schema supporting both camelCase and snake_case fields)
 const PhotoSchema = new mongoose.Schema({
-    id: { type: String, required: true, unique: true, index: true },
+    id: { type: String, index: true },
     title: { type: String, default: 'Euphoria Photo' },
+    name: { type: String },
     originalFilename: { type: String, default: '' },
+    original_filename: { type: String, default: '' },
     caption: { type: String, default: '' },
+    description: { type: String, default: '' },
     category: { type: String, default: 'Stage & Performance', index: true },
     house: { type: String, default: 'General' },
-    imageUrl: { type: String, required: true },
+    team: { type: String, default: 'General' },
+    imageUrl: { type: String },
+    image_url: { type: String },
     url: { type: String },
     secure_url: { type: String },
+    secureUrl: { type: String },
     filePath: { type: String },
+    file_path: { type: String },
+    fileUrl: { type: String },
+    image: { type: String },
+    photo: { type: String },
+    src: { type: String },
     size: { type: String, default: 'Optimized' },
+    originalSize: { type: String, default: 'Optimized' },
+    original_size: { type: String, default: 'Optimized' },
     compressedSize: { type: String, default: 'Optimized' },
-    uploadedAt: { type: String, default: () => new Date().toISOString() }
+    compressed_size: { type: String, default: 'Optimized' },
+    uploadedAt: { type: String, default: () => new Date().toISOString() },
+    uploaded_at: { type: String }
 }, {
     timestamps: true,
+    strict: false,
     collection: 'gallery_photos'
 });
 
+// Provide PhotoModel and register aliases so model lookups across code remain 100% consistent
 const PhotoModel = mongoose.models.GalleryPhoto || mongoose.model('GalleryPhoto', PhotoSchema);
+if (!mongoose.models.Photo) {
+    try { mongoose.model('Photo', PhotoSchema); } catch (e) {}
+}
+if (!mongoose.models.Gallery) {
+    try { mongoose.model('Gallery', PhotoSchema); } catch (e) {}
+}
+if (!mongoose.models.GalleryPhotos) {
+    try { mongoose.model('GalleryPhotos', PhotoSchema); } catch (e) {}
+}
 
 // PostgreSQL Pool Connection (Vercel Postgres fallback)
 let pgPool = null;
@@ -157,39 +183,82 @@ function normalizePhotoUrl(raw) {
     if (trimmed.startsWith('/uploads/') || trimmed.includes('/uploads/')) {
         return '/images/euphoria_trophy.jpg';
     }
-    // If it's a Cloudinary public ID, construct the full Cloudinary HTTPS URL
+    // If it's a Cloudinary public ID or filename, construct the full Cloudinary HTTPS URL
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME || (cloudinary.config && cloudinary.config().cloud_name);
-    if (cloudName && !trimmed.includes('/')) {
-        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${trimmed}`;
+    if (cloudName && !trimmed.startsWith('http') && !trimmed.startsWith('data:') && !trimmed.startsWith('/')) {
+        const cleanPublicId = trimmed.replace(/^euphoria_festival_gallery\//, '');
+        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${cleanPublicId}`;
     }
     return trimmed;
 }
 
-// Normalize photo objects so imageUrl, url, secure_url, and filePath are always present
+// Normalize photo objects so all common fields (camelCase and snake_case) are uniformly accessible
 function normalizePhoto(photo) {
     if (!photo || typeof photo !== 'object') return photo;
-    const rawUrl = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    const rawUrl = (
+        photo.imageUrl ||
+        photo.image_url ||
+        photo.secure_url ||
+        photo.secureUrl ||
+        photo.url ||
+        photo.filePath ||
+        photo.file_path ||
+        photo.fileUrl ||
+        photo.image ||
+        photo.photo ||
+        photo.src ||
+        photo.path ||
+        ''
+    ).toString().trim();
     const resolvedUrl = normalizePhotoUrl(rawUrl);
+    const photoId = String(photo.id || photo._id || 'photo_' + Date.now());
+    const originalFile = photo.originalFilename || photo.original_filename || photo.filename || photo.name || '';
+    const photoTitle = (photo.title && String(photo.title).trim())
+        ? String(photo.title).trim()
+        : (originalFile ? path.basename(originalFile).replace(/\.[^/.]+$/, '').trim() : 'Euphoria Photo');
+    const compSize = photo.compressedSize || photo.compressed_size || photo.size || 'Optimized';
+    const uploadTime = photo.uploadedAt || photo.uploaded_at || photo.createdAt || photo.created_at || new Date().toISOString();
+    const category = (photo.category && String(photo.category).trim()) ? String(photo.category).trim() : 'Stage & Performance';
+    const house = (photo.house && String(photo.house).trim()) ? String(photo.house).trim() : 'General';
+
     return {
-        id: String(photo.id || 'photo_' + Date.now()),
-        title: photo.title || 'Euphoria Photo',
-        originalFilename: photo.originalFilename || photo.original_filename || '',
+        id: photoId,
+        _id: photoId,
+        title: photoTitle,
+        name: photoTitle,
+        originalFilename: originalFile,
+        original_filename: originalFile,
         caption: photo.caption || '',
-        category: photo.category || 'Stage & Performance',
-        house: photo.house || 'General',
+        description: photo.caption || photo.description || '',
+        category: category,
+        house: house,
+        team: photo.house || photo.team || 'General',
         imageUrl: resolvedUrl,
+        image_url: resolvedUrl,
         url: resolvedUrl,
         secure_url: resolvedUrl,
+        secureUrl: resolvedUrl,
         filePath: resolvedUrl,
-        size: photo.size || 'Optimized',
-        compressedSize: photo.compressedSize || photo.compressed_size || 'Optimized',
-        uploadedAt: photo.uploadedAt || photo.uploaded_at || new Date().toISOString()
+        file_path: resolvedUrl,
+        fileUrl: resolvedUrl,
+        image: resolvedUrl,
+        photo: resolvedUrl,
+        src: resolvedUrl,
+        size: photo.size || compSize,
+        originalSize: photo.originalSize || photo.original_size || photo.size || compSize,
+        original_size: photo.originalSize || photo.original_size || photo.size || compSize,
+        compressedSize: compSize,
+        compressed_size: compSize,
+        uploadedAt: uploadTime,
+        uploaded_at: uploadTime,
+        createdAt: uploadTime,
+        created_at: uploadTime
     };
 }
 
-// Read photos from local storage file (fallback when database is offline)
+// Read photos from local storage file (fallback when database is offline or not configured)
 function readLocalPhotos() {
-    if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos) && inMemoryPhotos.length > 0) {
+    if (inMemoryPhotos !== null && Array.isArray(inMemoryPhotos)) {
         return inMemoryPhotos.map(normalizePhoto);
     }
 
@@ -200,7 +269,7 @@ function readLocalPhotos() {
         if (fs.existsSync(DATA_FILE)) {
             const raw = fs.readFileSync(DATA_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
                 inMemoryPhotos = parsed.map(normalizePhoto);
                 return inMemoryPhotos;
             }
@@ -214,7 +283,7 @@ function readLocalPhotos() {
         if (fs.existsSync(TMP_DATA_FILE)) {
             const raw = fs.readFileSync(TMP_DATA_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
                 inMemoryPhotos = parsed.map(normalizePhoto);
                 return inMemoryPhotos;
             }
@@ -228,20 +297,23 @@ function readLocalPhotos() {
 }
 
 // Write photos to local storage file (fallback cache)
-function writeLocalPhotos(photos) {
-    inMemoryPhotos = Array.isArray(photos) ? photos.map(normalizePhoto) : [];
+function writeLocalPhotos(photos, updateMemory = true) {
+    const normalized = Array.isArray(photos) ? photos.map(normalizePhoto) : [];
+    if (updateMemory) {
+        inMemoryPhotos = normalized;
+    }
     ensureDirs();
 
     // 1. Primary storage file (local environment)
     try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
+        fs.writeFileSync(DATA_FILE, JSON.stringify(normalized, null, 2), 'utf-8');
     } catch (e) {
         // Handled on read-only serverless filesystems
     }
 
     // 2. Serverless /tmp cache fallback
     try {
-        fs.writeFileSync(TMP_DATA_FILE, JSON.stringify(inMemoryPhotos, null, 2), 'utf-8');
+        fs.writeFileSync(TMP_DATA_FILE, JSON.stringify(normalized, null, 2), 'utf-8');
     } catch (e) {
         // Ignore /tmp write error
     }
@@ -264,22 +336,48 @@ async function initDb() {
         await ensurePgTable();
     } else {
         console.warn('[GalleryService] Notice: Neither MONGODB_URI nor POSTGRES_URL found in environment variables.');
-        console.warn('[GalleryService] For permanent persistence on Vercel across redeploys, set MONGODB_URI in your Vercel Dashboard project settings.');
+        console.warn('[GalleryService] Using resilient local file storage / memory cache (data/gallery.json).');
     }
 }
 
 /**
- * Fetch all gallery photos sorted newest first directly from persistent database
+ * Fetch all gallery photos sorted newest first directly from persistent database or storage
  */
 async function getAllPhotos() {
+    console.log('[GalleryService] getAllPhotos() requested - querying persistent storage...');
+
     // 1. Fetch from MongoDB Atlas
     const mongo = await getMongoConnection();
     if (mongo) {
         try {
-            const docs = await PhotoModel.find({}).sort({ uploadedAt: -1 }).lean();
-            const normalized = docs.map(normalizePhoto);
-            inMemoryPhotos = normalized;
-            return normalized;
+            console.log('[GalleryService] Querying MongoDB Atlas collection "gallery_photos"...');
+            let docs = await PhotoModel.find({}).sort({ uploadedAt: -1, uploaded_at: -1, createdAt: -1, _id: -1 }).lean();
+
+            // If primary collection is empty, check alternative collection names for legacy/mismatched collections
+            if (!docs || docs.length === 0) {
+                const altCollections = ['photos', 'gallery', 'galleryphotos', 'galleries'];
+                for (const collName of altCollections) {
+                    try {
+                        const rawColl = mongoose.connection.collection(collName);
+                        const altDocs = await rawColl.find({}).sort({ uploadedAt: -1, uploaded_at: -1, createdAt: -1, _id: -1 }).toArray();
+                        if (altDocs && altDocs.length > 0) {
+                            console.log(`[GalleryService] Found ${altDocs.length} photos in fallback collection "${collName}".`);
+                            docs = altDocs;
+                            break;
+                        }
+                    } catch (collErr) {}
+                }
+            }
+
+            if (docs && docs.length > 0) {
+                const normalized = docs.map(normalizePhoto).filter(p => Boolean(p.imageUrl));
+                console.log(`[GalleryService] MongoDB Atlas returned ${normalized.length} photos.`);
+                inMemoryPhotos = normalized;
+                writeLocalPhotos(normalized, false);
+                return normalized;
+            } else {
+                console.log('[GalleryService] MongoDB Atlas returned 0 photos. Checking secondary storage...');
+            }
         } catch (e) {
             console.error('[GalleryService] Error querying MongoDB Atlas:', e.message);
         }
@@ -289,101 +387,97 @@ async function getAllPhotos() {
     const pool = getPgPool();
     if (pool) {
         try {
+            console.log('[GalleryService] Querying PostgreSQL table "gallery_photos"...');
             await ensurePgTable();
             const res = await pool.query('SELECT * FROM gallery_photos ORDER BY uploaded_at DESC');
-            const normalized = res.rows.map(row => normalizePhoto({
-                id: row.id,
-                title: row.title,
-                originalFilename: row.original_filename,
-                caption: row.caption,
-                category: row.category,
-                house: row.house,
-                imageUrl: row.image_url,
-                url: row.url,
-                secure_url: row.secure_url,
-                filePath: row.file_path,
-                size: row.size,
-                compressedSize: row.compressed_size,
-                uploadedAt: row.uploaded_at
-            }));
-            inMemoryPhotos = normalized;
-            return normalized;
+            if (res && res.rows && res.rows.length > 0) {
+                const normalized = res.rows.map(normalizePhoto).filter(p => Boolean(p.imageUrl));
+                console.log(`[GalleryService] PostgreSQL returned ${normalized.length} photos.`);
+                inMemoryPhotos = normalized;
+                writeLocalPhotos(normalized, false);
+                return normalized;
+            } else {
+                console.log('[GalleryService] PostgreSQL returned 0 photos. Checking local storage cache...');
+            }
         } catch (e) {
             console.error('[GalleryService] Error querying PostgreSQL:', e.message);
         }
     }
 
     // 3. Fallback: local storage cache
+    console.log('[GalleryService] Fetching photos from local storage cache (data/gallery.json)...');
     const local = readLocalPhotos();
-    return [...local].sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+    const sortedLocal = [...local]
+        .map(normalizePhoto)
+        .filter(p => Boolean(p.imageUrl))
+        .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+    console.log(`[GalleryService] Local storage returned ${sortedLocal.length} photos.`);
+    return sortedLocal;
 }
 
 /**
  * Fetch photos filtered by category directly from persistent database
  */
 async function getPhotosByCategory(category) {
-    if (!category || category === 'ALL' || category === 'All Moments') {
+    if (!category || category === 'ALL' || category === 'All Moments' || category.toUpperCase() === 'ALL') {
         return getAllPhotos();
     }
 
-    // 1. Query MongoDB Atlas
-    const mongo = await getMongoConnection();
-    if (mongo) {
-        try {
-            const regex = new RegExp(`^${category.trim()}$`, 'i');
-            const docs = await PhotoModel.find({ category: regex }).sort({ uploadedAt: -1 }).lean();
-            return docs.map(normalizePhoto);
-        } catch (e) {
-            console.error('[GalleryService] Error querying MongoDB Atlas by category:', e.message);
-        }
-    }
-
-    // 2. Query PostgreSQL
-    const pool = getPgPool();
-    if (pool) {
-        try {
-            await ensurePgTable();
-            const res = await pool.query(
-                'SELECT * FROM gallery_photos WHERE LOWER(category) = LOWER($1) ORDER BY uploaded_at DESC',
-                [category.trim()]
-            );
-            return res.rows.map(row => normalizePhoto({
-                id: row.id,
-                title: row.title,
-                originalFilename: row.original_filename,
-                caption: row.caption,
-                category: row.category,
-                house: row.house,
-                imageUrl: row.image_url,
-                url: row.url,
-                secure_url: row.secure_url,
-                filePath: row.file_path,
-                size: row.size,
-                compressedSize: row.compressed_size,
-                uploadedAt: row.uploaded_at
-            }));
-        } catch (e) {
-            console.error('[GalleryService] Error querying PostgreSQL by category:', e.message);
-        }
-    }
-
-    // 3. Fallback
+    console.log(`[GalleryService] getPhotosByCategory("${category}") requested.`);
     const photos = await getAllPhotos();
-    return photos.filter(p => p.category && p.category.toLowerCase() === category.toLowerCase());
+    const targetCat = category.trim().toLowerCase();
+    const filtered = photos.filter(p => {
+        if (!p.category) return false;
+        const cat = p.category.trim().toLowerCase();
+        return cat === targetCat || cat.includes(targetCat) || targetCat.includes(cat);
+    });
+    console.log(`[GalleryService] Filtered ${filtered.length} photos for category: "${category}".`);
+    return filtered;
 }
 
 /**
  * Save new photo with direct Cloudinary storage and persistent database write
  */
-async function savePhoto({ title, caption, category, house, imageUrl, url, secure_url, filePath, path: pPath, imageData, originalSize, compressedSize, originalFilename }) {
+async function savePhoto({
+    title,
+    caption,
+    description,
+    category,
+    house,
+    team,
+    imageUrl,
+    image_url,
+    url,
+    secure_url,
+    secureUrl,
+    filePath,
+    file_path,
+    fileUrl,
+    path: pPath,
+    imageData,
+    image,
+    photo: pPhoto,
+    file,
+    originalSize,
+    original_size,
+    size,
+    compressedSize,
+    compressed_size,
+    originalFilename,
+    original_filename,
+    filename,
+    name
+}) {
     ensureDirs();
-    const rawUrl = imageUrl || secure_url || url || filePath || pPath || null;
+    const rawUrl = imageUrl || image_url || secure_url || secureUrl || url || filePath || file_path || fileUrl || pPath || null;
     let finalImageUrl = (rawUrl && typeof rawUrl === 'string') ? normalizePhotoUrl(rawUrl) : null;
+    const rawImageData = imageData || image || pPhoto || file || null;
 
     // Retain clean original file name (strip extension if present for title)
+    const effectiveFilename = originalFilename || original_filename || filename || name || '';
     let cleanBaseName = '';
-    if (originalFilename && typeof originalFilename === 'string') {
-        cleanBaseName = path.basename(originalFilename).replace(/\.[^/.]+$/, '').trim();
+    if (effectiveFilename && typeof effectiveFilename === 'string') {
+        cleanBaseName = path.basename(effectiveFilename).replace(/\.[^/.]+$/, '').trim();
     } else if (title && typeof title === 'string') {
         cleanBaseName = title.trim();
     }
@@ -393,10 +487,10 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
         .replace(/\s+/g, '_') || 'Euphoria_Photo';
 
     // Handle base64 image data: upload directly to Cloudinary (never save to local disk)
-    if (!finalImageUrl && imageData && typeof imageData === 'string') {
+    if (!finalImageUrl && rawImageData && typeof rawImageData === 'string') {
         try {
             console.log('[GalleryService] Uploading base64 image directly to Cloudinary...');
-            const cldRes = await cloudinary.uploader.upload(imageData, {
+            const cldRes = await cloudinary.uploader.upload(rawImageData, {
                 folder: 'euphoria_festival_gallery',
                 public_id: `${safeBaseName}_${Date.now()}_${Math.round(Math.random() * 1e6)}`,
                 transformation: [{ quality: 'auto', fetch_format: 'auto' }]
@@ -406,7 +500,7 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
         } catch (cldErr) {
             console.warn('[GalleryService] Cloudinary direct upload notice:', cldErr.message);
             if (!finalImageUrl) {
-                finalImageUrl = imageData;
+                finalImageUrl = rawImageData;
             }
         }
     }
@@ -421,23 +515,49 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
 
     const determinedTitle = (title && typeof title === 'string' && title.trim())
         ? title.trim()
-        : (cleanBaseName || originalFilename || 'Euphoria Photo');
+        : (cleanBaseName || effectiveFilename || 'Euphoria Photo');
 
-    const newPhoto = {
-        id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    const determinedId = 'photo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const uploadTimestamp = new Date().toISOString();
+    const effectiveCategory = (category && category.trim()) ? category.trim() : 'Stage & Performance';
+    const effectiveHouse = (house && house.trim()) ? house.trim() : (team || 'General');
+    const effectiveCaption = (caption || description || '').trim();
+    const effectiveSize = originalSize || original_size || size || 'Optimized';
+    const effectiveCompressedSize = compressedSize || compressed_size || effectiveSize;
+
+    const newPhoto = normalizePhoto({
+        id: determinedId,
+        _id: determinedId,
         title: determinedTitle,
-        originalFilename: originalFilename || '',
-        caption: (caption || '').trim(),
-        category: (category && category.trim()) ? category.trim() : 'Stage & Performance',
-        house: (house && house.trim()) ? house.trim() : 'General',
+        name: determinedTitle,
+        originalFilename: effectiveFilename,
+        original_filename: effectiveFilename,
+        caption: effectiveCaption,
+        description: effectiveCaption,
+        category: effectiveCategory,
+        house: effectiveHouse,
+        team: effectiveHouse,
         imageUrl: finalImageUrl,
+        image_url: finalImageUrl,
         url: finalImageUrl,
         secure_url: finalImageUrl,
+        secureUrl: finalImageUrl,
         filePath: finalImageUrl,
-        size: originalSize || 'Optimized',
-        compressedSize: compressedSize || 'Optimized',
-        uploadedAt: new Date().toISOString()
-    };
+        file_path: finalImageUrl,
+        fileUrl: finalImageUrl,
+        image: finalImageUrl,
+        photo: finalImageUrl,
+        src: finalImageUrl,
+        size: effectiveSize,
+        originalSize: effectiveSize,
+        original_size: effectiveSize,
+        compressedSize: effectiveCompressedSize,
+        compressed_size: effectiveCompressedSize,
+        uploadedAt: uploadTimestamp,
+        uploaded_at: uploadTimestamp,
+        createdAt: uploadTimestamp,
+        created_at: uploadTimestamp
+    });
 
     let persistedToDb = false;
 
@@ -448,10 +568,18 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
             await PhotoModel.findOneAndUpdate(
                 { id: newPhoto.id },
                 newPhoto,
-                { upsert: true, new: true }
+                { upsert: true, new: true, setDefaultsOnInsert: true }
             );
+            // Dual-persist to fallback collection 'photos' for synchronization across any legacy model
+            try {
+                await mongoose.connection.collection('photos').updateOne(
+                    { id: newPhoto.id },
+                    { $set: newPhoto },
+                    { upsert: true }
+                );
+            } catch (collErr) {}
             persistedToDb = true;
-            console.log(`[GalleryService] Successfully saved photo to MongoDB Atlas: ID="${newPhoto.id}", Title="${newPhoto.title}"`);
+            console.log(`[GalleryService] Successfully saved photo to MongoDB Atlas: ID="${newPhoto.id}", Title="${newPhoto.title}", URL="${newPhoto.imageUrl}"`);
         } catch (mongoErr) {
             console.error('[GalleryService] Failed to persist photo to MongoDB Atlas:', mongoErr.message);
         }
@@ -467,7 +595,9 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                 ON CONFLICT (id) DO UPDATE SET
                     title = EXCLUDED.title,
-                    image_url = EXCLUDED.image_url;
+                    image_url = EXCLUDED.image_url,
+                    url = EXCLUDED.url,
+                    secure_url = EXCLUDED.secure_url;
             `, [
                 newPhoto.id,
                 newPhoto.title,
@@ -493,9 +623,9 @@ async function savePhoto({ title, caption, category, house, imageUrl, url, secur
     // 3. Always update in-memory cache and write local file fallback
     const localPhotos = readLocalPhotos();
     localPhotos.unshift(newPhoto);
-    writeLocalPhotos(localPhotos);
+    writeLocalPhotos(localPhotos, true);
 
-    console.log(`[GalleryService] Stored photo record: ID=${newPhoto.id}, Title="${newPhoto.title}", Category="${newPhoto.category}", URL="${newPhoto.imageUrl}". DB persisted: ${persistedToDb}`);
+    console.log(`[GalleryService] Stored photo record: ID=${newPhoto.id}, Title="${newPhoto.title}", Category="${newPhoto.category}", URL="${newPhoto.imageUrl}". DB persisted: ${persistedToDb}. Total in cache: ${localPhotos.length}`);
     return newPhoto;
 }
 
@@ -530,9 +660,11 @@ async function deletePhoto(identifier) {
     const index = photos.findIndex(p => {
         if (!p) return false;
         if (p.id && String(p.id).trim().toLowerCase() === cleanId) return true;
+        if (p._id && String(p._id).trim().toLowerCase() === cleanId) return true;
         if (p.imageUrl && String(p.imageUrl).trim() === rawStr) return true;
         if (p.url && String(p.url).trim() === rawStr) return true;
         if (p.originalFilename && p.originalFilename.toLowerCase() === baseName) return true;
+        if (p.original_filename && p.original_filename.toLowerCase() === baseName) return true;
         if (p.title && p.title.trim().toLowerCase() === cleanId) return true;
         return false;
     });
@@ -575,7 +707,10 @@ async function deletePhoto(identifier) {
     const mongo = await getMongoConnection();
     if (mongo) {
         try {
-            await PhotoModel.deleteOne({ id: photo.id });
+            await PhotoModel.deleteOne({ $or: [{ id: photo.id }, { _id: photo.id }] });
+            try {
+                await mongoose.connection.collection('photos').deleteOne({ $or: [{ id: photo.id }, { _id: photo.id }] });
+            } catch (cErr) {}
             console.log(`[GalleryService] Deleted photo from MongoDB Atlas: ID=${photo.id}`);
         } catch (mongoErr) {
             console.error('[GalleryService] Error deleting from MongoDB Atlas:', mongoErr.message);
@@ -595,7 +730,7 @@ async function deletePhoto(identifier) {
 
     // 3. Remove from in-memory cache and local file
     photos.splice(index, 1);
-    writeLocalPhotos(photos);
+    writeLocalPhotos(photos, true);
 
     console.log(`[GalleryService] Permanently removed photo "${photo.id}". ${photos.length} photos remaining.`);
 

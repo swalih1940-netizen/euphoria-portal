@@ -1272,31 +1272,36 @@
 
             async function fetchHomeLivePhotos() {
                 try {
+                    console.log('[Home Gallery] Fetching latest live photos from /api/gallery...');
                     const res = await fetch('/api/gallery?_nocache=' + Date.now(), { cache: 'no-store' });
                     if (res.ok) {
                         const data = await res.json();
-                        if (data && data.success && Array.isArray(data.photos)) {
-                            const grid = document.getElementById('home-gallery-grid');
-                            if (!grid) return;
-                            const topPhotos = data.photos.slice(0, 8);
-                            if (topPhotos.length === 0) {
-                                grid.innerHTML = `
-                                    <div class="col-span-full text-center py-12 text-slate-500">
-                                        <p class="text-xs font-semibold">Photos will be published throughout festival days.</p>
-                                    </div>`;
-                            } else {
-                                grid.innerHTML = topPhotos.map(p => `
-                                    <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
-                                        data-src="${p.imageUrl}">
-                                        <div class="aspect-[4/3] w-full overflow-hidden bg-slate-950 relative">
-                                            <img src="${p.imageUrl}" alt="${p.title || 'Festival Photo'}" loading="lazy"
-                                                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
-                                        </div>
+                        const photos = Array.isArray(data) ? data : (data?.photos || data?.data || []);
+                        const grid = document.getElementById('home-gallery-grid');
+                        if (!grid) return;
+                        const topPhotos = photos.slice(0, 8);
+                        console.log(`[Home Gallery] Retrieved ${topPhotos.length} photos for homepage preview.`);
+                        if (topPhotos.length === 0) {
+                            grid.innerHTML = `
+                                <div class="col-span-full text-center py-12 text-slate-500">
+                                    <p class="text-xs font-semibold">Photos will be published throughout festival days.</p>
+                                </div>`;
+                        } else {
+                            grid.innerHTML = topPhotos.map(p => {
+                                const pUrl = p.imageUrl || p.image_url || p.secure_url || p.secureUrl || p.url || p.filePath || p.file_path || '/images/euphoria_trophy.jpg';
+                                const pTitle = p.title || p.name || 'Festival Photo';
+                                return `
+                                <div class="home-gallery-card group relative rounded-none overflow-hidden bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 shadow-lg sm:shadow-xl cursor-pointer"
+                                    data-src="${pUrl}">
+                                    <div class="aspect-[4/3] w-full overflow-hidden bg-slate-950 relative">
+                                        <img src="${pUrl}" alt="${pTitle}" loading="lazy"
+                                            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                            onerror="this.onerror=null; this.src='/images/euphoria_trophy.jpg';" />
                                     </div>
-                                `).join('');
-                            }
-                            bindHomeCardListeners();
+                                </div>`;
+                            }).join('');
                         }
+                        bindHomeCardListeners();
                     } else {
                         console.error('[Home Gallery] Failed to fetch live photos. HTTP status:', res.status);
                     }
@@ -1307,6 +1312,26 @@
 
             fetchHomeLivePhotos();
             window.addEventListener('focus', fetchHomeLivePhotos);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) fetchHomeLivePhotos();
+            });
+
+            // Instant cross-tab sync when photos are uploaded from admin panel
+            if (window.BroadcastChannel) {
+                try {
+                    const homeSyncChan = new BroadcastChannel('euphoria_gallery_sync');
+                    homeSyncChan.onmessage = (event) => {
+                        console.log('[Home Gallery] Instant update signal received via BroadcastChannel:', event.data);
+                        fetchHomeLivePhotos();
+                    };
+                } catch (bcErr) {}
+            }
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'euphoria_gallery_last_update') {
+                    console.log('[Home Gallery] Instant update signal received via localStorage storage event.');
+                    fetchHomeLivePhotos();
+                }
+            });
 
             if (homeCloseBtn) homeCloseBtn.addEventListener('click', closeHomeLightbox);
             if (homeNextBtn) homeNextBtn.addEventListener('click', showNextHomePhoto);

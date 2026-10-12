@@ -251,7 +251,21 @@ const photoUrlFn = function (photo) {
     if (!photo) return '';
     let raw = '';
     if (typeof photo === 'string') raw = photo.trim();
-    else raw = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+    else raw = (
+        photo.imageUrl ||
+        photo.image_url ||
+        photo.secure_url ||
+        photo.secureUrl ||
+        photo.url ||
+        photo.filePath ||
+        photo.file_path ||
+        photo.fileUrl ||
+        photo.image ||
+        photo.photo ||
+        photo.src ||
+        photo.path ||
+        ''
+    ).toString().trim();
 
     if (!raw) return '';
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
@@ -264,8 +278,9 @@ const photoUrlFn = function (photo) {
         return '/images/euphoria_trophy.jpg';
     }
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || (cloudinary.config && cloudinary.config().cloud_name);
-    if (cloudName && !raw.includes('/')) {
-        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${raw}`;
+    if (cloudName && !raw.startsWith('http') && !raw.startsWith('data:') && !raw.startsWith('/')) {
+        const cleanPublicId = raw.replace(/^euphoria_festival_gallery\//, '');
+        return `https://res.cloudinary.com/${cloudName}/image/upload/euphoria_festival_gallery/${cleanPublicId}`;
     }
     return raw;
 };
@@ -401,6 +416,9 @@ app.get(['/eventeuphoria', '/eventeuphoria/*'], (req, res) => {
     if (pathSegments.startsWith('result')) {
         return renderResultsPage(req, res);
     }
+    if (pathSegments.startsWith('gallery') || pathSegments.startsWith('photo')) {
+        return renderGalleryPage(req, res);
+    }
     if (pathSegments) {
         return res.redirect(301, `/#${pathSegments}`);
     }
@@ -413,7 +431,9 @@ const renderGalleryPage = async (req, res) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
+        console.log(`[Public Gallery Route] [${req.method}] ${req.originalUrl || req.url} - Tracing incoming gallery page request...`);
         const photos = await galleryService.getAllPhotos();
+        console.log(`[Public Gallery Route] Rendering public /gallery page with ${photos.length} photos.`);
         res.render('gallery', {
             title: `FESTIVAL GALLERY | Event Euphoria '26 | SIRAJUL IRFAN`,
             photos: photos,
@@ -431,16 +451,26 @@ const renderGalleryPage = async (req, res) => {
     }
 };
 
-app.get('/gallery', renderGalleryPage);
+app.get(['/gallery', '/gallery/', '/photos', '/festival-gallery', '/eventeuphoria/gallery'], renderGalleryPage);
 
 // 5. Gallery Public JSON API
-app.get(['/api/gallery', '/api/gallery/list', '/api/photos'], async (req, res) => {
+app.get([
+    '/api/gallery',
+    '/api/gallery/',
+    '/api/gallery/list',
+    '/api/gallery/photos',
+    '/api/photos',
+    '/api/photos/list',
+    '/api/photos/all'
+], async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     try {
         const category = req.query.category;
+        console.log(`[Public Gallery API] [${req.method}] ${req.originalUrl || req.url} - Tracing incoming gallery fetch request (Category: "${category || 'ALL'}", Query: ${JSON.stringify(req.query)})`);
         const photos = category ? await galleryService.getPhotosByCategory(category) : await galleryService.getAllPhotos();
+        console.log(`[Public Gallery API] Responding to ${req.path} with ${photos.length} photos (success: true).`);
         res.json({ success: true, count: photos.length, photos });
     } catch (err) {
         console.error('[Gallery API Error]:', err.message);

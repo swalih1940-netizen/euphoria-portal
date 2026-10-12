@@ -664,6 +664,13 @@
 
             if (successCount > 0) {
                 showAlert(`Successfully uploaded ${successCount} photo${successCount > 1 ? 's' : ''}! Details saved to database.`, true);
+                try {
+                    localStorage.setItem('euphoria_gallery_last_update', Date.now().toString());
+                    if (window.BroadcastChannel) {
+                        const syncChan = new BroadcastChannel('euphoria_gallery_sync');
+                        syncChan.postMessage({ type: 'PHOTOS_UPDATED', count: successCount, timestamp: Date.now() });
+                    }
+                } catch (e) {}
                 clearSelectedFiles();
                 loadAdminPhotos();
             }
@@ -907,6 +914,13 @@
 
                 if (res.ok && data.success) {
                     showAlert(`Photo deleted successfully from gallery.`, true);
+                    try {
+                        localStorage.setItem('euphoria_gallery_last_update', Date.now().toString());
+                        if (window.BroadcastChannel) {
+                            const syncChan = new BroadcastChannel('euphoria_gallery_sync');
+                            syncChan.postMessage({ type: 'PHOTOS_DELETED', timestamp: Date.now() });
+                        }
+                    } catch (e) {}
                     // Silently sync authoritative state from server without page reload or flicker
                     loadAdminPhotos(true);
                 } else {

@@ -516,7 +516,21 @@
             if (!photo) return '';
             let raw = '';
             if (typeof photo === 'string') raw = photo.trim();
-            else raw = (photo.imageUrl || photo.secure_url || photo.url || photo.filePath || photo.path || '').toString().trim();
+            else raw = (
+                photo.imageUrl ||
+                photo.image_url ||
+                photo.secure_url ||
+                photo.secureUrl ||
+                photo.url ||
+                photo.filePath ||
+                photo.file_path ||
+                photo.fileUrl ||
+                photo.image ||
+                photo.photo ||
+                photo.src ||
+                photo.path ||
+                ''
+            ).toString().trim();
 
             if (!raw) return '';
             if (raw.startsWith('http://') || raw.startsWith('https://')) {
@@ -535,11 +549,11 @@
             const imgUrl = resolvePhotoUrl(photo);
             if (!imgUrl) return '';
             const category = photo.category || 'Stage & Performance';
-            const title = photo.title || 'Event Euphoria Photo';
+            const title = photo.title || photo.name || 'Event Euphoria Photo';
             const safeTitleAttr = title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             return `
             <div class="gallery-card group relative bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden cursor-pointer shadow-lg sm:shadow-xl hover:border-amber-500/50 transition-all duration-300"
-                data-id="${photo.id || ''}"
+                data-id="${photo.id || photo._id || ''}"
                 data-category="${category}"
                 data-src="${imgUrl}">
                 
@@ -638,18 +652,16 @@
 
         async function fetchLivePhotos() {
             try {
+                console.log('[Gallery Live Sync] Fetching live photos from /api/gallery...');
                 const res = await fetch(`/api/gallery?_nocache=${Date.now()}`, {
                     headers: { 'Accept': 'application/json' },
                     cache: 'no-store'
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.success && Array.isArray(data.photos)) {
-                        console.log(`[Gallery Live Sync] Successfully retrieved ${data.photos.length} photos.`);
-                        renderGalleryGrid(data.photos);
-                    } else {
-                        console.warn('[Gallery Live Sync] Unexpected data structure:', data);
-                    }
+                    const photos = Array.isArray(data) ? data : (data?.photos || data?.data || []);
+                    console.log(`[Gallery Live Sync] Successfully retrieved ${photos.length} photos from API.`);
+                    renderGalleryGrid(photos);
                 } else {
                     console.error('[Gallery Live Sync] Failed to fetch gallery photos. HTTP Status:', res.status);
                 }
@@ -877,8 +889,26 @@
                 fetchLivePhotos();
             }
         });
-        // Background live poll every 12 seconds
-        setInterval(fetchLivePhotos, 12000);
+
+        // Instant cross-tab sync when admin uploads or deletes photos
+        if (window.BroadcastChannel) {
+            try {
+                const gallerySyncChannel = new BroadcastChannel('euphoria_gallery_sync');
+                gallerySyncChannel.onmessage = (event) => {
+                    console.log('[Gallery Live Sync] Instant update signal received via BroadcastChannel:', event.data);
+                    fetchLivePhotos();
+                };
+            } catch (e) {}
+        }
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'euphoria_gallery_last_update') {
+                console.log('[Gallery Live Sync] Instant update signal received via localStorage storage event.');
+                fetchLivePhotos();
+            }
+        });
+
+        // Background live poll every 8 seconds
+        setInterval(fetchLivePhotos, 8000);
     </script>
 </body>
 
